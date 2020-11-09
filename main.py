@@ -7,13 +7,12 @@ import numpy as np
 import pandas as pd
 import shapely.geometry as sg
 from PySide2 import QtCore
-from PySide2.QtCore import QRunnable, Slot, QThreadPool, Signal, QObject, QUrl
-from PySide2.QtWebChannel import QWebChannel
+from PySide2.QtCore import QRunnable, Slot, Signal, QObject, QUrl
 from PySide2.QtWebEngineWidgets import QWebEngineSettings
 from PySide2.QtWidgets import *
-from branca.element import JavascriptLink, Element
 from folium.plugins import HeatMap
 
+from plot_server import PlotServer
 from ui_resources.mainwindow import Ui_MainWindow
 
 gpd.options.use_pygeos = True
@@ -25,7 +24,6 @@ import shapely.speedups
 shapely.speedups.enable()
 
 import requests
-import tempfile
 
 
 class Signaller(QObject):
@@ -47,28 +45,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.webview.page().settings().setAttribute(
             QWebEngineSettings.WebAttribute.LocalContentCanAccessFileUrls, True)
 
-        self.map_temp_dir = tempfile.TemporaryDirectory()
+        # self.map_temp_dir = tempfile.TemporaryDirectory()
+        #
+        # self.map = fl.Map(location=[51.1, -1.9], prefer_canvas=True)
+        # self.map_layers = []
+        # abspath_qwc_js = os.path.abspath('ui_resources' + os.sep + 'qwebchannel.js')
+        # self.map.get_root().header.add_child(JavascriptLink(abspath_qwc_js))
+        # abspath_mc_js = os.path.abspath('ui_resources' + os.sep + 'map_callback.js')
+        # self.map.get_root().header.add_child(JavascriptLink(abspath_mc_js))
+        # self.map.get_root().script.add_child(Element('var the_map = map_' + self.map._id + ';'))
+        #
+        # self.map.save(os.path.abspath(self.map_temp_dir.name + os.sep + 'map.html'))
+        # self.webview.load(QUrl.fromLocalFile(os.path.abspath(self.map_temp_dir.name + os.sep + 'map.html')))
+        # # self.webview.page().runJavaScript('$(document).ready( function() {$("script").append(' + self.map_callback_js.format(self.map._id) + ');});')
+        #
+        # channel = QWebChannel(self.webview.page())
+        # self.webview.page().setWebChannel(channel)
+        # channel.registerObject("backend", self)
+        plot_server = PlotServer()
+        plot_server.start()
 
-        self.map = fl.Map(location=[51.1, -1.9], prefer_canvas=True)
-        self.map_layers = []
-        abspath_qwc_js = os.path.abspath('ui_resources' + os.sep + 'qwebchannel.js')
-        self.map.get_root().header.add_child(JavascriptLink(abspath_qwc_js))
-        abspath_mc_js = os.path.abspath('ui_resources' + os.sep + 'map_callback.js')
-        self.map.get_root().header.add_child(JavascriptLink(abspath_mc_js))
-        self.map.get_root().script.add_child(Element('var the_map = map_' + self.map._id + ';'))
-
-        self.map.save(os.path.abspath(self.map_temp_dir.name + os.sep + 'map.html'))
-        self.webview.load(QUrl.fromLocalFile(os.path.abspath(self.map_temp_dir.name + os.sep + 'map.html')))
-        # self.webview.page().runJavaScript('$(document).ready( function() {$("script").append(' + self.map_callback_js.format(self.map._id) + ');});')
-
-        channel = QWebChannel(self.webview.page())
-        self.webview.page().setWebChannel(channel)
-        channel.registerObject("backend", self)
-
+        self.webview.load(plot_server.url)
         self.webview.show()
 
-        self.threadpool = QThreadPool()
-        self.create_map()
+        # self.threadpool = QThreadPool()
+        # self.create_map()
 
     def create_map(self):
         mapgen = MapWorker()
