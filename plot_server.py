@@ -74,7 +74,7 @@ class PlotServer:
         self._landuse_polygons_lock = threading.Lock()
         self._landuse_polygons = None
 
-        self.generate_static_map(make_bounds_polygon(50.87, -1.5, 51.00, -1.3))
+        self.generate_static_layers(make_bounds_polygon(50.87, -1.5, 51.00, -1.3))
 
         self._current_plot = DynamicMap(self.compose_overlay_plot, streams=self.callback_streams)
         self.server = pn.serve(self._current_plot, start=False, show=False)
@@ -122,7 +122,10 @@ class PlotServer:
                     if not self._cached_area.contains(bounds_poly):
                         # Generate new data asynchronously
                         print('Starting Async data gen for ', bounds_poly)
-                        self._thread_pool.submit(self.generate_static_map, bounds_poly)
+                        # self._thread_pool.submit(self.generate_static_layers, bounds_poly)
+                        self.generate_static_layers(bounds_poly)
+                    else:
+                        pass
                 else:
                     print('Area too large to render')
             else:
@@ -133,9 +136,9 @@ class PlotServer:
         print("Rendering DynamicMap callable result")
         return plot.opts(width=self.plot_size[0], height=self.plot_size[1])
 
-    def generate_static_map(self, bounds_poly):
+    def generate_static_layers(self, bounds_poly):
         """
-        Generate static landuse map
+        Generate static layers of map
         """
         # Polygons aren't much use without a base map context
         assert self.layers is not None
@@ -147,16 +150,12 @@ class PlotServer:
             census_future = self._thread_pool.submit(self.ingest_census_data)
             print('Querying OSM Landuse')
             osm_future = self._thread_pool.submit(self.query_osm_landuse_polygons, bounds_poly)
-            # while True:
-            #     if osm_future.done() and census_future.done():
-            #         break
             wait([census_future])
             assert self._census_wards is not None
             bounded_census_wards = self._census_wards.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
             wait([osm_future])
             assert self._landuse_polygons is not None
         else:
-            # When census data is already loaded, no point running in another thread then immediately joining on it
             print('Querying OSM Landuse')
             osm_future = self._thread_pool.submit(self.query_osm_landuse_polygons, bounds_poly)
             bounded_census_wards = self._census_wards.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
@@ -252,6 +251,8 @@ class PlotServer:
                 continue
             # Add Shapely polygon to list
             poly = sg.Polygon(locs)
+            if poly.area < 1e-5:
+                continue
             df_list.append([poly])
         # df_list = [sg.Polygon([nodes[id] for id in element['nodes']]) for element in ways]
         assert len(df_list) > 0
