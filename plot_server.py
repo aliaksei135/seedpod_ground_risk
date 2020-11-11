@@ -251,8 +251,6 @@ class PlotServer:
                 continue
             # Add Shapely polygon to list
             poly = sg.Polygon(locs)
-            if poly.area < 1e-5:
-                continue
             df_list.append([poly])
         # df_list = [sg.Polygon([nodes[id] for id in element['nodes']]) for element in ways]
         assert len(df_list) > 0
@@ -263,9 +261,11 @@ class PlotServer:
             # Construct gdf
             # OSM uses Web Mercator so set CRS without projecting as CRS is known
             if self._landuse_polygons is None:
+                print('Initialised landuse polys cache')
                 self._landuse_polygons = poly_df
             else:
                 self._landuse_polygons = self._landuse_polygons.append(poly_df, ignore_index=True)
+                self._landuse_polygons.drop_duplicates(subset='geometry', inplace=True, ignore_index=True)
 
         with self._cached_area_lock:
             if self._cached_area is None:
