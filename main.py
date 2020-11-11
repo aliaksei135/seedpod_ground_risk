@@ -1,7 +1,6 @@
 import sys
 
 from PySide2 import QtCore
-from PySide2.QtWebEngineWidgets import QWebEngineSettings
 from PySide2.QtWidgets import *
 
 from plot_server import PlotServer
@@ -13,8 +12,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
-        self.webview.page().settings().setAttribute(
-            QWebEngineSettings.WebAttribute.LocalContentCanAccessFileUrls, True)
 
         plot_server = PlotServer()
         plot_server.start()

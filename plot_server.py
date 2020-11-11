@@ -1,5 +1,6 @@
 import os
 import threading
+from concurrent.futures import wait
 from concurrent.futures.thread import ThreadPoolExecutor
 
 import colorcet
@@ -65,6 +66,7 @@ class PlotServer:
         self.callback_streams = [RangeXY()]
         self.plot_size = plot_size
 
+        self._thread_pool = ThreadPoolExecutor()
         self._cached_area_lock = threading.Lock()
         self._cached_area = None
         self._census_wards_lock = threading.Lock()
@@ -72,17 +74,13 @@ class PlotServer:
         self._landuse_polygons_lock = threading.Lock()
         self._landuse_polygons = None
 
-        self.generate_static_map(make_bounds_polygon(50.77, -1.7, 51.08, -0.9))
+        self.generate_static_map(make_bounds_polygon(50.87, -1.5, 51.00, -1.3))
 
         self._current_plot = DynamicMap(self.compose_overlay_plot, streams=self.callback_streams)
         self.server = pn.serve(self._current_plot, start=False, show=False)
         self._server_thread = None
         self.url = 'http://localhost:{port}/{prefix}'.format(port=self.server.port, prefix=self.server.prefix) \
             if self.server.address is None else self.server.address
-
-        self._thread_pool = ThreadPoolExecutor()
-
-        # self._thread_pool.submit(self.generate_static_map, make_bounds_polygon((-1.6, -1.2), (50.8, 51.05)))
 
     def start(self):
         """
@@ -113,20 +111,27 @@ class PlotServer:
         :returns overlay plot of stored layers
         """
         if self._cached_area is not None:
+            print('Cache exists')
             if not is_null(x_range) and not is_null(y_range):
                 # Construct box around requested bounds
                 bounds_poly = make_bounds_polygon(x_range, y_range)
                 # Ensure bounds are small enough to render without OOM or heat death of universe
                 if bounds_poly.area < 0.2:
+                    print('Area renderable')
                     # Check if bounds box is *fully* contained within the cached area polygon
                     if not self._cached_area.contains(bounds_poly):
                         # Generate new data asynchronously
+                        print('Starting Async data gen for ', bounds_poly)
                         self._thread_pool.submit(self.generate_static_map, bounds_poly)
+                else:
+                    print('Area too large to render')
+            else:
+                print('None range update')
 
         layers = list(self.layers.values())
         plot = Overlay(layers)
-        print("Updating DynamicMap")
-        return plot.collate().opts(width=self.plot_size[0], height=self.plot_size[1])
+        print("Rendering DynamicMap callable result")
+        return plot.opts(width=self.plot_size[0], height=self.plot_size[1])
 
     def generate_static_map(self, bounds_poly):
         """
@@ -135,15 +140,34 @@ class PlotServer:
         # Polygons aren't much use without a base map context
         assert self.layers is not None
 
+        bounds = bounds_poly.bounds
         if self._census_wards is None:
+            # Some gain in concurrently running these
             print('Ingesting Census Data')
-            self.ingest_census_data()
-        print('Querying OSM Landuse')
-        self.query_osm_landuse_polygons(bounds_poly)
+            census_future = self._thread_pool.submit(self.ingest_census_data)
+            print('Querying OSM Landuse')
+            osm_future = self._thread_pool.submit(self.query_osm_landuse_polygons, bounds_poly)
+            # while True:
+            #     if osm_future.done() and census_future.done():
+            #         break
+            wait([census_future])
+            assert self._census_wards is not None
+            bounded_census_wards = self._census_wards.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
+            wait([osm_future])
+            assert self._landuse_polygons is not None
+        else:
+            # When census data is already loaded, no point running in another thread then immediately joining on it
+            print('Querying OSM Landuse')
+            osm_future = self._thread_pool.submit(self.query_osm_landuse_polygons, bounds_poly)
+            bounded_census_wards = self._census_wards.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
+            wait([osm_future])
+            assert self._landuse_polygons is not None
 
         print('Overlaying census and OSM polys')
         # Find landuse polygons intersecting/within census wards and merge left
-        census_df = gpd.overlay(self._landuse_polygons, self._census_wards, how='intersection').to_crs('EPSG:4326')
+        census_df = gpd.overlay(self._landuse_polygons,
+                                bounded_census_wards,
+                                how='intersection')
         # Estimate the population of landuse polygons from the density of the census ward they are within
         # EPSG:4326 is *not* an equal area projection so would give gibberish areas
         # Project geometries to an equidistant/equal areq projection
@@ -160,7 +184,7 @@ class PlotServer:
 
         # Actually perform the populations scaling
         census_df['population'] = census_df['population'].apply(scale_pop)
-        print(census_df.shape)
+        print('Census df shape ', census_df.shape)
         # Construct the GeoViews Polygons
         print('Constructing Geoviews Polygons')
         residential_pop_polys = gv.Polygons(census_df, vdims=['name', 'population']) \
@@ -174,7 +198,7 @@ class PlotServer:
         with self._layers_lock:
             self.layers['residential'] = residential_pop_polys
         try:
-            print('Rendering plot')
+            print('Calling plot update')
             # Calling the stream event with None kwargs results into plot regenerating without firing bounds update
             self._current_plot.event(x_range=None, y_range=None)
         except AttributeError:
@@ -230,7 +254,9 @@ class PlotServer:
             poly = sg.Polygon(locs)
             df_list.append([poly])
         # df_list = [sg.Polygon([nodes[id] for id in element['nodes']]) for element in ways]
+        assert len(df_list) > 0
         poly_df = gpd.GeoDataFrame(df_list, columns=['geometry']).set_crs('EPSG:4326')
+        print("Landuse polys shape: ", poly_df.shape)
 
         with self._landuse_polygons_lock:
             # Construct gdf
