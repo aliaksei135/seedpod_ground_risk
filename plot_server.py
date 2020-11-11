@@ -10,7 +10,7 @@ import panel as pn
 import shapely.geometry as sg
 import shapely.ops as so
 from geoviews import tile_sources as gvts
-from holoviews import DynamicMap
+from holoviews import DynamicMap, Overlay
 from holoviews.streams import RangeXY
 from numpy import isnan
 
@@ -35,7 +35,7 @@ gv.output(backend='bokeh')
 
 def make_bounds_polygon(*args):
     if len(args) == 2:
-        return sg.box(args[0][0], args[1][0], args[0][1], args[1][1])
+        return sg.box(args[1][0], args[0][0], args[1][1], args[0][1])
     elif len(args) == 4:
         return sg.box(*args)
 
@@ -72,7 +72,7 @@ class PlotServer:
         self._landuse_polygons_lock = threading.Lock()
         self._landuse_polygons = None
 
-        self.generate_static_map(make_bounds_polygon(50.77, -2.0, 51.18, -0.9))
+        self.generate_static_map(make_bounds_polygon(50.77, -1.7, 51.08, -0.9))
 
         self._current_plot = DynamicMap(self.compose_overlay_plot, streams=self.callback_streams)
         self.server = pn.serve(self._current_plot, start=False, show=False)
@@ -82,7 +82,7 @@ class PlotServer:
 
         self._thread_pool = ThreadPoolExecutor()
 
-        self._thread_pool.submit(self.generate_static_map, make_bounds_polygon((-1.6, -1.2), (50.8, 51.05)))
+        # self._thread_pool.submit(self.generate_static_map, make_bounds_polygon((-1.6, -1.2), (50.8, 51.05)))
 
     def start(self):
         """
@@ -116,18 +116,17 @@ class PlotServer:
             if not is_null(x_range) and not is_null(y_range):
                 # Construct box around requested bounds
                 bounds_poly = make_bounds_polygon(x_range, y_range)
-                # Check if bounds box is *fully* contained within the cached area polygon
-                if not self._cached_area.contains(bounds_poly):
-                    # Generate new data asynchronously
-                    self._thread_pool.submit(self.generate_static_map, bounds_poly)
+                # Ensure bounds are small enough to render without OOM or heat death of universe
+                if bounds_poly.area < 0.2:
+                    # Check if bounds box is *fully* contained within the cached area polygon
+                    if not self._cached_area.contains(bounds_poly):
+                        # Generate new data asynchronously
+                        self._thread_pool.submit(self.generate_static_map, bounds_poly)
 
-        plot = None
-        for layer in self.layers.values():
-            if plot is None:
-                plot = layer
-            else:
-                plot = plot * layer
-        return plot.opts(width=self.plot_size[0], height=self.plot_size[1])
+        layers = list(self.layers.values())
+        plot = Overlay(layers)
+        print("Updating DynamicMap")
+        return plot.collate().opts(width=self.plot_size[0], height=self.plot_size[1])
 
     def generate_static_map(self, bounds_poly):
         """
@@ -137,9 +136,12 @@ class PlotServer:
         assert self.layers is not None
 
         if self._census_wards is None:
+            print('Ingesting Census Data')
             self.ingest_census_data()
+        print('Querying OSM Landuse')
         self.query_osm_landuse_polygons(bounds_poly)
 
+        print('Overlaying census and OSM polys')
         # Find landuse polygons intersecting/within census wards and merge left
         census_df = gpd.overlay(self._landuse_polygons, self._census_wards, how='intersection').to_crs('EPSG:4326')
         # Estimate the population of landuse polygons from the density of the census ward they are within
@@ -158,7 +160,9 @@ class PlotServer:
 
         # Actually perform the populations scaling
         census_df['population'] = census_df['population'].apply(scale_pop)
+        print(census_df.shape)
         # Construct the GeoViews Polygons
+        print('Constructing Geoviews Polygons')
         residential_pop_polys = gv.Polygons(census_df, vdims=['name', 'population']) \
             .opts(tools=self.tools,
                   active_tools=self.active_tools,
@@ -169,13 +173,18 @@ class PlotServer:
         # Store layer
         with self._layers_lock:
             self.layers['residential'] = residential_pop_polys
-        # self._current_plot.update(x_range=None, y_range=None)
+        try:
+            print('Rendering plot')
+            # Calling the stream event with None kwargs results into plot regenerating without firing bounds update
+            self._current_plot.event(x_range=None, y_range=None)
+        except AttributeError:
+            pass
 
     def query_osm_landuse_polygons(self, bound_poly, landuse='residential'):
         """
         Perform blocking query on OpenStreetMaps Overpass API for objects with the passed landuse.
         Retain only polygons and store in GeoPandas GeoDataFrame
-        :param iterable bbox: bounding box of EPSG:4326 coordinates in OSM Overpass format (South, West, North, East)
+        :param shapely.Polygon bound_poly: bounding box around requested area in EPSG:4326 coordinates
         :param str landuse: OSM landuse key from https://wiki.openstreetmap.org/wiki/Landuse
         """
         if self._cached_area is not None:
@@ -221,14 +230,15 @@ class PlotServer:
             poly = sg.Polygon(locs)
             df_list.append([poly])
         # df_list = [sg.Polygon([nodes[id] for id in element['nodes']]) for element in ways]
+        poly_df = gpd.GeoDataFrame(df_list, columns=['geometry']).set_crs('EPSG:4326')
 
         with self._landuse_polygons_lock:
             # Construct gdf
             # OSM uses Web Mercator so set CRS without projecting as CRS is known
             if self._landuse_polygons is None:
-                self._landuse_polygons = gpd.GeoDataFrame(df_list, columns=['geometry']).set_crs('EPSG:4326')
+                self._landuse_polygons = poly_df
             else:
-                self._landuse_polygons = self._landuse_polygons
+                self._landuse_polygons = self._landuse_polygons.append(poly_df, ignore_index=True)
 
         with self._cached_area_lock:
             if self._cached_area is None:
