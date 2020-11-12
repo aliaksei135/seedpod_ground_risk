@@ -59,7 +59,7 @@ class PlotServer:
     server: Server
     _cached_area: sg.Polygon
     _census_wards: gpd.GeoDataFrame
-    _landuse_polygons: gpd.GeoDataFrame
+    _landuse_polygons: Dict[str, gpd.GeoDataFrame]
     _current_bounds: sg.Polygon
 
     # noinspection PyTypeChecker
@@ -83,7 +83,7 @@ class PlotServer:
         self._census_wards_lock = threading.Lock()
         self._census_wards = None
         self._landuse_polygons_lock = threading.Lock()
-        self._landuse_polygons = None
+        self._landuse_polygons = {}
         self._current_bounds = None
 
         self.generate_static_layers(make_bounds_polygon(50.87, -1.5, 51.00, -1.3))
@@ -153,6 +153,8 @@ class PlotServer:
         """
         # Polygons aren't much use without a base map context
         assert self.layers is not None
+        # TODO: Generalise for arbitrary landuse keys
+        landuse = 'residential'
 
         bounds = bounds_poly.bounds
         if not from_cache:
@@ -162,24 +164,24 @@ class PlotServer:
                 self._progress_callback('Ingesting Census Data')
                 census_future = self._thread_pool.submit(self.ingest_census_data)
                 self._progress_callback('Querying OSM Landuse')
-                osm_future = self._thread_pool.submit(self.query_osm_landuse_polygons, bounds_poly)
+                osm_future = self._thread_pool.submit(self.query_osm_landuse_polygons, bounds_poly, landuse=landuse)
                 wait([census_future])
                 assert self._census_wards is not None
                 bounded_census_wards = self._census_wards.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
                 wait([osm_future])
-                assert self._landuse_polygons is not None
+                assert landuse in self._landuse_polygons
             else:
                 self._progress_callback('Querying OSM Landuse')
-                osm_future = self._thread_pool.submit(self.query_osm_landuse_polygons, bounds_poly)
+                osm_future = self._thread_pool.submit(self.query_osm_landuse_polygons, bounds_poly, landuse=landuse)
                 bounded_census_wards = self._census_wards.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
                 wait([osm_future])
-                assert self._landuse_polygons is not None
+                assert landuse in self._landuse_polygons
         else:
             bounded_census_wards = self._census_wards.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
 
         self._progress_callback('Overlaying census and OSM polys')
         # Find landuse polygons intersecting/within census wards and merge left
-        census_df = gpd.overlay(self._landuse_polygons,
+        census_df = gpd.overlay(self._landuse_polygons[landuse],
                                 bounded_census_wards,
                                 how='intersection')
         # Estimate the population of landuse polygons from the density of the census ward they are within
@@ -191,7 +193,7 @@ class PlotServer:
         # This was found empirically minimising the population error in 10 random villaegs in Hampshire
         # TODO: Scale population in smaller area more robustly
         def scale_pop(x):
-            if 0 < x < 7000:
+            if 0 < x < 3000:
                 v = (-0.0000001 * (x ** 2) + 6) * x
                 print('population scaled from ', x, ' to ', v)
                 return v
@@ -202,7 +204,7 @@ class PlotServer:
         census_df['population'] = census_df['population'].apply(scale_pop)
         # Construct the GeoViews Polygons
         self._progress_callback('Constructing Polygons')
-        residential_pop_polys = gv.Polygons(census_df, vdims=['name', 'population']) \
+        gv_polys = gv.Polygons(census_df, vdims=['name', 'population']) \
             .opts(tools=self.tools,
                   active_tools=self.active_tools,
                   cmap=self.cmap,
@@ -211,7 +213,7 @@ class PlotServer:
                   colorbar=True, colorbar_opts={'title': 'Population'}, show_legend=False)
         # Store layer
         with self._layers_lock:
-            self.layers['residential'] = residential_pop_polys
+            self.layers[landuse] = gv_polys
         try:
             self._progress_callback('Calling plot update')
             # Calling the stream event with None kwargs results into plot regenerating without firing bounds update
@@ -219,7 +221,7 @@ class PlotServer:
         except AttributeError:
             pass
 
-    def query_osm_landuse_polygons(self, bound_poly: sg.Polygon, landuse: str = 'residential') -> NoReturn:
+    def query_osm_landuse_polygons(self, bound_poly: sg.Polygon, landuse: Optional[str] = 'residential') -> NoReturn:
         """
         Perform blocking query on OpenStreetMaps Overpass API for objects with the passed landuse.
         Retain only polygons and store in GeoPandas GeoDataFrame
@@ -275,12 +277,12 @@ class PlotServer:
 
         with self._landuse_polygons_lock:
             # Construct gdf
-            if self._landuse_polygons is None:
+            if landuse not in self._landuse_polygons:
                 self._progress_callback('Initialised landuse polygon cache')
-                self._landuse_polygons = poly_df
+                self._landuse_polygons[landuse] = poly_df
             else:
-                self._landuse_polygons = self._landuse_polygons.append(poly_df)
-                self._landuse_polygons.drop_duplicates(subset='geometry', inplace=True, ignore_index=True)
+                self._landuse_polygons[landuse] = self._landuse_polygons[landuse].append(poly_df)
+                self._landuse_polygons[landuse].drop_duplicates(subset='geometry', inplace=True, ignore_index=True)
 
         with self._cached_area_lock:
             if self._cached_area is None:
