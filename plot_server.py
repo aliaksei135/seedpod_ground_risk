@@ -61,6 +61,7 @@ class PlotServer:
     _census_wards: gpd.GeoDataFrame
     _landuse_polygons: gpd.GeoDataFrame
 
+    # noinspection PyTypeChecker
     def __init__(self, tiles: str = 'Wikipedia', tools: Iterable[str] = None, active_tools: Iterable[str] = None,
                  cmap: str = 'CET_L18',
                  plot_size: Tuple[int, int] = (770, 740),
@@ -99,6 +100,7 @@ class PlotServer:
             self.server.start()
             self._server_thread = threading.Thread(target=self.server.io_loop.start, daemon=True)
         self._server_thread.start()
+        self._progress_callback('Plot Server started')
 
     def stop(self) -> NoReturn:
         """
@@ -108,6 +110,7 @@ class PlotServer:
         if self._server_thread is not None:
             if self._server_thread.is_alive():
                 self._server_thread.join()
+                self._progress_callback('Plot Server stopped')
 
     def compose_overlay_plot(self, x_range: Tuple[float, float] = (-1.6, -1.2),
                              y_range: Tuple[float, float] = (50.8, 51.05)) -> Union[Overlay, Element, DynamicMap]:
@@ -120,29 +123,25 @@ class PlotServer:
         :returns overlay plot of stored layers
         """
         if self._cached_area is not None:
-            print('Cache exists')
+            self._progress_callback('Cache exists')
             if not is_null(x_range) and not is_null(y_range):
                 # Construct box around requested bounds
                 bounds_poly = make_bounds_polygon(x_range, y_range)
                 # Ensure bounds are small enough to render without OOM or heat death of universe
                 if bounds_poly.area < 0.2:
-                    print('Area renderable')
+                    self._progress_callback('Area renderable')
                     # Check if bounds box is *fully* contained within the cached area polygon
                     if not self._cached_area.contains(bounds_poly):
                         # Generate new data asynchronously
-                        print('Starting Async data gen for ', bounds_poly)
-                        # self._thread_pool.submit(self.generate_static_layers, bounds_poly)
                         self.generate_static_layers(bounds_poly)
                     else:
                         pass
                 else:
-                    print('Area too large to render')
-            else:
-                print('None range update')
+                    self._progress_callback('Area too large to render')
 
         layers = list(self.layers.values())
         plot = Overlay(layers)
-        print("Rendering DynamicMap callable result")
+        self._progress_callback("Rendering new map...")
         return plot.opts(width=self.plot_size[0], height=self.plot_size[1])
 
     def generate_static_layers(self, bounds_poly: sg.Polygon) -> NoReturn:
@@ -155,9 +154,9 @@ class PlotServer:
         bounds = bounds_poly.bounds
         if self._census_wards is None:
             # Some gain in concurrently running these
-            print('Ingesting Census Data')
+            self._progress_callback('Ingesting Census Data')
             census_future = self._thread_pool.submit(self.ingest_census_data)
-            print('Querying OSM Landuse')
+            self._progress_callback('Querying OSM Landuse')
             osm_future = self._thread_pool.submit(self.query_osm_landuse_polygons, bounds_poly)
             wait([census_future])
             assert self._census_wards is not None
@@ -165,13 +164,13 @@ class PlotServer:
             wait([osm_future])
             assert self._landuse_polygons is not None
         else:
-            print('Querying OSM Landuse')
+            self._progress_callback('Querying OSM Landuse')
             osm_future = self._thread_pool.submit(self.query_osm_landuse_polygons, bounds_poly)
             bounded_census_wards = self._census_wards.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
             wait([osm_future])
             assert self._landuse_polygons is not None
 
-        print('Overlaying census and OSM polys')
+        self._progress_callback('Overlaying census and OSM polys')
         # Find landuse polygons intersecting/within census wards and merge left
         census_df = gpd.overlay(self._landuse_polygons,
                                 bounded_census_wards,
@@ -192,9 +191,8 @@ class PlotServer:
 
         # Actually perform the populations scaling
         census_df['population'] = census_df['population'].apply(scale_pop)
-        print('Census df shape ', census_df.shape)
         # Construct the GeoViews Polygons
-        print('Constructing Geoviews Polygons')
+        self._progress_callback('Constructing Polygons')
         residential_pop_polys = gv.Polygons(census_df, vdims=['name', 'population']) \
             .opts(tools=self.tools,
                   active_tools=self.active_tools,
@@ -206,7 +204,7 @@ class PlotServer:
         with self._layers_lock:
             self.layers['residential'] = residential_pop_polys
         try:
-            print('Calling plot update')
+            self._progress_callback('Calling plot update')
             # Calling the stream event with None kwargs results into plot regenerating without firing bounds update
             self._current_plot.event(x_range=None, y_range=None)
         except AttributeError:
@@ -264,13 +262,12 @@ class PlotServer:
         # df_list = [sg.Polygon([nodes[id] for id in element['nodes']]) for element in ways]
         assert len(df_list) > 0
         poly_df = gpd.GeoDataFrame(df_list, columns=['geometry']).set_crs('EPSG:4326')
-        print("Landuse polys shape: ", poly_df.shape)
 
         with self._landuse_polygons_lock:
             # Construct gdf
             # OSM uses Web Mercator so set CRS without projecting as CRS is known
             if self._landuse_polygons is None:
-                print('Initialised landuse polys cache')
+                self._progress_callback('Initialised landuse polygon cache')
                 self._landuse_polygons = poly_df
             else:
                 self._landuse_polygons = self._landuse_polygons.append(poly_df, ignore_index=True)

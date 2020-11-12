@@ -13,11 +13,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__()
         self.setupUi(self)
 
-        plot_server = PlotServer()
+        plot_server = PlotServer(progress_callback=self.update_progress)
         plot_server.start()
 
         self.webview.load(plot_server.url)
         self.webview.show()
+
+    def update_progress(self, update_str: str):
+        self.statusBar.showMessage(update_str)
 
 
 if __name__ == '__main__':
