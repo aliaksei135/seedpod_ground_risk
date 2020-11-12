@@ -67,7 +67,8 @@ class PlotServer:
                  active_tools: Optional[Iterable[str]] = None,
                  cmap: str = 'CET_L18',
                  plot_size: Tuple[int, int] = (770, 740),
-                 progress_callback: Optional[Callable[[str], None]] = None):
+                 progress_callback: Optional[Callable[[str], None]] = None,
+                 update_callback: Optional[Callable[[], None]] = None):
         self.tools = ['hover', 'crosshair'] if tools is None else tools
         self.active_tools = ['wheel_zoom'] if active_tools is None else active_tools
         self.cmap = getattr(colorcet, cmap)
@@ -76,6 +77,7 @@ class PlotServer:
         self.callback_streams = [RangeXY()]
         self.plot_size = plot_size
         self._progress_callback = progress_callback
+        self._update_callback = update_callback
 
         self._thread_pool = ThreadPoolExecutor()
         self._cached_area_lock = threading.Lock()
@@ -84,9 +86,9 @@ class PlotServer:
         self._census_wards = None
         self._landuse_polygons_lock = threading.Lock()
         self._landuse_polygons = {}
-        self._current_bounds = None
+        self._current_bounds = make_bounds_polygon(50.87, -1.5, 51.00, -1.3)
 
-        self.generate_static_layers(make_bounds_polygon(50.87, -1.5, 51.00, -1.3))
+        self.generate_static_layers(self._current_bounds)
 
         self._current_plot = DynamicMap(self.compose_overlay_plot, streams=self.callback_streams)
         self.server = pn.serve(self._current_plot, start=False, show=False)
@@ -148,6 +150,7 @@ class PlotServer:
         layers = list(self.layers.values())
         plot = Overlay(layers)
         self._progress_callback("Rendering new map...")
+        self._update_callback()
         return plot.opts(width=self.plot_size[0], height=self.plot_size[1])
 
     def generate_static_layers(self, bounds_poly: sg.Polygon, from_cache: Optional[bool] = False) -> NoReturn:

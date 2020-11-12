@@ -1,6 +1,7 @@
 import sys
 
 from PySide2 import QtCore
+from PySide2.QtGui import QStandardItemModel, QStandardItem
 from PySide2.QtWidgets import *
 
 from plot_server import PlotServer
@@ -13,14 +14,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__()
         self.setupUi(self)
 
-        plot_server = PlotServer(progress_callback=self.update_progress)
-        plot_server.start()
+        self.plot_server = PlotServer(progress_callback=self.update_progress,
+                                      update_callback=self.update_layers_tree)
+        self.plot_server.start()
 
-        self.webview.load(plot_server.url)
+        self.webview.load(self.plot_server.url)
         self.webview.show()
+
+        self.layers_model = QStandardItemModel(self.treeView)
+        self.treeView.setModel(self.layers_model)
 
     def update_progress(self, update_str: str):
         self.statusBar.showMessage(update_str)
+
+    def update_layers_tree(self):
+        self.layers_model.clear()
+        append = self.layers_model.appendRow
+        for k in self.plot_server.layers.keys():
+            item = QStandardItem(k)
+            append(item)
 
 
 if __name__ == '__main__':
