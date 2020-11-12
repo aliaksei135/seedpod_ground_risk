@@ -134,11 +134,14 @@ class PlotServer:
                 # Ensure bounds are small enough to render without OOM or heat death of universe
                 if bounds_poly.area < 0.2:
                     self._progress_callback('Area renderable')
-                    # Check if bounds box is *fully* contained within the cached area polygon,
-                    # if so generate only from cache, otherwise generate new data
-                    # TODO: Generating map synchronously won't scale with more layers
-                    self.generate_static_layers(bounds_poly, from_cache=self._cached_area.contains(bounds_poly))
-                    self._current_bounds = bounds_poly
+                    # If new bounds are contained within existing bounds do nothing
+                    # as polygons are already rendered
+                    if not self._current_bounds.contains(bounds_poly):
+                        # Check if bounds box is *fully* contained within the cached area polygon,
+                        # if so generate only from cache, otherwise generate new data
+                        # TODO: Generating map synchronously won't scale with more layers
+                        self.generate_static_layers(bounds_poly, from_cache=self._cached_area.contains(bounds_poly))
+                        self._current_bounds = bounds_poly
                 else:
                     self._progress_callback('Area too large to render')
 
