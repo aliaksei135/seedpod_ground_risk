@@ -2,7 +2,7 @@ import os
 import threading
 from concurrent.futures import wait
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn
+from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn, Optional
 
 import colorcet
 import geopandas as gpd
@@ -60,12 +60,14 @@ class PlotServer:
     _cached_area: sg.Polygon
     _census_wards: gpd.GeoDataFrame
     _landuse_polygons: gpd.GeoDataFrame
+    _current_bounds: sg.Polygon
 
     # noinspection PyTypeChecker
-    def __init__(self, tiles: str = 'Wikipedia', tools: Iterable[str] = None, active_tools: Iterable[str] = None,
+    def __init__(self, tiles: str = 'Wikipedia', tools: Optional[Iterable[str]] = None,
+                 active_tools: Optional[Iterable[str]] = None,
                  cmap: str = 'CET_L18',
                  plot_size: Tuple[int, int] = (770, 740),
-                 progress_callback: Callable[[str], None] = None):
+                 progress_callback: Optional[Callable[[str], None]] = None):
         self.tools = ['hover', 'crosshair'] if tools is None else tools
         self.active_tools = ['wheel_zoom'] if active_tools is None else active_tools
         self.cmap = getattr(colorcet, cmap)
@@ -82,6 +84,7 @@ class PlotServer:
         self._census_wards = None
         self._landuse_polygons_lock = threading.Lock()
         self._landuse_polygons = None
+        self._current_bounds = None
 
         self.generate_static_layers(make_bounds_polygon(50.87, -1.5, 51.00, -1.3))
 
@@ -112,8 +115,9 @@ class PlotServer:
                 self._server_thread.join()
                 self._progress_callback('Plot Server stopped')
 
-    def compose_overlay_plot(self, x_range: Tuple[float, float] = (-1.6, -1.2),
-                             y_range: Tuple[float, float] = (50.8, 51.05)) -> Union[Overlay, Element, DynamicMap]:
+    def compose_overlay_plot(self, x_range: Optional[Tuple[float, float]] = (-1.6, -1.2),
+                             y_range: Optional[Tuple[float, float]] = (50.8, 51.05)) \
+            -> Union[Overlay, Element, DynamicMap]:
         """
         Compose all generated HoloViews layers in self.layers into a single overlay plot.
         Overlaid in a first-on-the-bottom manner.
@@ -130,12 +134,11 @@ class PlotServer:
                 # Ensure bounds are small enough to render without OOM or heat death of universe
                 if bounds_poly.area < 0.2:
                     self._progress_callback('Area renderable')
-                    # Check if bounds box is *fully* contained within the cached area polygon
-                    if not self._cached_area.contains(bounds_poly):
-                        # Generate new data asynchronously
-                        self.generate_static_layers(bounds_poly)
-                    else:
-                        pass
+                    # Check if bounds box is *fully* contained within the cached area polygon,
+                    # if so generate only from cache, otherwise generate new data
+                    # TODO: Generating map synchronously won't scale with more layers
+                    self.generate_static_layers(bounds_poly, from_cache=self._cached_area.contains(bounds_poly))
+                    self._current_bounds = bounds_poly
                 else:
                     self._progress_callback('Area too large to render')
 
@@ -144,7 +147,7 @@ class PlotServer:
         self._progress_callback("Rendering new map...")
         return plot.opts(width=self.plot_size[0], height=self.plot_size[1])
 
-    def generate_static_layers(self, bounds_poly: sg.Polygon) -> NoReturn:
+    def generate_static_layers(self, bounds_poly: sg.Polygon, from_cache: Optional[bool] = False) -> NoReturn:
         """
         Generate static layers of map
         """
@@ -152,23 +155,27 @@ class PlotServer:
         assert self.layers is not None
 
         bounds = bounds_poly.bounds
-        if self._census_wards is None:
-            # Some gain in concurrently running these
-            self._progress_callback('Ingesting Census Data')
-            census_future = self._thread_pool.submit(self.ingest_census_data)
-            self._progress_callback('Querying OSM Landuse')
-            osm_future = self._thread_pool.submit(self.query_osm_landuse_polygons, bounds_poly)
-            wait([census_future])
-            assert self._census_wards is not None
-            bounded_census_wards = self._census_wards.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
-            wait([osm_future])
-            assert self._landuse_polygons is not None
+        if not from_cache:
+            # TODO: Multiple duplicate statements weaving in and out of concurrency
+            if self._census_wards is None:
+                # Some gain in concurrently running these
+                self._progress_callback('Ingesting Census Data')
+                census_future = self._thread_pool.submit(self.ingest_census_data)
+                self._progress_callback('Querying OSM Landuse')
+                osm_future = self._thread_pool.submit(self.query_osm_landuse_polygons, bounds_poly)
+                wait([census_future])
+                assert self._census_wards is not None
+                bounded_census_wards = self._census_wards.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
+                wait([osm_future])
+                assert self._landuse_polygons is not None
+            else:
+                self._progress_callback('Querying OSM Landuse')
+                osm_future = self._thread_pool.submit(self.query_osm_landuse_polygons, bounds_poly)
+                bounded_census_wards = self._census_wards.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
+                wait([osm_future])
+                assert self._landuse_polygons is not None
         else:
-            self._progress_callback('Querying OSM Landuse')
-            osm_future = self._thread_pool.submit(self.query_osm_landuse_polygons, bounds_poly)
             bounded_census_wards = self._census_wards.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
-            wait([osm_future])
-            assert self._landuse_polygons is not None
 
         self._progress_callback('Overlaying census and OSM polys')
         # Find landuse polygons intersecting/within census wards and merge left
@@ -185,7 +192,9 @@ class PlotServer:
         # TODO: Scale population in smaller area more robustly
         def scale_pop(x):
             if 0 < x < 7000:
-                return (-0.0000001 * (x ** 2) + 6) * x
+                v = (-0.0000001 * (x ** 2) + 6) * x
+                print('population scaled from ', x, ' to ', v)
+                return v
             else:
                 return x
 
@@ -261,16 +270,16 @@ class PlotServer:
             df_list.append([poly])
         # df_list = [sg.Polygon([nodes[id] for id in element['nodes']]) for element in ways]
         assert len(df_list) > 0
+        # OSM uses Web Mercator so set CRS without projecting as CRS is known
         poly_df = gpd.GeoDataFrame(df_list, columns=['geometry']).set_crs('EPSG:4326')
 
         with self._landuse_polygons_lock:
             # Construct gdf
-            # OSM uses Web Mercator so set CRS without projecting as CRS is known
             if self._landuse_polygons is None:
                 self._progress_callback('Initialised landuse polygon cache')
                 self._landuse_polygons = poly_df
             else:
-                self._landuse_polygons = self._landuse_polygons.append(poly_df, ignore_index=True)
+                self._landuse_polygons = self._landuse_polygons.append(poly_df)
                 self._landuse_polygons.drop_duplicates(subset='geometry', inplace=True, ignore_index=True)
 
         with self._cached_area_lock:
@@ -289,7 +298,7 @@ class PlotServer:
             'EPSG:27700').to_crs('EPSG:4326')
         # Import census ward densities
         density_df = pd.read_csv(os.sep.join(('static_data', 'density.csv')), header=0)
-        # TODO: Scale density more robustly
+        # Scale from hectares to m^2
         density_df['area'] = density_df['area'] * 10000
         density_df['density'] = density_df['density'] / 10000
 
