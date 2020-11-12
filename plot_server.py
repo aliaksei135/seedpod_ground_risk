@@ -2,6 +2,7 @@ import os
 import threading
 from concurrent.futures import wait
 from concurrent.futures.thread import ThreadPoolExecutor
+from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn
 
 import colorcet
 import geopandas as gpd
@@ -10,8 +11,9 @@ import pandas as pd
 import panel as pn
 import shapely.geometry as sg
 import shapely.ops as so
+from bokeh.server.server import Server
 from geoviews import tile_sources as gvts
-from holoviews import DynamicMap, Overlay
+from holoviews import DynamicMap, Overlay, Element
 from holoviews.streams import RangeXY
 from numpy import isnan
 
@@ -34,14 +36,14 @@ gv.extension('bokeh')
 gv.output(backend='bokeh')
 
 
-def make_bounds_polygon(*args):
+def make_bounds_polygon(*args: Iterable[float]) -> sg.Polygon:
     if len(args) == 2:
         return sg.box(args[1][0], args[0][0], args[1][1], args[0][1])
     elif len(args) == 4:
         return sg.box(*args)
 
 
-def is_null(values):
+def is_null(values: Any) -> bool:
     try:
         for value in values:
             if value is None or isnan(value):
@@ -53,11 +55,16 @@ def is_null(values):
 
 
 class PlotServer:
+    layers: Dict[str, Union[Overlay, Element]]
+    server: Server
     _cached_area: sg.Polygon
     _census_wards: gpd.GeoDataFrame
     _landuse_polygons: gpd.GeoDataFrame
 
-    def __init__(self, tiles='Wikipedia', tools=None, active_tools=None, cmap='CET_L18', plot_size=(770, 740)):
+    def __init__(self, tiles: str = 'Wikipedia', tools: Iterable[str] = None, active_tools: Iterable[str] = None,
+                 cmap: str = 'CET_L18',
+                 plot_size: Tuple[int, int] = (770, 740),
+                 progress_callback: Callable[[str], None] = None):
         self.tools = ['hover', 'crosshair'] if tools is None else tools
         self.active_tools = ['wheel_zoom'] if active_tools is None else active_tools
         self.cmap = getattr(colorcet, cmap)
@@ -65,6 +72,7 @@ class PlotServer:
         self.layers = {'base': getattr(gvts, tiles)}
         self.callback_streams = [RangeXY()]
         self.plot_size = plot_size
+        self._progress_callback = progress_callback
 
         self._thread_pool = ThreadPoolExecutor()
         self._cached_area_lock = threading.Lock()
@@ -82,7 +90,7 @@ class PlotServer:
         self.url = 'http://localhost:{port}/{prefix}'.format(port=self.server.port, prefix=self.server.prefix) \
             if self.server.address is None else self.server.address
 
-    def start(self):
+    def start(self) -> NoReturn:
         """
         Start the plot server in a daemon thread
         """
@@ -92,7 +100,7 @@ class PlotServer:
             self._server_thread = threading.Thread(target=self.server.io_loop.start, daemon=True)
         self._server_thread.start()
 
-    def stop(self):
+    def stop(self) -> NoReturn:
         """
         Stop the plot server if running
         """
@@ -101,7 +109,8 @@ class PlotServer:
             if self._server_thread.is_alive():
                 self._server_thread.join()
 
-    def compose_overlay_plot(self, x_range=(-1.6, -1.2), y_range=(50.8, 51.05)):
+    def compose_overlay_plot(self, x_range: Tuple[float, float] = (-1.6, -1.2),
+                             y_range: Tuple[float, float] = (50.8, 51.05)) -> Union[Overlay, Element, DynamicMap]:
         """
         Compose all generated HoloViews layers in self.layers into a single overlay plot.
         Overlaid in a first-on-the-bottom manner.
@@ -136,7 +145,7 @@ class PlotServer:
         print("Rendering DynamicMap callable result")
         return plot.opts(width=self.plot_size[0], height=self.plot_size[1])
 
-    def generate_static_layers(self, bounds_poly):
+    def generate_static_layers(self, bounds_poly: sg.Polygon) -> NoReturn:
         """
         Generate static layers of map
         """
@@ -203,7 +212,7 @@ class PlotServer:
         except AttributeError:
             pass
 
-    def query_osm_landuse_polygons(self, bound_poly, landuse='residential'):
+    def query_osm_landuse_polygons(self, bound_poly: sg.Polygon, landuse: str = 'residential') -> NoReturn:
         """
         Perform blocking query on OpenStreetMaps Overpass API for objects with the passed landuse.
         Retain only polygons and store in GeoPandas GeoDataFrame
@@ -273,7 +282,7 @@ class PlotServer:
             else:
                 self._cached_area = so.unary_union([self._cached_area, bound_poly])
 
-    def ingest_census_data(self):
+    def ingest_census_data(self) -> NoReturn:
         """
         Ingest Census boundaries and density values and overlay/merge
         """
