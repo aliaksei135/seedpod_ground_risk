@@ -211,7 +211,6 @@ class PlotServer:
             .opts(tools=self.tools,
                   active_tools=self.active_tools,
                   cmap=self.cmap,
-                  width=1600, height=800,
                   color='population',
                   colorbar=True, colorbar_opts={'title': 'Population'}, show_legend=False)
         # Store layer
