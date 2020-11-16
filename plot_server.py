@@ -197,12 +197,9 @@ class PlotServer:
 
         # Scale to reduce error for smaller, less dense wards
         # This was found empirically minimising the population error in 10 random villaegs in Hampshire
-        # TODO: Scale population in smaller area more robustly
         def scale_pop(x):
             if 0 < x < 3000:
-                v = 0.998 * x + 6
-                print('population scaled from ', x, ' to ', v)
-                return v
+                return 0.998 * x + 6
             else:
                 return x
 
