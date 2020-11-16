@@ -22,7 +22,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.webview.show()
 
         self.layers_model = QStandardItemModel(self.treeView)
+        self.layers_model.itemChanged.connect(self.layer_key_updated)
         self.treeView.setModel(self.layers_model)
+        self.treeView.setEnabled(True)
 
     def update_progress(self, update_str: str):
         self.statusBar.showMessage(update_str)
@@ -32,7 +34,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         append = self.layers_model.appendRow
         for k in self.plot_server.layers.keys():
             item = QStandardItem(k)
+            if k is 'base':
+                item.setEditable(False)
             append(item)
+
+    def layer_key_updated(self, layer):
+        pass
 
 
 if __name__ == '__main__':

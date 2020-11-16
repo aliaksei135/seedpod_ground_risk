@@ -200,7 +200,7 @@ class PlotServer:
         # TODO: Scale population in smaller area more robustly
         def scale_pop(x):
             if 0 < x < 3000:
-                v = (-0.0000001 * (x ** 2) + 6) * x
+                v = 0.998 * x + 6
                 print('population scaled from ', x, ' to ', v)
                 return v
             else:
