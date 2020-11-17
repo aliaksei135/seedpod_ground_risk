@@ -32,7 +32,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def update_layers_tree(self):
         self.layers_model.clear()
         append = self.layers_model.appendRow
-        for k in self.plot_server.layers.keys():
+        for k in self.plot_server._generated_layers.keys():
             item = QStandardItem(k)
             if k is 'base':
                 item.setEditable(False)
