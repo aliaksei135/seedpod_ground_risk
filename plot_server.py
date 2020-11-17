@@ -152,6 +152,7 @@ class PlotServer:
     def generate_static_layers(self, bounds_poly: sg.Polygon) -> NoReturn:
         """
         Generate static layers of map
+        :param shapely.geometry.Polygon bounds_poly: the bounding polygon for which to generate the map
         """
         # Polygons aren't much use without a base map context
         assert self.static_layers is not None
