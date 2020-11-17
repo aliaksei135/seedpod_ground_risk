@@ -19,6 +19,7 @@ from holoviews.streams import RangeXY
 from numpy import isnan
 
 from layer import Layer
+from layers.geojson_layer import GeoJSONLayer
 from layers.residential_layer import ResidentialLayer
 
 gpd.options.use_pygeos = True
@@ -76,7 +77,7 @@ class PlotServer:
         self.cmap = getattr(colorcet, cmap)
         self._layers_lock = threading.Lock()
         self._generated_layers = {'base': getattr(gvts, tiles)}
-        self.static_layers = [ResidentialLayer()]
+        self.static_layers = [GeoJSONLayer('static_data/test_path.json'), ResidentialLayer()]
         self.callback_streams = [RangeXY()]
         self.plot_size = plot_size
         self._progress_callback = progress_callback
