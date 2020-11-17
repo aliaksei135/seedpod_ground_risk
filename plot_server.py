@@ -1,6 +1,5 @@
 import threading
-from concurrent.futures import wait
-from concurrent.futures._base import as_completed
+from concurrent.futures import wait, as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
 from itertools import chain
 from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn, Optional
@@ -11,6 +10,7 @@ import geoviews as gv
 import panel as pn
 import shapely.geometry as sg
 import shapely.ops as so
+import shapely.speedups
 from bokeh.server.server import Server
 from geoviews import tile_sources as gvts
 from holoviews import DynamicMap, Overlay, Element
@@ -18,19 +18,10 @@ from holoviews.element import Geometry
 from holoviews.streams import RangeXY
 from numpy import isnan
 
-# import spatialpandas as spd
-# import dask.dataframe as dd
-# import datashader as ds
-# import datashader.transfer_functions as dstf
-# import datashader.spatial.points as dsp
-# from holoviews.operation.datashader import datashade, shade, spread, dynspread, rasterize
 from layer import Layer
 from layers.residential_layer import ResidentialLayer
 
 gpd.options.use_pygeos = True
-
-import shapely.speedups
-
 shapely.speedups.enable()
 
 gv.extension('bokeh')
@@ -58,7 +49,9 @@ def is_null(values: Any) -> bool:
 class PlotServer:
     static_layers: Iterable[Layer]
     server: Server
+    plot_size: Tuple[int, int]
     _current_bounds: sg.Polygon
+    _cached_area: sg.Polygon
     _generated_layers: Dict[str, Geometry]
 
     # noinspection PyTypeChecker
@@ -68,6 +61,16 @@ class PlotServer:
                  plot_size: Tuple[int, int] = (770, 740),
                  progress_callback: Optional[Callable[[str], None]] = None,
                  update_callback: Optional[Callable[[], None]] = None):
+        """
+        Initialise a Plot Server
+        :param str tiles: a geoviews.tile_sources attribute string from http://geoviews.org/gallery/bokeh/tile_sources.html#bokeh-gallery-tile-sources
+        :param List[str] tools: the bokeh tools to make available for the plot from https://docs.bokeh.org/en/latest/docs/user_guide/tools.html
+        :param List[str] active_tools: the subset of `tools` that should be enabled by default
+        :param cmap: a colorcet attribute string for the colourmap to use from https://colorcet.holoviz.org/user_guide/Continuous.html
+        :param Tuple[int, int] plot_size: the plot size in (width, height) order
+        :param progress_callback: an optional callable that takes a string updating progress
+        :param update_callback: an optional callable that is called before an plot is rendered
+        """
         self.tools = ['hover', 'crosshair'] if tools is None else tools
         self.active_tools = ['wheel_zoom'] if active_tools is None else active_tools
         self.cmap = getattr(colorcet, cmap)
@@ -135,9 +138,6 @@ class PlotServer:
                 # If new bounds are contained within existing bounds do nothing
                 # as polygons are already rendered
                 if not self._current_bounds.contains(bounds_poly):
-                    # Check if bounds box is *fully* contained within the cached area polygon,
-                    # if so generate only from cache, otherwise generate new data
-                    # TODO: Generating map synchronously won't scale with more layers
                     self.generate_static_layers(bounds_poly)
                     self._current_bounds = bounds_poly
                     self._progress_callback("Rendering new map...")
@@ -160,9 +160,11 @@ class PlotServer:
         self._progress_callback('Generating layer data')
         layer_futures = [self._thread_pool.submit(self.generate_layer, layer, bounds_poly) for layer in
                          self.static_layers]
+        # Store generated layers as they are completed
         for future in as_completed(layer_futures):
             layer_key, geom = future.result()
             # Store layer
+            # Lock not needed as this loop is synchronous
             self._generated_layers[layer_key] = geom
 
         try:
