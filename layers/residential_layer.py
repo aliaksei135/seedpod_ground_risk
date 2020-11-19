@@ -3,12 +3,14 @@ import threading
 from typing import NoReturn, Optional
 
 import colorcet
+import datashader as ds
 import geopandas as gpd
 import geoviews as gv
 import pandas as pd
 import requests
 import shapely.geometry as sg
 from holoviews.element import Geometry
+from holoviews.operation.datashader import rasterize
 
 from layer import Layer
 
@@ -17,8 +19,8 @@ class ResidentialLayer(Layer):
     _census_wards: gpd.GeoDataFrame
     _landuse_polygons: gpd.GeoDataFrame
 
-    def __init__(self):
-        super(ResidentialLayer, self).__init__()
+    def __init__(self, **kwargs):
+        super(ResidentialLayer, self).__init__(**kwargs)
         self.key = 'residential'
 
         self._census_wards_lock = threading.Lock()
@@ -60,8 +62,15 @@ class ResidentialLayer(Layer):
             .opts(color='population',
                   cmap=colorcet.CET_L18,
                   colorbar=True, colorbar_opts={'title': 'Population'}, show_legend=False)
-
-        return gv_polys
+        if self.rasterise:
+            raster = rasterize(gv_polys, aggregator=ds.sum('population'),
+                               cmap=colorcet.CET_L18, dynamic=False).options(colorbar=True,
+                                                                             clipping_colors={'0': 'transparent',
+                                                                                              'NaN': 'transparent',
+                                                                                              '-NaN': 'transparent'})
+            return raster
+        else:
+            return gv_polys
 
     def clear_cache(self):
         self._landuse_polygons = gpd.GeoDataFrame()

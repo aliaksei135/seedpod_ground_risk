@@ -14,9 +14,10 @@ class Layer(abc.ABC):
     is_dynamic: bool
     cached_area: Polygon
 
-    def __init__(self):
+    def __init__(self, rasterise: bool = True):
         self.key = ''
         self.is_dynamic = False
+        self.rasterise = rasterise
         self.cached_area = sg.Polygon()
 
     @abc.abstractmethod

@@ -58,6 +58,7 @@ class PlotServer:
     # noinspection PyTypeChecker
     def __init__(self, tiles: str = 'Wikipedia', tools: Optional[Iterable[str]] = None,
                  active_tools: Optional[Iterable[str]] = None,
+                 rasterise: bool = True,
                  cmap: str = 'CET_L18',
                  plot_size: Tuple[int, int] = (770, 740),
                  progress_callback: Optional[Callable[[str], None]] = None,
@@ -67,6 +68,7 @@ class PlotServer:
         :param str tiles: a geoviews.tile_sources attribute string from http://geoviews.org/gallery/bokeh/tile_sources.html#bokeh-gallery-tile-sources
         :param List[str] tools: the bokeh tools to make available for the plot from https://docs.bokeh.org/en/latest/docs/user_guide/tools.html
         :param List[str] active_tools: the subset of `tools` that should be enabled by default
+        :param bool rasterise: Whether to opportunistically raster layers
         :param cmap: a colorcet attribute string for the colourmap to use from https://colorcet.holoviz.org/user_guide/Continuous.html
         :param Tuple[int, int] plot_size: the plot size in (width, height) order
         :param progress_callback: an optional callable that takes a string updating progress
@@ -74,10 +76,12 @@ class PlotServer:
         """
         self.tools = ['hover', 'crosshair'] if tools is None else tools
         self.active_tools = ['wheel_zoom'] if active_tools is None else active_tools
+        self.rasterise = rasterise
         self.cmap = getattr(colorcet, cmap)
         self._layers_lock = threading.Lock()
         self._generated_layers = {'base': getattr(gvts, tiles)}
-        self.static_layers = [GeoJSONLayer('static_data/test_path.json'), ResidentialLayer()]
+        self.static_layers = [ResidentialLayer(rasterise=rasterise),
+                              GeoJSONLayer('static_data/test_path.json', rasterise=False)]
         self.callback_streams = [RangeXY()]
         self.plot_size = plot_size
         self._progress_callback = progress_callback
@@ -138,14 +142,15 @@ class PlotServer:
                 self._progress_callback('Area renderable')
                 # If new bounds are contained within existing bounds do nothing
                 # as polygons are already rendered
-                if not self._current_bounds.contains(bounds_poly):
+                # If rasterising layers this must be called each map update to avoud loss of raster resolution
+                if self.rasterise or not self._current_bounds.contains(bounds_poly):
                     self.generate_static_layers(bounds_poly)
                     self._current_bounds = bounds_poly
                     self._progress_callback("Rendering new map...")
             else:
                 self._progress_callback('Area too large to render')
 
-        plot = Overlay(list(self._generated_layers.values()))
+        plot = Overlay(list(self._generated_layers.values())).collate()
         self._update_callback()
         return plot.opts(width=self.plot_size[0], height=self.plot_size[1],
                          tools=self.tools, active_tools=self.active_tools)
