@@ -1,5 +1,4 @@
 import os
-import threading
 from typing import NoReturn, Optional
 
 import colorcet
@@ -23,9 +22,7 @@ class ResidentialLayer(Layer):
         super(ResidentialLayer, self).__init__(**kwargs)
         self.key = 'residential'
 
-        self._census_wards_lock = threading.Lock()
         self._census_wards = gpd.GeoDataFrame()
-        self._landuse_polygons_lock = threading.Lock()
         self._landuse_polygons = gpd.GeoDataFrame()
 
     def preload_data(self):
@@ -89,9 +86,8 @@ class ResidentialLayer(Layer):
         density_df['area'] = density_df['area'] * 10000
         density_df['density'] = density_df['density'] / 10000
 
-        with self._census_wards_lock:
-            # These share a common UID, so merge together on it and store
-            self._census_wards = census_wards_df.merge(density_df, on='code')
+        # These share a common UID, so merge together on it and store
+        self._census_wards = census_wards_df.merge(density_df, on='code')
 
     def query_osm_landuse_polygons(self, bound_poly: sg.Polygon, landuse: Optional[str] = 'residential') -> NoReturn:
         """
