@@ -21,6 +21,7 @@ from numpy import isnan
 from layer import Layer
 from layers.geojson_layer import GeoJSONLayer
 from layers.residential_layer import ResidentialLayer
+from layers.roads_layer import RoadsLayer
 
 gpd.options.use_pygeos = True
 shapely.speedups.enable()
@@ -81,6 +82,7 @@ class PlotServer:
         self._layers_lock = threading.Lock()
         self._generated_layers = {'base': getattr(gvts, tiles)}
         self.static_layers = [ResidentialLayer(rasterise=rasterise),
+                              RoadsLayer(rasterise=True),
                               GeoJSONLayer('static_data/test_path.json', rasterise=False)]
         self.callback_streams = [RangeXY()]
         self.plot_size = plot_size
