@@ -56,7 +56,7 @@ class RoadsLayer(Layer):
 
     def preload_data(self) -> NoReturn:
         try:
-            self.interpolated_road_populations = dsp.read_parquet(os.sep.join(('static_data', 'timed_tfc.parq')))
+            self.interpolated_road_populations = dsp.read_parquet(os.sep.join(('static_data', 'timed_tfc.parq.res100')))
         except FileNotFoundError:
             # Cannot find the pre-generated parquet file, so we have to generate it from scratch
             # Grab some snacks; this takes a while
@@ -69,7 +69,7 @@ class RoadsLayer(Layer):
             # Ingest simplified road geometries
             self._ingest_road_geometries()
             # Interpolate static traffic counts along road geometries
-            all_points = self._interpolate_traffic_counts(resolution=100)
+            all_points = self._interpolate_traffic_counts(resolution=20)
 
             # Ingest relative weekly variations data and combine with static average traffic counts
             self._apply_relative_traffic_variations(all_points)
@@ -83,9 +83,11 @@ class RoadsLayer(Layer):
                                                           (self.interpolated_road_populations.lat < bounds[2]) &
                                                           (self.interpolated_road_populations.lon < bounds[3])]
         points = gv.Points(bounded_data[bounded_data.hour == self.week_timesteps.index(hour)],
-                           kdims=['lon', 'lat'], vdims=['population']).opts(colorbar=True, color='population')
+                           kdims=['lon', 'lat'], vdims=['population']).opts(colorbar=True, tools=['hover', 'crosshair'],
+                                                                            color='population')
         if self.rasterise:
-            raster = rasterize(points, aggregator=ds.mean('population'), dynamic=False).opts(colorbar=True)
+            raster = rasterize(points, aggregator=ds.mean('population'),
+                               dynamic=False).opts(colorbar=True, tools=['hover', 'crosshair'])
             return raster
         else:
             return points
@@ -171,7 +173,7 @@ class RoadsLayer(Layer):
         gv_timed_tfc_counts_df = pd.DataFrame({'lon': gv_timed_tfc_counts[:, 0], 'lat': gv_timed_tfc_counts[:, 1],
                                                'population': gv_timed_tfc_counts[:, 2],
                                                'hour': gv_timed_tfc_counts[:, 3]})
-        dsp.to_parquet(gv_timed_tfc_counts_df, 'timed_tfc.parq', 'lat', 'lon', shuffle='disk', npartitions=32)
+        dsp.to_parquet(gv_timed_tfc_counts_df, 'timed_tfc.parq.res100', 'lat', 'lon', shuffle='disk', npartitions=32)
         # print(gv_timed_tfc_counts_df.shape)
         # gv_timed_tfc_counts_df.head()
 
