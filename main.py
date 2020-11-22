@@ -14,7 +14,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__()
         self.setupUi(self)
 
-        self.plot_server = PlotServer(progress_callback=self.update_progress,
+        self.plot_server = PlotServer(tiles='Wikipedia',
+                                      rasterise=True,
+                                      progress_callback=self.update_progress,
                                       update_callback=self.update_layers_tree)
         self.plot_server.start()
 

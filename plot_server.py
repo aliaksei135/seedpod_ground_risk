@@ -81,9 +81,9 @@ class PlotServer:
         self.cmap = getattr(colorcet, cmap)
         self._layers_lock = threading.Lock()
         self._generated_layers = {'base': getattr(gvts, tiles)}
-        self.static_layers = [ResidentialLayer(rasterise=rasterise),
-                              RoadsLayer(rasterise=True),
-                              GeoJSONLayer('static_data/test_path.json', rasterise=False)]
+        self.static_layers = [GeoJSONLayer('static_data/test_path.json', rasterise=False),
+                              ResidentialLayer(rasterise=rasterise),
+                              RoadsLayer(rasterise=rasterise)]
         self.callback_streams = [RangeXY()]
         self.plot_size = plot_size
         self._progress_callback = progress_callback
