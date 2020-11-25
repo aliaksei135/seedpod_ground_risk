@@ -1,4 +1,5 @@
 import os
+from time import time
 from typing import NoReturn, List
 
 import datashader as ds
@@ -74,8 +75,7 @@ class RoadsLayer(Layer):
             self._apply_relative_traffic_variations(all_points)
 
     def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, hour: str = 'Monday 15:00') -> Geometry:
-        # roads_raster = DynamicMap(self._generate_points, kdims=['hour'], dynamic=False).redim.values(hour=self.week_timesteps).opts(
-        #     cmap=colorcet.CET_L18, tools=['hover'], colorbar=True)
+        t0 = time()
         bounds = bounds_polygon.bounds
         bounded_data = self.interpolated_road_populations[(self.interpolated_road_populations.lat > bounds[0]) &
                                                           (self.interpolated_road_populations.lon > bounds[1]) &
@@ -87,19 +87,18 @@ class RoadsLayer(Layer):
         if self.rasterise:
             raster = rasterize(points, aggregator=ds.mean('population'),
                                dynamic=False).opts(colorbar=True, tools=['hover', 'crosshair'])
+            t1 = time()
+            print('Roads with raster: ', t1 - t0)
             return raster
         else:
+            t1 = time()
+            print('Roads no raster: ', t1 - t0)
             return points
 
     def clear_cache(self) -> NoReturn:
         self._traffic_counts = gpd.GeoDataFrame()
         self.interpolated_road_populations = None
         self._roads_geometries = gpd.GeoDataFrame()
-
-    def _generate_points(self, hour: str) -> gv.Points:
-        return gv.Points(self.interpolated_road_populations[
-                             self.interpolated_road_populations.hour == self.week_timesteps.index(hour)],
-                         kdims=['lon', 'lat'], vdims=['population']).opts(colorbar=True, color='population')
 
     def _ingest_traffic_counts(self) -> NoReturn:
         """

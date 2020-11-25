@@ -1,4 +1,5 @@
 import os
+from time import time
 from typing import NoReturn, Optional
 
 import colorcet
@@ -28,6 +29,7 @@ class ResidentialLayer(Layer):
         self.ingest_census_data()
 
     def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False) -> Geometry:
+        t0 = time()
         bounds = bounds_polygon.bounds
 
         if not from_cache:
@@ -66,8 +68,12 @@ class ResidentialLayer(Layer):
                                                                              clipping_colors={'0': 'transparent',
                                                                                               'NaN': 'transparent',
                                                                                               '-NaN': 'transparent'})
+            t1 = time()
+            print('Residential with raster: ', t1 - t0)
             return raster
         else:
+            t1 = time()
+            print('Residential no raster: ', t1 - t0)
             return gv_polys
 
     def clear_cache(self):

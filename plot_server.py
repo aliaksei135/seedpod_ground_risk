@@ -175,12 +175,12 @@ class PlotServer:
             # Lock not needed as this loop is synchronous
             self._generated_layers[layer_key] = geom
 
-        try:
-            self._progress_callback('Calling plot update')
-            # Calling the stream event with None kwargs results into plot regenerating without firing bounds update
-            self._current_plot.event(x_range=None, y_range=None)
-        except AttributeError:
-            pass
+        # try:
+        #     self._progress_callback('Calling plot update')
+        #     # Calling the stream event with None kwargs results into plot regenerating without firing bounds update
+        #     # self._current_plot.event(x_range=None, y_range=None)
+        # except AttributeError:
+        #     pass
 
     @staticmethod
     def generate_layer(layer: Layer, bounds_poly: sg.Polygon) -> Tuple[str, Geometry]:
