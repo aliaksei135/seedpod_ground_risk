@@ -12,8 +12,8 @@ from layer import Layer
 class GeoJSONLayer(Layer):
 
     def __init__(self, geojson_filepath, **kwargs):
-        super(GeoJSONLayer, self).__init__(**kwargs)
-        self.key = os.path.basename(geojson_filepath)
+        key = os.path.basename(geojson_filepath)
+        super(GeoJSONLayer, self).__init__(key, **kwargs)
         self.filepath = geojson_filepath
         self.dataframe = gpd.GeoDataFrame()
 

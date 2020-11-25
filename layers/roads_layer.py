@@ -44,9 +44,8 @@ def generate_week_timesteps():
 class RoadsLayer(Layer):
     _traffic_counts: gpd.GeoDataFrame
 
-    def __init__(self, **kwargs):
-        super(RoadsLayer, self).__init__(**kwargs)
-        self.key = 'roads'
+    def __init__(self, key, **kwargs):
+        super(RoadsLayer, self).__init__(key, **kwargs)
 
         self.week_timesteps = generate_week_timesteps()
         self.interpolated_road_populations = None

@@ -18,9 +18,8 @@ class ResidentialLayer(Layer):
     _census_wards: gpd.GeoDataFrame
     _landuse_polygons: gpd.GeoDataFrame
 
-    def __init__(self, **kwargs):
-        super(ResidentialLayer, self).__init__(**kwargs)
-        self.key = 'residential'
+    def __init__(self, key, **kwargs):
+        super(ResidentialLayer, self).__init__(key, **kwargs)
 
         self._census_wards = gpd.GeoDataFrame()
         self._landuse_polygons = gpd.GeoDataFrame()
