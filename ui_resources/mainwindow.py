@@ -3,13 +3,12 @@
 # Form implementation generated from reading ui file 'main.ui',
 # licensing of 'main.ui' applies.
 #
-# Created: Sun Nov  1 12:40:12 2020
+# Created: Wed Nov 25 16:50:34 2020
 #      by: pyside2-uic  running on PySide2 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
 from PySide2 import QtCore, QtWidgets
-
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -29,9 +28,9 @@ class Ui_MainWindow(object):
         self.splitter.setGeometry(QtCore.QRect(0, 0, 1200, 775))
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName("splitter")
-        self.treeView = QtWidgets.QTreeView(self.splitter)
-        self.treeView.setEnabled(False)
-        self.treeView.setObjectName("treeView")
+        self.listWidget = QtWidgets.QListWidget(self.splitter)
+        self.listWidget.setEnabled(False)
+        self.listWidget.setObjectName("listWidget")
         self.webview = QWebEngineView(self.splitter)
         self.webview.setMinimumSize(QtCore.QSize(500, 0))
         self.webview.setObjectName("webview")
@@ -51,6 +50,15 @@ class Ui_MainWindow(object):
         self.statusBar = QtWidgets.QStatusBar(MainWindow)
         self.statusBar.setObjectName("statusBar")
         MainWindow.setStatusBar(self.statusBar)
+        self.actionImport = QtWidgets.QAction(MainWindow)
+        self.actionImport.setObjectName("actionImport")
+        self.actionExport = QtWidgets.QAction(MainWindow)
+        self.actionExport.setObjectName("actionExport")
+        self.actionAbout_Static_Sources = QtWidgets.QAction(MainWindow)
+        self.actionAbout_Static_Sources.setObjectName("actionAbout_Static_Sources")
+        self.menuImport_Export.addAction(self.actionImport)
+        self.menuImport_Export.addAction(self.actionExport)
+        self.menuImport_Export.addAction(self.actionAbout_Static_Sources)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuImport_Export.menuAction())
         self.menubar.addAction(self.menuConfig.menuAction())
@@ -62,9 +70,13 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "SEEDPOD Ground Risk", None, -1))
         self.menuFile.setTitle(QtWidgets.QApplication.translate("MainWindow", "File", None, -1))
-        self.menuImport_Export.setTitle(QtWidgets.QApplication.translate("MainWindow", "Import/Export", None, -1))
+        self.menuImport_Export.setTitle(QtWidgets.QApplication.translate("MainWindow", "Data", None, -1))
         self.menuConfig.setTitle(QtWidgets.QApplication.translate("MainWindow", "Config", None, -1))
         self.menuAbout.setTitle(QtWidgets.QApplication.translate("MainWindow", "About", None, -1))
+        self.actionImport.setText(QtWidgets.QApplication.translate("MainWindow", "Import", None, -1))
+        self.actionExport.setText(QtWidgets.QApplication.translate("MainWindow", "Export", None, -1))
+        self.actionAbout_Static_Sources.setText(
+            QtWidgets.QApplication.translate("MainWindow", "About Static Sources", None, -1))
 
 
 from PySide2.QtWebEngineWidgets import QWebEngineView

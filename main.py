@@ -1,7 +1,7 @@
 import sys
 
 from PySide2 import QtCore
-from PySide2.QtGui import QStandardItemModel, QStandardItem
+from PySide2.QtCore import Qt
 from PySide2.QtWidgets import *
 
 from plot_server import PlotServer
@@ -15,7 +15,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
 
         self.plot_server = PlotServer(tiles='Wikipedia',
-                                      rasterise=True,
+                                      rasterise=False,
                                       progress_callback=self.update_progress,
                                       update_callback=self.update_layers_tree)
         self.plot_server.start()
@@ -23,24 +23,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.webview.load(self.plot_server.url)
         self.webview.show()
 
-        self.layers_model = QStandardItemModel(self.treeView)
-        self.layers_model.itemChanged.connect(self.layer_key_updated)
-        self.treeView.setModel(self.layers_model)
-        self.treeView.setEnabled(True)
+        self.listWidget.setEnabled(True)
+        self.listWidget.setDragDropMode(QAbstractItemView.InternalMove)
+        self.listWidget.itemDoubleClicked.connect(self.layer_edit)
 
     def update_progress(self, update_str: str):
         self.statusBar.showMessage(update_str)
 
     def update_layers_tree(self):
-        self.layers_model.clear()
-        append = self.layers_model.appendRow
-        for k in self.plot_server._generated_layers.keys():
-            item = QStandardItem(k)
-            if k is 'base':
-                item.setEditable(False)
-            append(item)
+        self.listWidget.clear()
+        for layer in self.plot_server._generated_layers.keys():
+            item = QListWidgetItem(layer)
+            item.setCheckState(Qt.CheckState.Checked)
+            self.listWidget.addItem(item)
 
-    def layer_key_updated(self, layer):
+    def layer_edit(self, item):
+        print('Editing ', item)
         pass
 
 
