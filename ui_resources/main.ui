@@ -44,10 +44,10 @@
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
     </property>
-    <widget class="QListWidget" name="listWidget">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
+    <widget class="MapLayersListWidget" name="listWidget">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
     </widget>
     <widget class="QWebEngineView" name="webview" native="true">
      <property name="minimumSize">
@@ -113,14 +113,19 @@
    </property>
   </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QWebEngineView</class>
-   <extends>QWidget</extends>
-   <header>qwebengineview.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
+    <customwidgets>
+        <customwidget>
+            <class>QWebEngineView</class>
+            <extends>QWidget</extends>
+            <header>qwebengineview.h</header>
+            <container>1</container>
+        </customwidget>
+        <customwidget>
+            <class>MapLayersListWidget</class>
+            <extends>QListWidget</extends>
+            <header>maplayerslistwidget.h</header>
+        </customwidget>
+    </customwidgets>
  <resources/>
  <connections/>
 </ui>

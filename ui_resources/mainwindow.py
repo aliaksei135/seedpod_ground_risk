@@ -3,7 +3,7 @@
 # Form implementation generated from reading ui file 'main.ui',
 # licensing of 'main.ui' applies.
 #
-# Created: Wed Nov 25 16:50:34 2020
+# Created: Sat Nov 28 14:48:45 2020
 #      by: pyside2-uic  running on PySide2 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -28,7 +28,7 @@ class Ui_MainWindow(object):
         self.splitter.setGeometry(QtCore.QRect(0, 0, 1200, 775))
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName("splitter")
-        self.listWidget = QtWidgets.QListWidget(self.splitter)
+        self.listWidget = MapLayersListWidget(self.splitter)
         self.listWidget.setEnabled(False)
         self.listWidget.setObjectName("listWidget")
         self.webview = QWebEngineView(self.splitter)
@@ -80,3 +80,4 @@ class Ui_MainWindow(object):
 
 
 from PySide2.QtWebEngineWidgets import QWebEngineView
+from .maplayerslistwidget import MapLayersListWidget
