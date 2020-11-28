@@ -1,10 +1,10 @@
 import sys
+import time
 
-from PySide2 import QtCore
 from PySide2.QtCore import Qt
+from PySide2.QtGui import QPixmap
 from PySide2.QtWidgets import *
 
-from plot_server import PlotServer
 from ui_resources.mainwindow import Ui_MainWindow
 
 
@@ -49,8 +49,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 if __name__ == '__main__':
-    QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
     app = QApplication(sys.argv)
+    pixmap = QPixmap('ui_resources/cascade_splash.png')
+    splash = QSplashScreen(pixmap)
+    splash.setWindowFlags(Qt.WindowStaysOnTopHint)
+    splash.setEnabled(False)
+    splash.setMask(pixmap.mask())
+    splash.show()
+    time.sleep(0.1)  # This seems to fix the splash mask displaying but not the actual image
+    app.processEvents()
+
+    from plot_server import PlotServer
+
     window = MainWindow()
     window.show()
+    splash.finish(window)
     sys.exit(app.exec_())
