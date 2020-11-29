@@ -72,6 +72,7 @@
     <property name="title">
      <string>File</string>
     </property>
+       <addaction name="actionConfiguration"/>
    </widget>
    <widget class="QMenu" name="menuImport_Export">
     <property name="title">
@@ -79,39 +80,44 @@
     </property>
     <addaction name="actionImport"/>
     <addaction name="actionExport"/>
-    <addaction name="actionAbout_Static_Sources"/>
    </widget>
-   <widget class="QMenu" name="menuConfig">
-    <property name="title">
-     <string>Config</string>
-    </property>
-   </widget>
-   <widget class="QMenu" name="menuAbout">
-    <property name="title">
-     <string>About</string>
-    </property>
-   </widget>
+      <widget class="QMenu" name="menuAbout">
+          <property name="title">
+              <string>About</string>
+          </property>
+          <addaction name="actionAbout_Static_Sources"/>
+          <addaction name="actionAbout_App"/>
+      </widget>
    <addaction name="menuFile"/>
    <addaction name="menuImport_Export"/>
-   <addaction name="menuConfig"/>
    <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionImport">
    <property name="text">
-    <string>Import</string>
+       <string>Import</string>
    </property>
   </action>
-  <action name="actionExport">
-   <property name="text">
-    <string>Export</string>
-   </property>
-  </action>
-  <action name="actionAbout_Static_Sources">
-   <property name="text">
-    <string>About Static Sources</string>
-   </property>
-  </action>
+     <action name="actionExport">
+         <property name="text">
+             <string>Export</string>
+         </property>
+     </action>
+     <action name="actionAbout_Static_Sources">
+         <property name="text">
+             <string>About Static Data</string>
+         </property>
+     </action>
+     <action name="actionAbout_App">
+         <property name="text">
+             <string>About App</string>
+         </property>
+     </action>
+     <action name="actionConfiguration">
+         <property name="text">
+             <string>Configuration</string>
+         </property>
+     </action>
  </widget>
     <customwidgets>
         <customwidget>
@@ -126,6 +132,6 @@
             <header>maplayerslistwidget.h</header>
         </customwidget>
     </customwidgets>
- <resources/>
- <connections/>
+    <resources/>
+    <connections/>
 </ui>

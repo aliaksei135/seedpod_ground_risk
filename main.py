@@ -16,8 +16,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.plot_server = PlotServer(tiles='Wikipedia',
                                       rasterise=False,
-                                      progress_callback=self.update_progress,
-                                      update_callback=self.update_layers_list)
+                                      progress_callback=self.status_update,
+                                      update_callback=self.layers_update)
         self.plot_server.start()
 
         self.webview.load(self.plot_server.url)
@@ -29,10 +29,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.listWidget.itemDropped.connect(self.layer_reorder)
         self.listWidget.itemDoubleClicked.connect(self.layer_edit)
 
-    def update_progress(self, update_str: str):
+        self.actionConfiguration.triggered.connect(self.menu_config)
+        self.actionImport.triggered.connect(self.menu_file_import)
+        self.actionExport.triggered.connect(self.menu_file_export)
+        self.actionAbout_Static_Sources.triggered.connect(self.menu_about_static_sources)
+        self.actionAbout_App.triggered.connect(self.menu_about_app)
+
+    def menu_config(self):
+        pass
+
+    def menu_file_import(self):
+        pass
+
+    def menu_file_export(self):
+        pass
+
+    def menu_about_static_sources(self):
+        pass
+
+    def menu_about_app(self):
+        pass
+
+    def status_update(self, update_str: str):
         self.statusBar.showMessage(update_str)
 
-    def update_layers_list(self):
+    def layers_update(self):
         self.listWidget.clear()
         for layer in self.plot_server._generated_layers.keys():
             item = QListWidgetItem(layer)
