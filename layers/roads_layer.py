@@ -56,7 +56,9 @@ class RoadsLayer(Layer):
 
     def preload_data(self) -> NoReturn:
         try:
-            self.interpolated_road_populations = dsp.read_parquet(os.sep.join(('static_data', 'timed_tfc.parq.res100')))
+            # self.interpolated_road_populations = read_parquet_dask(
+            #     os.sep.join(('static_data', 'timed_tfc.parq')))
+            self.interpolated_road_populations = dsp.read_parquet(os.sep.join(('static_data', 'timed_tfc.parq')))
         except FileNotFoundError:
             # Cannot find the pre-generated parquet file, so we have to generate it from scratch
             # Grab some snacks; this takes a while
@@ -139,15 +141,6 @@ class RoadsLayer(Layer):
         # Flatten into continuous list of hourly variations for the week
         relative_variations_flat = (relative_variations_df.iloc[:, 1:] / 100).melt()['value']
 
-        # local_timed_tfc_counts = []
-        # # Iterate through the variation for each hourly slot in the week and scale the population/hr with it
-        # # TODO: Use Dask to map-reduce this
-        # for time_window in relative_variations_flat:
-        #     temp = []
-        #     for idx, row in self._traffic_counts.iterrows():
-        #         temp.append([row.latitude, row.longitude, row.population_per_hour * time_window])
-        #     local_timed_tfc_counts.append(temp)
-
         gv_timed_tfc_counts = None
         all_interp_points = np.array(all_points)
         # Iterate through each hour of the week
@@ -161,22 +154,12 @@ class RoadsLayer(Layer):
             else:
                 gv_timed_tfc_counts = np.concatenate((gv_timed_tfc_counts, stack), axis=0)
 
-        # gv_timed_tfc_counts = []
-        # for hour, hour_counts in enumerate(local_timed_interp_tfc_counts):
-        #     for lat, lon, val in hour_counts:
-        #         gv_timed_tfc_counts.append([lat, lon, val, hour])
-        # del local_timed_interp_tfc_counts
-
         gv_timed_tfc_counts = np.array(gv_timed_tfc_counts)
-        gv_timed_tfc_counts_df = pd.DataFrame({'lon': gv_timed_tfc_counts[:, 0], 'lat': gv_timed_tfc_counts[:, 1],
-                                               'population': gv_timed_tfc_counts[:, 2],
-                                               'hour': gv_timed_tfc_counts[:, 3]})
-        dsp.to_parquet(gv_timed_tfc_counts_df, 'timed_tfc.parq.res100', 'lat', 'lon', shuffle='disk', npartitions=32)
-        # print(gv_timed_tfc_counts_df.shape)
-        # gv_timed_tfc_counts_df.head()
-
-        del gv_timed_tfc_counts
-        del gv_timed_tfc_counts_df
+        gv_timed_tfc_counts_df = gpd.GeoDataFrame(
+            {'geometry': [sg.Point(xy) for xy in zip(gv_timed_tfc_counts[:, 0], gv_timed_tfc_counts[:, 1])],
+             'population': gv_timed_tfc_counts[:, 2],
+             'hour': gv_timed_tfc_counts[:, 3]})
+        dsp.to_parquet(gv_timed_tfc_counts_df, 'timed_tfc.parq', 'lat', 'lon', shuffle='disk', npartitions=32)
 
     def _ingest_road_geometries(self) -> NoReturn:
         """
