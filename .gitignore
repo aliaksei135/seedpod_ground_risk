@@ -203,3 +203,4 @@ compile_commands.json
 #/static_data/*.ods
 /static_data/timed_tfc.parq.res20/
 /static_data/timed_tfc.parq.res100/
+/static_data/timed_tfc.parq/

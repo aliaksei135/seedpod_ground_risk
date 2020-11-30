@@ -1,31 +1,29 @@
 import threading
-from collections import OrderedDict
 from concurrent.futures import wait, as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
-from itertools import chain
 from time import time
 from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn, Optional
 
 import colorcet
 import geopandas as gpd
-import panel as pn
 import shapely.geometry as sg
 import shapely.ops as so
-import shapely.speedups
 from bokeh.server.server import Server
 from geoviews import tile_sources as gvts
 from holoviews import DynamicMap, Overlay, Element
 from holoviews.element import Geometry
 from holoviews.streams import RangeXY
 from numpy import isnan
+from panel import serve
+from shapely.speedups import enable
 
 from layer import Layer
 from layers.geojson_layer import GeoJSONLayer
 from layers.residential_layer import ResidentialLayer
 from layers.roads_layer import RoadsLayer
 
-gpd.options.use_pygeos = True
-shapely.speedups.enable()
+gpd.options.use_pygeos = True  # Use GEOS optimised C++ routines
+enable()  # Enable shapely speedups
 
 
 def make_bounds_polygon(*args: Iterable[float]) -> sg.Polygon:
@@ -79,7 +77,7 @@ class PlotServer:
         self.rasterise = rasterise
         self.cmap = getattr(colorcet, cmap)
         self._base_tiles = {'Base ' + tiles + ' tiles': getattr(gvts, tiles)}
-        self._generated_layers = OrderedDict()
+        self._generated_layers = {}
         self.layer_order = []
         self.layers = [GeoJSONLayer('static_data/test_path.json', rasterise=False),
                        ResidentialLayer('Residential Population', rasterise=rasterise),
@@ -92,11 +90,11 @@ class PlotServer:
         self._thread_pool = ThreadPoolExecutor()
         self._current_bounds = make_bounds_polygon(50.87, -1.5, 51.00, -1.3)
 
-        wait([self._thread_pool.submit(layer.preload_data) for layer in chain(self.layers)])
+        wait([self._thread_pool.submit(layer.preload_data) for layer in self.layers])
         self.generate_layers(self._current_bounds)
 
         self._current_plot = DynamicMap(self.compose_overlay_plot, streams=self.callback_streams)
-        self.server = pn.serve(self._current_plot, start=False, show=False)
+        self.server = serve(self._current_plot, start=False, show=False)
         self._server_thread = None
         self.url = 'http://localhost:{port}/{prefix}'.format(port=self.server.port, prefix=self.server.prefix) \
             if self.server.address is None else self.server.address
