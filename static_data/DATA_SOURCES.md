@@ -1,7 +1,7 @@
 # Static Data Sources
-This project relies on open, largely governmental data sources. In order to avoid polluting this repository and to remain below GitHub's large file limit, the files required are listed below but are not included. 
+This project relies on open, largely governmental data sources. ~~In order to avoid polluting this repository and to remain below GitHub's large file limit, the files required are listed below but are not included.~~ 
 
-These are included in the installer package (TODO), however you are expected to obtain these as part of setting up the development environment.
+These are included in the installer package (TODO), ~~however you are expected to obtain these as part of setting up the development environment.~~
 
 ### Census data
 | Dataset                   | Filename(s)                                                                                                             | Link                                                                                                | Licence                                                                                                                                                                                             | Notes                                                                                                                                                                                                                                    |

@@ -195,9 +195,11 @@ compile_commands.json
 
 *_qmlcache.qrc
 
-/static_data/*.shp
-/static_data/*.shx
-/static_data/*.prj
-/static_data/*.dbf
-/static_data/*.csv
-/static_data/*.ods
+#/static_data/*.shp
+#/static_data/*.shx
+#/static_data/*.prj
+#/static_data/*.dbf
+#/static_data/*.csv
+#/static_data/*.ods
+/static_data/timed_tfc.parq.res20/
+/static_data/timed_tfc.parq.res100/
