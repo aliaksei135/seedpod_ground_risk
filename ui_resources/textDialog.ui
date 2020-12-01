@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+    <class>TextAboutDialog</class>
+    <widget class="QDialog" name="TextAboutDialog">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>500</width>
+                <height>400</height>
+            </rect>
+        </property>
+        <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+            </sizepolicy>
+        </property>
+        <property name="minimumSize">
+            <size>
+                <width>500</width>
+                <height>400</height>
+            </size>
+        </property>
+        <property name="windowTitle">
+            <string>Dialog</string>
+        </property>
+        <property name="sizeGripEnabled">
+            <bool>false</bool>
+        </property>
+        <property name="modal">
+            <bool>true</bool>
+        </property>
+        <widget class="QTextEdit" name="textEdit">
+            <property name="enabled">
+                <bool>true</bool>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>0</x>
+                    <y>0</y>
+                    <width>500</width>
+                    <height>400</height>
+                </rect>
+            </property>
+            <property name="sizePolicy">
+                <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                </sizepolicy>
+            </property>
+            <property name="minimumSize">
+                <size>
+                    <width>500</width>
+                    <height>400</height>
+                </size>
+            </property>
+            <property name="maximumSize">
+                <size>
+                    <width>0</width>
+                    <height>0</height>
+                </size>
+            </property>
+            <property name="autoFormatting">
+                <set>QTextEdit::AutoAll</set>
+            </property>
+            <property name="textInteractionFlags">
+                <set>Qt::NoTextInteraction</set>
+            </property>
+        </widget>
+    </widget>
+    <resources/>
+    <connections/>
+</ui>

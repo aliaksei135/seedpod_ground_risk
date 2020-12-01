@@ -1,11 +1,20 @@
 import sys
 import time
 
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, QFile, QTextStream, QIODevice
 from PySide2.QtGui import QPixmap
 from PySide2.QtWidgets import *
 
 from ui_resources.mainwindow import Ui_MainWindow
+from ui_resources.textdialog import Ui_TextAboutDialog
+
+
+class TextAboutDialog(QDialog):
+    def __init__(self, title):
+        super(TextAboutDialog, self).__init__()
+        self.ui = Ui_TextAboutDialog()
+        self.ui.setupUi(self)
+        self.setWindowTitle(title)
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -45,10 +54,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         pass
 
     def menu_about_static_sources(self):
-        pass
+        dialog = TextAboutDialog('About Data')
+        # TODO: Uncomment when PySide2 >= 5.14 for .setMarkdown
+        # doc = QTextDocument()
+        # doc.setMarkdown(self._read_file('static_data/DATA_SOURCES.md'))
+        # dialog.ui.textEdit.setDocument(doc)
+        dialog.ui.textEdit.setHtml(self._read_file('static_data/DATA_SOURCES.md'))
+        dialog.show()
 
     def menu_about_app(self):
-        pass
+        dialog = TextAboutDialog('About')
+        # TODO: Uncomment when PySide2 >= 5.14 for .setMarkdown
+        # doc = QTextDocument()
+        # doc.setMarkdown(self._read_file('static_data/DATA_SOURCES.md'))
+        # dialog.ui.textEdit.setDocument(doc)
+        dialog.ui.textEdit.setHtml(self._read_file('README.md'))
+        dialog.show()
 
     def status_update(self, update_str: str):
         self.statusBar.showMessage(update_str)
@@ -67,6 +88,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def layer_reorder(self):
         print('Layers reordered')
         self.plot_server.layer_order = [self.listWidget.item(n).text() for n in range(self.listWidget.count())]
+
+    def _read_file(self, file_path: str) -> str:
+        file = QFile(file_path)
+        file.open(QIODevice.ReadOnly)
+        ts = QTextStream(file)
+        string = ts.readAll()
+        return string
 
 
 if __name__ == '__main__':
