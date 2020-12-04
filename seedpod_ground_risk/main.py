@@ -5,8 +5,8 @@ from PySide2.QtCore import Qt, QFile, QTextStream, QIODevice
 from PySide2.QtGui import QPixmap
 from PySide2.QtWidgets import *
 
-from ui_resources.mainwindow import Ui_MainWindow
-from ui_resources.textdialog import Ui_TextAboutDialog
+from seedpod_ground_risk.ui_resources.mainwindow import Ui_MainWindow
+from seedpod_ground_risk.ui_resources.textdialog import Ui_TextAboutDialog
 
 
 class TextAboutDialog(QDialog):
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     time.sleep(0.1)  # This seems to fix the splash mask displaying but not the actual image
     app.processEvents()
 
-    from plot_server import PlotServer
+    from seedpod_ground_risk.plot_server import PlotServer
 
     window = MainWindow()
     window.show()

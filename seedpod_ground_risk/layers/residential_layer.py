@@ -12,7 +12,7 @@ import shapely.geometry as sg
 from holoviews.element import Geometry
 from holoviews.operation.datashader import rasterize
 
-from layer import Layer
+from seedpod_ground_risk.layer import Layer
 
 
 class ResidentialLayer(Layer):

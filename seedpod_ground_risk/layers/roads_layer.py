@@ -14,7 +14,7 @@ from holoviews.operation.datashader import rasterize
 from pyproj import Transformer
 from shapely import geometry as sg
 
-from layer import Layer
+from seedpod_ground_risk.layer import Layer
 
 DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 HOURS_OF_DAY = range(24)
@@ -58,7 +58,8 @@ class RoadsLayer(Layer):
         try:
             # self.interpolated_road_populations = read_parquet_dask(
             #     os.sep.join(('static_data', 'timed_tfc.parq')))
-            self.interpolated_road_populations = dsp.read_parquet(os.sep.join(('static_data', 'timed_tfc.parq')))
+            self.interpolated_road_populations = dsp.read_parquet(
+                os.sep.join(('static_data', 'timed_tfc.parq')))
         except FileNotFoundError:
             # Cannot find the pre-generated parquet file, so we have to generate it from scratch
             # Grab some snacks; this takes a while
@@ -136,8 +137,8 @@ class RoadsLayer(Layer):
         Apply the hourly relative variations from the week average for each count point
         """
         # Ingest data, ignoring header and footer info
-        relative_variations_df = pd.read_excel(os.sep.join(('static_data', 'tra0307.ods')), engine='odf', header=5,
-                                               skipfooter=8)
+        relative_variations_df = pd.read_excel(os.sep.join(('static_data', 'tra0307.ods')), engine='odf',
+                                               header=5, skipfooter=8)
         # Flatten into continuous list of hourly variations for the week
         relative_variations_flat = (relative_variations_df.iloc[:, 1:] / 100).melt()['value']
 
@@ -159,7 +160,8 @@ class RoadsLayer(Layer):
             {'geometry': [sg.Point(xy) for xy in zip(gv_timed_tfc_counts[:, 0], gv_timed_tfc_counts[:, 1])],
              'population': gv_timed_tfc_counts[:, 2],
              'hour': gv_timed_tfc_counts[:, 3]})
-        dsp.to_parquet(gv_timed_tfc_counts_df, 'timed_tfc.parq', 'lat', 'lon', shuffle='disk', npartitions=32)
+        dsp.to_parquet(gv_timed_tfc_counts_df, 'static_data/timed_tfc.parq', 'lat', 'lon', shuffle='disk',
+                       npartitions=32)
 
     def _ingest_road_geometries(self) -> NoReturn:
         """

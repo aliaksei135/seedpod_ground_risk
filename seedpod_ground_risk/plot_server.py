@@ -17,10 +17,10 @@ from numpy import isnan
 from panel import serve
 from shapely.speedups import enable
 
-from layer import Layer
-from layers.geojson_layer import GeoJSONLayer
-from layers.residential_layer import ResidentialLayer
-from layers.roads_layer import RoadsLayer
+from .layer import Layer
+from .layers.geojson_layer import GeoJSONLayer
+from .layers.residential_layer import ResidentialLayer
+from .layers.roads_layer import RoadsLayer
 
 gpd.options.use_pygeos = True  # Use GEOS optimised C++ routines
 enable()  # Enable shapely speedups

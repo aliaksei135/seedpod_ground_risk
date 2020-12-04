@@ -10,6 +10,7 @@
 
 from PySide2 import QtCore, QtWidgets
 
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -81,6 +82,7 @@ class Ui_MainWindow(object):
             QtWidgets.QApplication.translate("MainWindow", "About Static Data", None, -1))
         self.actionAbout_App.setText(QtWidgets.QApplication.translate("MainWindow", "About App", None, -1))
         self.actionConfiguration.setText(QtWidgets.QApplication.translate("MainWindow", "Configuration", None, -1))
+
 
 from PySide2.QtWebEngineWidgets import QWebEngineView
 from .maplayerslistwidget import MapLayersListWidget
