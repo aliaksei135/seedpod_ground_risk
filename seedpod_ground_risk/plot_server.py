@@ -5,7 +5,6 @@ from time import time
 from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn, Optional
 
 import colorcet
-import geopandas as gpd
 import shapely.geometry as sg
 import shapely.ops as so
 from bokeh.server.server import Server
@@ -15,15 +14,11 @@ from holoviews.element import Geometry
 from holoviews.streams import RangeXY
 from numpy import isnan
 from panel import serve
-from shapely.speedups import enable
 
 from .layer import Layer
 from .layers.geojson_layer import GeoJSONLayer
 from .layers.residential_layer import ResidentialLayer
 from .layers.roads_layer import RoadsLayer
-
-gpd.options.use_pygeos = True  # Use GEOS optimised C++ routines
-enable()  # Enable shapely speedups
 
 
 def make_bounds_polygon(*args: Iterable[float]) -> sg.Polygon:

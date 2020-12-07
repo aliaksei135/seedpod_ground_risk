@@ -11,8 +11,12 @@ import requests
 import shapely.geometry as sg
 from holoviews.element import Geometry
 from holoviews.operation.datashader import rasterize
+from shapely import speedups
 
 from seedpod_ground_risk.layer import Layer
+
+gpd.options.use_pygeos = True  # Use GEOS optimised C++ routines
+speedups.enable()  # Enable shapely speedups
 
 
 class ResidentialLayer(Layer):
@@ -64,6 +68,7 @@ class ResidentialLayer(Layer):
         if self.rasterise:
             raster = rasterize(gv_polys, aggregator=ds.sum('population'),
                                cmap=colorcet.CET_L18, dynamic=False).options(colorbar=True,
+                                                                             cmap=colorcet.CET_L18,
                                                                              tools=['hover', 'crosshair'],
                                                                              clipping_colors={'0': 'transparent',
                                                                                               'NaN': 'transparent',

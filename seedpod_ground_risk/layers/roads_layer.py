@@ -2,6 +2,7 @@ import os
 from time import time
 from typing import NoReturn, List
 
+import colorcet
 import datashader as ds
 import datashader.spatial.points as dsp
 import geopandas as gpd
@@ -13,8 +14,12 @@ from holoviews.element import Geometry
 from holoviews.operation.datashader import rasterize
 from pyproj import Transformer
 from shapely import geometry as sg
+from shapely import speedups
 
 from seedpod_ground_risk.layer import Layer
+
+gpd.options.use_pygeos = True  # Use GEOS optimised C++ routines
+speedups.enable()  # Enable shapely speedups
 
 DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 HOURS_OF_DAY = range(24)
@@ -86,10 +91,10 @@ class RoadsLayer(Layer):
                                                           (self.interpolated_road_populations.lon < bounds[3])]
         points = gv.Points(bounded_data[bounded_data.hour == self.week_timesteps.index(hour)],
                            kdims=['lon', 'lat'], vdims=['population']).opts(colorbar=True, tools=['hover', 'crosshair'],
-                                                                            color='population')
+                                                                            cmap=colorcet.CET_L18, color='population')
         if self.rasterise:
             raster = rasterize(points, aggregator=ds.mean('population'),
-                               dynamic=False).opts(colorbar=True, tools=['hover', 'crosshair'])
+                               dynamic=False).opts(colorbar=True, cmap=colorcet.CET_L18, tools=['hover', 'crosshair'])
             t1 = time()
             print('Roads with raster: ', t1 - t0)
             return raster
