@@ -2,7 +2,7 @@ import sys
 import time
 
 from PySide2.QtCore import Qt, QFile, QTextStream, QIODevice
-from PySide2.QtGui import QPixmap
+from PySide2.QtGui import QPixmap, QTextDocument
 from PySide2.QtWidgets import *
 
 from seedpod_ground_risk.ui_resources.mainwindow import Ui_MainWindow
@@ -55,20 +55,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def menu_about_static_sources(self):
         dialog = TextAboutDialog('About Data')
-        # TODO: Uncomment when PySide2 >= 5.14 for .setMarkdown
-        # doc = QTextDocument()
-        # doc.setMarkdown(self._read_file('static_data/DATA_SOURCES.md'))
-        # dialog.ui.textEdit.setDocument(doc)
-        dialog.ui.textEdit.setHtml(self._read_file('static_data/DATA_SOURCES.md'))
+        doc = QTextDocument()
+        doc.setMarkdown(self._read_file('static_data/DATA_SOURCES.md'))
+        dialog.ui.textEdit.setDocument(doc)
         dialog.show()
 
     def menu_about_app(self):
         dialog = TextAboutDialog('About')
-        # TODO: Uncomment when PySide2 >= 5.14 for .setMarkdown
-        # doc = QTextDocument()
-        # doc.setMarkdown(self._read_file('static_data/DATA_SOURCES.md'))
-        # dialog.ui.textEdit.setDocument(doc)
-        dialog.ui.textEdit.setHtml(self._read_file('README.md'))
+        doc = QTextDocument()
+        doc.setMarkdown(self._read_file('static_data/DATA_SOURCES.md'))
+        dialog.ui.textEdit.setDocument(doc)
         dialog.show()
 
     def status_update(self, update_str: str):
