@@ -1,9 +1,9 @@
 import sys
 import time
 
-from PySide2.QtCore import Qt, QFile, QTextStream, QIODevice
+from PySide2.QtCore import Qt
 from PySide2.QtGui import QPixmap, QTextDocument
-from PySide2.QtWidgets import *
+from PySide2.QtWidgets import QDialog, QMainWindow, QApplication, QAbstractItemView, QListWidgetItem, QSplashScreen
 
 from seedpod_ground_risk.ui_resources.mainwindow import Ui_MainWindow
 from seedpod_ground_risk.ui_resources.textdialog import Ui_TextAboutDialog
@@ -24,7 +24,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
 
         self.plot_server = PlotServer(tiles='Wikipedia',
-                                      rasterise=False,
+                                      rasterise=True,
                                       progress_callback=self.status_update,
                                       update_callback=self.layers_update)
         self.plot_server.start()
@@ -54,18 +54,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         pass
 
     def menu_about_static_sources(self):
-        dialog = TextAboutDialog('About Data')
+        self.dialog = TextAboutDialog('About Data')
         doc = QTextDocument()
         doc.setMarkdown(self._read_file('static_data/DATA_SOURCES.md'))
-        dialog.ui.textEdit.setDocument(doc)
-        dialog.show()
+        self.dialog.ui.textEdit.setDocument(doc)
+        self.dialog.show()
 
     def menu_about_app(self):
-        dialog = TextAboutDialog('About')
+        self.dialog = TextAboutDialog('About')
         doc = QTextDocument()
-        doc.setMarkdown(self._read_file('static_data/DATA_SOURCES.md'))
-        dialog.ui.textEdit.setDocument(doc)
-        dialog.show()
+        doc.setMarkdown(self._read_file('README.md'))
+        self.dialog.ui.textEdit.setDocument(doc)
+        self.dialog.show()
 
     def status_update(self, update_str: str):
         self.statusBar.showMessage(update_str)
@@ -86,6 +86,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.plot_server.layer_order = [self.listWidget.item(n).text() for n in range(self.listWidget.count())]
 
     def _read_file(self, file_path: str) -> str:
+        from PySide2.QtCore import QFile
+        from PySide2.QtCore import QTextStream
+        from PySide2.QtCore import QIODevice
+
         file = QFile(file_path)
         file.open(QIODevice.ReadOnly)
         ts = QTextStream(file)
