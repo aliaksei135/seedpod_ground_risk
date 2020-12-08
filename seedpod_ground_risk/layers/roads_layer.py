@@ -66,6 +66,7 @@ class RoadsLayer(Layer):
             self.interpolated_road_populations = dsp.read_parquet(
                 os.sep.join(('static_data', 'timed_tfc.parq')))
         except FileNotFoundError:
+            print("Pregenerated roads data not found")
             # Cannot find the pre-generated parquet file, so we have to generate it from scratch
             # Grab some snacks; this takes a while
             # TODO: Prevent low-spec hardware from even attempting to generate the data

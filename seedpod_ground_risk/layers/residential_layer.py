@@ -109,6 +109,7 @@ class ResidentialLayer(Layer):
         :param str landuse: OSM landuse key from https://wiki.openstreetmap.org/wiki/Landuse
         """
 
+        t0 = time()
         bounds = bound_poly.bounds
         overpass_url = "http://overpass-api.de/api/interpreter"
         query = """
@@ -127,6 +128,7 @@ class ResidentialLayer(Layer):
                       s_bound=bounds[0], w_bound=bounds[1], n_bound=bounds[2], e_bound=bounds[3])
         resp = requests.get(overpass_url, params={'data': query})
         data = resp.json()
+        print("OSM query took ", time() - t0)
 
         ways = [o for o in data['elements'] if o['type'] == 'way']
         nodes = {o['id']: (o['lon'], o['lat']) for o in data['elements'] if o['type'] == 'node'}
