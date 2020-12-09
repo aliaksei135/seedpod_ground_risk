@@ -3,7 +3,8 @@ import time
 
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QPixmap, QTextDocument
-from PySide2.QtWidgets import QDialog, QMainWindow, QApplication, QAbstractItemView, QListWidgetItem, QSplashScreen
+from PySide2.QtWidgets import QDialog, QMainWindow, QApplication, QAbstractItemView, QListWidgetItem, QSplashScreen, \
+    QMessageBox
 
 from seedpod_ground_risk.ui_resources.mainwindow import Ui_MainWindow
 from seedpod_ground_risk.ui_resources.textdialog import Ui_TextAboutDialog
@@ -23,8 +24,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__()
         self.setupUi(self)
 
+        msg_box = QMessageBox()
+        button_clicked = msg_box.question(self, "Use Rasterisation?",
+                                          "Rasterising will reduce the resolution of the plot but generate significantly "
+                                          "faster.")
+        rasterise = (button_clicked == msg_box.Yes)
+
         self.plot_server = PlotServer(tiles='Wikipedia',
-                                      rasterise=True,
+                                      rasterise=rasterise,
                                       progress_callback=self.status_update,
                                       update_callback=self.layers_update)
         self.plot_server.start()
@@ -38,14 +45,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.listWidget.itemDropped.connect(self.layer_reorder)
         self.listWidget.itemDoubleClicked.connect(self.layer_edit)
 
-        self.actionConfiguration.triggered.connect(self.menu_config)
+        self.actionRasterise.triggered.connect(self.menu_config_rasterise)
         self.actionImport.triggered.connect(self.menu_file_import)
         self.actionExport.triggered.connect(self.menu_file_export)
         self.actionAbout_Static_Sources.triggered.connect(self.menu_about_static_sources)
         self.actionAbout_App.triggered.connect(self.menu_about_app)
 
-    def menu_config(self):
-        pass
+    def menu_config_rasterise(self, checked):
+        # TODO: Allow reliable on-the-fly rasterisation switching
+        # self.plot_server.set_rasterise(checked)
+        if not checked:
+            msg_box = QMessageBox()
+            msg_box.warning(self, "Warning", "Not rasterising increases generation and render times significantly!")
 
     def menu_file_import(self):
         pass

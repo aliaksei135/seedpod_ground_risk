@@ -196,3 +196,8 @@ class PlotServer:
             layer_bounds_poly = bounds_poly.difference(layer.cached_area)
         layer.cached_area = so.unary_union([layer.cached_area, bounds_poly])
         return layer.key, layer.generate(layer_bounds_poly, from_cache=from_cache)
+
+    def set_rasterise(self, val: bool) -> None:
+        self.rasterise = val
+        for layer in self.layers:
+            layer.rasterise = val
