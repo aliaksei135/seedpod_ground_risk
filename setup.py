@@ -2,37 +2,60 @@ import os
 import sys
 
 import PySide2
+import distributed
+import fiona
+import geopandas
+import panel
+import pyviz_comms
+import shiboken2
 from cx_Freeze import setup, Executable
 
-qt_plugins_path = os.path.join(PySide2.__path__[0], "Qt", "plugins")
+qt_plugins_path = os.path.join(PySide2.__path__[0], "plugins")
 
 base = None
-if sys.platform == "win32":
-    base = "Win32GUI"
+# Remove cmd prompt window on win32
+# if sys.platform == "win32":
+#     base = "Win32GUI"
 
 options = {
     "build_exe": {
-        # "build_exe": "dist",
-        "optimize": 0,
+        "optimize": 1,  # do not use optimise 2, this removes docstrings, causing build to fail
         "include_files": [
-            os.path.join(qt_plugins_path, "platforms"),  # additional plugins needed by qt at runtime
-            "static_data/2018-MRDB-minimal.dbf",
-            "static_data/2018-MRDB-minimal.prj",
-            "static_data/2018-MRDB-minimal.shp",
-            "static_data/2018-MRDB-minimal.shx",
-            "static_data/DATA_SOURCES.md",
-            "static_data/density.csv",
-            "static_data/dft_traffic_counts_aadf.csv",
-            "static_data/england_wa_2011_clipped.dbf",
-            "static_data/england_wa_2011_clipped.prj",
-            "static_data/england_wa_2011_clipped.shp",
-            "static_data/england_wa_2011_clipped.shx",
-            "static_data/test_path.json",
-            "static_data/timed_tfc.parq.res20.7z",
-            "static_data/tra0307.ods"
+            PySide2.__path__[0],  # additional plugins needed by qt at runtime
+            os.path.join(sys.base_prefix, "Library", "bin", "mkl_intel_thread.dll"),  # LAPACK etc. routines
+            shiboken2.__path__[0],  # C++ bindings
+            distributed.__path__[0],
+            fiona.__path__[0],  # Geospatial primitives
+            geopandas.__path__[0],  # Geopandas requires access to its data dir
+            os.path.join(pyviz_comms.comm_path, "notebook.js"),
+            panel.__path__[0],
+            tuple(["static_data/2018-MRDB-minimal.dbf"] * 2),
+            tuple(["static_data/2018-MRDB-minimal.prj"] * 2),
+            tuple(["static_data/2018-MRDB-minimal.shp"] * 2),
+            tuple(["static_data/2018-MRDB-minimal.shx"] * 2),
+            tuple(["static_data/DATA_SOURCES.md"] * 2),
+            tuple(["static_data/density.csv"] * 2),
+            tuple(["static_data/dft_traffic_counts_aadf.csv"] * 2),
+            tuple(["static_data/england_wa_2011_clipped.dbf"] * 2),
+            tuple(["static_data/england_wa_2011_clipped.prj"] * 2),
+            tuple(["static_data/england_wa_2011_clipped.shp"] * 2),
+            tuple(["static_data/england_wa_2011_clipped.shx"] * 2),
+            tuple(["static_data/test_path.json"] * 2),
+            tuple(["static_data/timed_tfc.parq.res20.7z"] * 2),
+            tuple(["static_data/tra0307.ods"] * 2),
+            "README.md",
+            ("seedpod_ground_risk/ui_resources/cascade_splash.png", "ui_resources/cascade_splash.png")
         ],
         "packages": [
             "PySide2",
+            "shiboken2",
+            "uu",
+            "json",
+            "pyproj.datadir",  # CRS projection data
+            "llvmlite.binding",
+            "pyexpat",
+            "numba.cuda",  # CUDA routines
+            "pyarrow.compute"  # native routines
         ],
         "zip_include_packages": [
             "PySide2",
@@ -40,16 +63,13 @@ options = {
             "PySide2.QtWebEngineWidgets",
             "shiboken2",
             "encodings",
-            "pyviz_comms"
         ],  # reduce size of packages that are used
         "excludes": [
             "tkinter",
-            "unittest",
-            "email",
-            "http",
-            "xml",
             "pydoc",
             "pdb",
+            "IPython",
+            "jupyter"
         ],  # exclude packages that are not really needed
     }
 }
@@ -58,7 +78,8 @@ executables = [Executable("seedpod_ground_risk/main.py", base=base, targetName='
 
 setup(
     name="SEEDPOD Ground Risk",
-    version="0.1a",
+    version="0.1.0",
+    author="Aliaksei Pilko <A.Pilko@soton.ac.uk>",
     description="Ground Risk-to-Life model proof of concept for SEEDPOD",
     options=options,
     executables=executables,
