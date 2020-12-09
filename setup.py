@@ -21,6 +21,7 @@ options = {
     "build_exe": {
         "optimize": 1,  # do not use optimise 2, this removes docstrings, causing build to fail
         "include_files": [
+            # TODO: A lot of the full package includes are unnecessary
             PySide2.__path__[0],  # additional plugins needed by qt at runtime
             os.path.join(sys.base_prefix, "Library", "bin", "mkl_intel_thread.dll"),  # LAPACK etc. routines
             shiboken2.__path__[0],  # C++ bindings
@@ -29,6 +30,7 @@ options = {
             geopandas.__path__[0],  # Geopandas requires access to its data dir
             os.path.join(pyviz_comms.comm_path, "notebook.js"),
             panel.__path__[0],
+            # These are copied to the same relative path in the package
             tuple(["static_data/2018-MRDB-minimal.dbf"] * 2),
             tuple(["static_data/2018-MRDB-minimal.prj"] * 2),
             tuple(["static_data/2018-MRDB-minimal.shp"] * 2),
@@ -47,13 +49,13 @@ options = {
             ("seedpod_ground_risk/ui_resources/cascade_splash.png", "ui_resources/cascade_splash.png")
         ],
         "packages": [
-            "PySide2",
-            "shiboken2",
-            "uu",
+            "PySide2",  # Qt
+            "shiboken2",  # PySide2 C++ bindings
+            "uu",  # Binary data en/decode over ASCII sockets
             "json",
             "pyproj.datadir",  # CRS projection data
-            "llvmlite.binding",
-            "pyexpat",
+            "llvmlite.binding",  # Numba C bindings
+            "pyexpat",  # XML parsing
             "numba.cuda",  # CUDA routines
             "pyarrow.compute"  # native routines
         ],
