@@ -2,7 +2,7 @@ import threading
 from concurrent.futures import wait, as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
 from time import time
-from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn, Optional
+from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn, Optional, List
 
 import colorcet
 import shapely.geometry as sg
@@ -40,7 +40,7 @@ def is_null(values: Any) -> bool:
 
 
 class PlotServer:
-    layers: Iterable[Layer]
+    layers: List[Layer]
     server: Server
     plot_size: Tuple[int, int]
     _current_bounds: sg.Polygon
@@ -52,7 +52,7 @@ class PlotServer:
                  active_tools: Optional[Iterable[str]] = None,
                  rasterise: bool = True,
                  cmap: str = 'CET_L18',
-                 plot_size: Tuple[int, int] = (770, 740),
+                 plot_size: Tuple[int, int] = (760, 735),
                  progress_callback: Optional[Callable[[str], None]] = None,
                  update_callback: Optional[Callable[[], None]] = None):
         """
@@ -75,7 +75,7 @@ class PlotServer:
         self._base_tiles = {'Base ' + tiles + ' tiles': getattr(gvts, tiles)}
         self._generated_layers = {}
         self.layer_order = []
-        self.layers = [GeoJSONLayer('static_data/test_path.json', rasterise=False),
+        self.layers = [GeoJSONLayer('static_data/test_path.json'),
                        ResidentialLayer('Residential Population', rasterise=rasterise),
                        RoadsLayer('Road Traffic Population per Hour', rasterise=rasterise)]
         self.callback_streams = [RangeXY()]
@@ -148,6 +148,7 @@ class PlotServer:
                 self._progress_callback('Area too large to render')
 
         plot = Overlay(list(self._generated_layers.values()))
+
         self._update_callback()
         return plot.opts(width=self.plot_size[0], height=self.plot_size[1],
                          tools=self.tools, active_tools=self.active_tools)
@@ -205,3 +206,8 @@ class PlotServer:
 
     def set_time(self, hour: int) -> None:
         self._time_idx = hour
+
+    def add_geojson_layer(self, filepath: str) -> None:
+        layer = GeoJSONLayer(filepath)
+        layer.preload_data()
+        self.layers.append(layer)

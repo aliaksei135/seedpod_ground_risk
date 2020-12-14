@@ -1,10 +1,11 @@
+import os
 import sys
 import time
 
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QPixmap, QTextDocument
 from PySide2.QtWidgets import QDialog, QMainWindow, QApplication, QAbstractItemView, QListWidgetItem, QSplashScreen, \
-    QMessageBox
+    QMessageBox, QFileDialog
 
 from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps
 from seedpod_ground_risk.ui_resources.mainwindow import Ui_MainWindow
@@ -56,7 +57,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             msg_box.warning(self, "Warning", "Not rasterising increases generation and render times significantly!")
 
     def menu_file_import(self):
-        pass
+        filepath = QFileDialog.getOpenFileName(self, "Import GeoJSON geometry...", os.getcwd(),
+                                               "GeoJSON Files (*.json)")
+        if filepath:
+            self.plot_server.add_geojson_layer(filepath[0])
 
     def menu_file_export(self):
         pass
@@ -112,7 +116,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    pixmap = QPixmap('ui_resources/cascade_splash.png')
+    pixmap = QPixmap('seedpod_ground_risk/ui_resources/cascade_splash.png')
     splash = QSplashScreen(pixmap)
     splash.setWindowFlags(Qt.WindowStaysOnTopHint)
     splash.setEnabled(False)
