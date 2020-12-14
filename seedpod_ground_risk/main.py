@@ -63,7 +63,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.plot_server.add_geojson_layer(filepath[0])
 
     def menu_file_export(self):
-        pass
+        from PySide2.QtCore import QFile
+
+        file_dir = QFileDialog.getExistingDirectory(self, "Save plot image...", os.getcwd(), QFileDialog.ShowDirsOnly)
+        file = QFile(os.path.join(file_dir, 'risk_plot.png'))
+        self.webview.grab().save(file)
 
     def menu_about_static_sources(self):
         self.dialog = TextAboutDialog('About Data')
