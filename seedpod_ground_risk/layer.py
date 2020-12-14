@@ -30,7 +30,7 @@ class Layer(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False) -> Geometry:
+    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Geometry:
         """
         Generate the map of this layer. This is called asynchronously, so cannot access plot_server members.
         :param shapely.geometry.Polygon bounds_polygon: the bounding polygon for which to generate the map

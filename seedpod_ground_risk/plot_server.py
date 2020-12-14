@@ -71,6 +71,7 @@ class PlotServer:
         self.active_tools = ['wheel_zoom'] if active_tools is None else active_tools
         self.rasterise = rasterise
         self.cmap = getattr(colorcet, cmap)
+        self._time_idx = 0
         self._base_tiles = {'Base ' + tiles + ' tiles': getattr(gvts, tiles)}
         self._generated_layers = {}
         self.layer_order = []
@@ -162,7 +163,7 @@ class PlotServer:
 
         layers = {}
         self._progress_callback('Generating layer data')
-        layer_futures = [self._thread_pool.submit(self.generate_layer, layer, bounds_poly) for layer in
+        layer_futures = [self._thread_pool.submit(self.generate_layer, layer, bounds_poly, self._time_idx) for layer in
                          self.layers]
         # Store generated layers as they are completed
         for future in as_completed(layer_futures):
@@ -184,7 +185,7 @@ class PlotServer:
             self._generated_layers.update({k: layers[k] for k in layers.keys() if k not in self._generated_layers})
 
     @staticmethod
-    def generate_layer(layer: Layer, bounds_poly: sg.Polygon) -> Tuple[str, Geometry]:
+    def generate_layer(layer: Layer, bounds_poly: sg.Polygon, hour: int) -> Tuple[str, Geometry]:
         from_cache = False
         layer_bounds_poly = bounds_poly
         if bounds_poly.within(layer.cached_area):
@@ -195,9 +196,12 @@ class PlotServer:
             # Get only the area that needs to be generated
             layer_bounds_poly = bounds_poly.difference(layer.cached_area)
         layer.cached_area = so.unary_union([layer.cached_area, bounds_poly])
-        return layer.key, layer.generate(layer_bounds_poly, from_cache=from_cache)
+        return layer.key, layer.generate(layer_bounds_poly, from_cache=from_cache, hour=hour)
 
     def set_rasterise(self, val: bool) -> None:
         self.rasterise = val
         for layer in self.layers:
             layer.rasterise = val
+
+    def set_time(self, hour: int) -> None:
+        self._time_idx = hour

@@ -20,7 +20,7 @@ class GeoJSONLayer(Layer):
     def preload_data(self) -> NoReturn:
         self.dataframe = gpd.read_file(self.filepath)
 
-    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False) -> Geometry:
+    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Geometry:
         return gv.Contours(self.dataframe).opts(line_width=5)
 
     def clear_cache(self) -> NoReturn:

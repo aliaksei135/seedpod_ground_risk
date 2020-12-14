@@ -32,7 +32,7 @@ class ResidentialLayer(Layer):
     def preload_data(self):
         self.ingest_census_data()
 
-    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False) -> Geometry:
+    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Geometry:
         t0 = time()
         bounds = bounds_polygon.bounds
 

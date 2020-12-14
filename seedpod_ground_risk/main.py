@@ -6,6 +6,7 @@ from PySide2.QtGui import QPixmap, QTextDocument
 from PySide2.QtWidgets import QDialog, QMainWindow, QApplication, QAbstractItemView, QListWidgetItem, QSplashScreen, \
     QMessageBox
 
+from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps
 from seedpod_ground_risk.ui_resources.mainwindow import Ui_MainWindow
 from seedpod_ground_risk.ui_resources.textdialog import Ui_TextAboutDialog
 
@@ -20,15 +21,9 @@ class TextAboutDialog(QDialog):
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
-    def __init__(self):
+    def __init__(self, rasterise=True):
         super(MainWindow, self).__init__()
         self.setupUi(self)
-
-        msg_box = QMessageBox()
-        button_clicked = msg_box.question(self, "Use Rasterisation?",
-                                          "Rasterising will reduce the resolution of the plot but generate significantly "
-                                          "faster.")
-        rasterise = (button_clicked == msg_box.Yes)
 
         self.plot_server = PlotServer(tiles='Wikipedia',
                                       rasterise=rasterise,
@@ -44,6 +39,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.listWidget.setAcceptDrops(True)
         self.listWidget.itemDropped.connect(self.layer_reorder)
         self.listWidget.itemDoubleClicked.connect(self.layer_edit)
+
+        self.timeSlider.valueChanged.connect(self.time_changed)
 
         self.actionRasterise.triggered.connect(self.menu_config_rasterise)
         self.actionImport.triggered.connect(self.menu_file_import)
@@ -96,6 +93,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print('Layers reordered')
         self.plot_server.layer_order = [self.listWidget.item(n).text() for n in range(self.listWidget.count())]
 
+    def time_changed(self, value):
+        labels = generate_week_timesteps()
+        self.plot_server.set_time(value)
+        self.timeSliderLabel.setText(labels[value])
+
     def _read_file(self, file_path: str) -> str:
         from PySide2.QtCore import QFile
         from PySide2.QtCore import QTextStream
@@ -121,7 +123,19 @@ if __name__ == '__main__':
 
     from seedpod_ground_risk.plot_server import PlotServer
 
-    window = MainWindow()
+    msg_box = QMessageBox()
+    msg_box.setDefaultButton(QMessageBox.Yes)
+    button_clicked = msg_box.question(splash, "Use Rasterisation?",
+                                      "Rasterising will reduce the resolution of the plot but generate significantly "
+                                      "faster.",
+                                      QMessageBox.Yes | QMessageBox.No,
+                                      QMessageBox.Yes)
+    app.processEvents()
+    rasterise = (button_clicked == msg_box.Yes)
+
+    window = MainWindow(rasterise=rasterise)
     window.show()
+    window.raise_()
+    window.activateWindow()
     splash.finish(window)
     sys.exit(app.exec_())

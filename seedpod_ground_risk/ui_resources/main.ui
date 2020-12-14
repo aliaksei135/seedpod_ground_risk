@@ -4,10 +4,10 @@
  <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
    <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>1200</width>
-    <height>800</height>
+       <x>0</x>
+       <y>0</y>
+       <width>1216</width>
+       <height>818</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -32,41 +32,105 @@
    <string>SEEDPOD Ground Risk</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QSplitter" name="splitter">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>1200</width>
-      <height>775</height>
-     </rect>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-    <widget class="MapLayersListWidget" name="listWidget">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-    </widget>
-    <widget class="QWebEngineView" name="webview" native="true">
-     <property name="minimumSize">
-      <size>
-       <width>500</width>
-       <height>0</height>
-      </size>
-     </property>
-    </widget>
-   </widget>
+      <widget class="QSplitter" name="splitter">
+          <property name="geometry">
+              <rect>
+                  <x>0</x>
+                  <y>20</y>
+                  <width>1211</width>
+                  <height>761</height>
+              </rect>
+          </property>
+          <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+              </sizepolicy>
+          </property>
+          <property name="minimumSize">
+              <size>
+                  <width>1211</width>
+                  <height>761</height>
+              </size>
+          </property>
+          <property name="maximumSize">
+              <size>
+                  <width>0</width>
+                  <height>0</height>
+              </size>
+          </property>
+          <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+          </property>
+          <widget class="MapLayersListWidget" name="listWidget">
+              <property name="enabled">
+                  <bool>false</bool>
+              </property>
+          </widget>
+          <widget class="QWebEngineView" name="webview" native="true">
+              <property name="minimumSize">
+                  <size>
+                      <width>500</width>
+                      <height>0</height>
+                  </size>
+              </property>
+          </widget>
+      </widget>
+      <widget class="QSlider" name="timeSlider">
+          <property name="geometry">
+              <rect>
+                  <x>760</x>
+                  <y>0</y>
+                  <width>441</width>
+                  <height>22</height>
+              </rect>
+          </property>
+          <property name="maximum">
+              <number>167</number>
+          </property>
+          <property name="pageStep">
+              <number>3</number>
+          </property>
+          <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="tickPosition">
+              <enum>QSlider::TicksAbove</enum>
+          </property>
+          <property name="tickInterval">
+              <number>12</number>
+          </property>
+      </widget>
+      <widget class="QLabel" name="timeSliderLabel">
+          <property name="geometry">
+              <rect>
+                  <x>590</x>
+                  <y>0</y>
+                  <width>161</width>
+                  <height>20</height>
+              </rect>
+          </property>
+          <property name="font">
+              <font>
+                  <pointsize>11</pointsize>
+              </font>
+          </property>
+          <property name="text">
+              <string>Time of Week</string>
+          </property>
+          <property name="alignment">
+              <set>Qt::AlignCenter</set>
+          </property>
+      </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1200</width>
-     <height>32</height>
-    </rect>
+       <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>1216</width>
+           <height>21</height>
+       </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">

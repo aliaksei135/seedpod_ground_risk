@@ -20,7 +20,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1200, 800)
+        MainWindow.resize(1216, 818)
         sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -43,7 +43,11 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(u"centralwidget")
         self.splitter = QSplitter(self.centralwidget)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setGeometry(QRect(0, 0, 1200, 775))
+        self.splitter.setGeometry(QRect(0, 20, 1211, 761))
+        sizePolicy.setHeightForWidth(self.splitter.sizePolicy().hasHeightForWidth())
+        self.splitter.setSizePolicy(sizePolicy)
+        self.splitter.setMinimumSize(QSize(1211, 761))
+        self.splitter.setMaximumSize(QSize(0, 0))
         self.splitter.setOrientation(Qt.Horizontal)
         self.listWidget = MapLayersListWidget(self.splitter)
         self.listWidget.setObjectName(u"listWidget")
@@ -53,10 +57,25 @@ class Ui_MainWindow(object):
         self.webview.setObjectName(u"webview")
         self.webview.setMinimumSize(QSize(500, 0))
         self.splitter.addWidget(self.webview)
+        self.timeSlider = QSlider(self.centralwidget)
+        self.timeSlider.setObjectName(u"timeSlider")
+        self.timeSlider.setGeometry(QRect(760, 0, 441, 22))
+        self.timeSlider.setMaximum(167)
+        self.timeSlider.setPageStep(3)
+        self.timeSlider.setOrientation(Qt.Horizontal)
+        self.timeSlider.setTickPosition(QSlider.TicksAbove)
+        self.timeSlider.setTickInterval(12)
+        self.timeSliderLabel = QLabel(self.centralwidget)
+        self.timeSliderLabel.setObjectName(u"timeSliderLabel")
+        self.timeSliderLabel.setGeometry(QRect(590, 0, 161, 20))
+        font = QFont()
+        font.setPointSize(11)
+        self.timeSliderLabel.setFont(font)
+        self.timeSliderLabel.setAlignment(Qt.AlignCenter)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1200, 32))
+        self.menubar.setGeometry(QRect(0, 0, 1216, 21))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuImport_Export = QMenu(self.menubar)
@@ -80,7 +99,6 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
 
         QMetaObject.connectSlotsByName(MainWindow)
-
     # setupUi
 
     def retranslateUi(self, MainWindow):
@@ -90,7 +108,9 @@ class Ui_MainWindow(object):
         self.actionAbout_Static_Sources.setText(QCoreApplication.translate("MainWindow", u"About Static Data", None))
         self.actionAbout_App.setText(QCoreApplication.translate("MainWindow", u"About App", None))
         self.actionRasterise.setText(QCoreApplication.translate("MainWindow", u"Rasterise", None))
+        self.timeSliderLabel.setText(QCoreApplication.translate("MainWindow", u"Time of Week", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"Config", None))
         self.menuImport_Export.setTitle(QCoreApplication.translate("MainWindow", u"Data", None))
         self.menuAbout.setTitle(QCoreApplication.translate("MainWindow", u"About", None))
     # retranslateUi
+

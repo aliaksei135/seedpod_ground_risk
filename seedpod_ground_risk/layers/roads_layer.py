@@ -83,14 +83,14 @@ class RoadsLayer(Layer):
             # Ingest relative weekly variations data and combine with static average traffic counts
             self._apply_relative_traffic_variations(all_points)
 
-    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, hour: str = 'Monday 15:00') -> Geometry:
+    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, hour: int = 0, **kwargs) -> Geometry:
         t0 = time()
         bounds = bounds_polygon.bounds
         bounded_data = self.interpolated_road_populations[(self.interpolated_road_populations.lat > bounds[0]) &
                                                           (self.interpolated_road_populations.lon > bounds[1]) &
                                                           (self.interpolated_road_populations.lat < bounds[2]) &
                                                           (self.interpolated_road_populations.lon < bounds[3])]
-        points = gv.Points(bounded_data[bounded_data.hour == self.week_timesteps.index(hour)],
+        points = gv.Points(bounded_data[bounded_data.hour == hour],
                            kdims=['lon', 'lat'], vdims=['population']).opts(colorbar=True, tools=['hover', 'crosshair'],
                                                                             cmap=colorcet.CET_L18, color='population')
         if self.rasterise:
