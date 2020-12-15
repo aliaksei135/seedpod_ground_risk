@@ -3,10 +3,10 @@ import sys
 import time
 from multiprocessing.connection import Connection
 
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, QRect
 from PySide2.QtGui import QPixmap, QTextDocument
 from PySide2.QtWidgets import QDialog, QMainWindow, QApplication, QAbstractItemView, QListWidgetItem, QSplashScreen, \
-    QMessageBox, QFileDialog
+    QMessageBox, QFileDialog, QSlider, QLabel
 
 from seedpod_ground_risk.ui_resources.mainwindow import Ui_MainWindow
 from seedpod_ground_risk.ui_resources.textdialog import Ui_TextAboutDialog
@@ -58,6 +58,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.listWidget.itemDropped.connect(self.layer_reorder)
         self.listWidget.itemDoubleClicked.connect(self.layer_edit)
 
+        self.timeSlider = QSlider(Qt.Horizontal)
+        self.timeSlider.setObjectName(u"timeSlider")
+        self.timeSlider.setGeometry(QRect(760, 0, 441, 22))
+        self.timeSlider.setMaximum(167)
+        self.timeSlider.setPageStep(3)
+        # self.timeSlider.setOrientation(Qt.Horizontal)
+        self.timeSlider.setTickPosition(QSlider.TicksAbove)
+        self.timeSlider.setTickInterval(12)
+        self.toolBar.addWidget(self.timeSlider)
+        self.timeSliderLabel = QLabel("Time of Week")
+        self.timeSliderLabel.setObjectName(u"timeSliderLabel")
+        self.timeSliderLabel.setGeometry(QRect(590, 0, 161, 20))
+        self.toolBar.addWidget(self.timeSliderLabel)
         self.timeSlider.valueChanged.connect(self.time_changed)
 
         self.actionRasterise.triggered.connect(self.menu_config_rasterise)
