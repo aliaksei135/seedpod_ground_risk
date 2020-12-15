@@ -80,8 +80,8 @@ class PlotServer:
                        RoadsLayer('Road Traffic Population per Hour', rasterise=rasterise)]
         self.callback_streams = [RangeXY()]
         self.plot_size = plot_size
-        self._progress_callback = progress_callback
-        self._update_callback = update_callback
+        self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
+        self._update_callback = update_callback if update_callback is not None else lambda *args: None
 
         self._thread_pool = ThreadPoolExecutor()
         self._current_bounds = make_bounds_polygon(50.87, -1.5, 51.00, -1.3)
