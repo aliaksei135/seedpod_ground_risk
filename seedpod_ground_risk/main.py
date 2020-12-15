@@ -93,15 +93,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def menu_file_import(self):
         filepath = QFileDialog.getOpenFileName(self, "Import GeoJSON geometry...", os.getcwd(),
                                                "GeoJSON Files (*.json)")
-        if filepath:
+        if filepath[0]:
             self.plot_server.add_geojson_layer(filepath[0])
 
     def menu_file_export(self):
         from PySide2.QtCore import QFile
 
         file_dir = QFileDialog.getExistingDirectory(self, "Save plot image...", os.getcwd(), QFileDialog.ShowDirsOnly)
-        file = QFile(os.path.join(file_dir, 'risk_plot.png'))
-        self.webview.grab().save(file)
+        if file_dir:
+            file = QFile(os.path.join(file_dir, 'risk_plot.png'))
+            self.webview.grab().save(file)
 
     def menu_about_static_sources(self):
         self.dialog = TextAboutDialog('About Data')
