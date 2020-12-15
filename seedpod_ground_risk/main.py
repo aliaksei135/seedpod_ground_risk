@@ -1,13 +1,13 @@
 import os
 import sys
 import time
+from multiprocessing.connection import Connection
 
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QPixmap, QTextDocument
 from PySide2.QtWidgets import QDialog, QMainWindow, QApplication, QAbstractItemView, QListWidgetItem, QSplashScreen, \
     QMessageBox, QFileDialog
 
-from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps
 from seedpod_ground_risk.ui_resources.mainwindow import Ui_MainWindow
 from seedpod_ground_risk.ui_resources.textdialog import Ui_TextAboutDialog
 
@@ -20,9 +20,26 @@ class TextAboutDialog(QDialog):
         self.setWindowTitle(title)
 
 
+def start_plot_server(pipe_in: Connection, rasterise):
+    from seedpod_ground_risk.plot_server import PlotServer
+
+    plot_server = PlotServer(tiles='Wikipedia',
+                             rasterise=rasterise, )
+
+    plot_server.start()
+    pipe_in.send(plot_server.url)
+    while True:
+        time.sleep(0.2)
+
+
 class MainWindow(QMainWindow, Ui_MainWindow):
 
-    def __init__(self, rasterise=True):
+    def __init__(self):
+
+        # pipe_out, pipe_in = Pipe(False)
+        # plot_proc = Process(target=start_plot_server, args=(pipe_in, rasterise), daemon=True)
+        # plot_proc.start()
+
         super(MainWindow, self).__init__()
         self.setupUi(self)
 
@@ -48,6 +65,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionExport.triggered.connect(self.menu_file_export)
         self.actionAbout_Static_Sources.triggered.connect(self.menu_about_static_sources)
         self.actionAbout_App.triggered.connect(self.menu_about_app)
+
+        # url = pipe_out.recv()
+        # self.webview.load(url)
+        # self.webview.show()
 
     def menu_config_rasterise(self, checked):
         # TODO: Allow reliable on-the-fly rasterisation switching
@@ -102,7 +123,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.plot_server.layer_order = [self.listWidget.item(n).text() for n in range(self.listWidget.count())]
 
     def time_changed(self, value):
-        labels = generate_week_timesteps()
+        try:
+            labels = generate_week_timesteps()
+        except NameError:
+            from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps
+            labels = generate_week_timesteps()
         self.plot_server.set_time(value)
         self.timeSliderLabel.setText(labels[value])
 
@@ -141,7 +166,7 @@ if __name__ == '__main__':
     app.processEvents()
     rasterise = (button_clicked == msg_box.Yes)
 
-    window = MainWindow(rasterise=rasterise)
+    window = MainWindow()
     window.show()
     window.raise_()
     window.activateWindow()
