@@ -78,10 +78,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionExport.triggered.connect(self.menu_file_export)
         self.actionAbout_Static_Sources.triggered.connect(self.menu_about_static_sources)
         self.actionAbout_App.triggered.connect(self.menu_about_app)
+        self.actionGenerate.triggered.connect(self.menu_generate)
 
         # url = pipe_out.recv()
         # self.webview.load(url)
         # self.webview.show()
+
+    def menu_generate(self):
+        self.plot_server.generate_map()
 
     def menu_config_rasterise(self, checked):
         # TODO: Allow reliable on-the-fly rasterisation switching
