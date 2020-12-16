@@ -10,20 +10,30 @@ import pyviz_comms
 import shiboken2
 from cx_Freeze import setup, Executable
 
-qt_plugins_path = os.path.join(PySide2.__path__[0], "plugins")
-
 base = None
 # Remove cmd prompt window on win32
 # if sys.platform == "win32":
 #     base = "Win32GUI"
 
+platform_includes = []
+if sys.platform.startswith('win'):
+    qt_plugins_path = os.path.join(PySide2.__path__[0], "plugins")
+    platform_includes += [
+        os.path.join(sys.base_prefix, "Library", "bin", "mkl_intel_thread.dll"),  # LAPACK etc. routines
+    ]
+elif sys.platform.startswith('linux'):
+    qt_plugins_path = os.path.join(PySide2.__path__[0], "Qt", "plugins", "platforms")
+    platform_includes += [
+        (os.path.join(sys.base_prefix, "lib", "libspatialindex_c.so"), "spatialindex_c.so")
+    ]
+
 options = {
     "build_exe": {
         "optimize": 1,  # do not use optimise 2, this removes docstrings, causing build to fail
-        "include_files": [
+        "include_files": platform_includes + [
+            qt_plugins_path,
             # TODO: A lot of the full package includes are unnecessary
             PySide2.__path__[0],  # additional plugins needed by qt at runtime
-            os.path.join(sys.base_prefix, "Library", "bin", "mkl_intel_thread.dll"),  # LAPACK etc. routines
             shiboken2.__path__[0],  # C++ bindings
             distributed.__path__[0],
             fiona.__path__[0],  # Geospatial primitives
@@ -57,7 +67,7 @@ options = {
             "llvmlite.binding",  # Numba C bindings
             "pyexpat",  # XML parsing
             "numba.cuda",  # CUDA routines
-            "pyarrow.compute"  # native routines
+            "pyarrow.compute",  # native routines
         ],
         "zip_include_packages": [
             "PySide2",
