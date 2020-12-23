@@ -7,6 +7,7 @@ from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn, Option
 import colorcet
 import shapely.geometry as sg
 import shapely.ops as so
+from bokeh.io import curdoc
 from bokeh.server.server import Server
 from geoviews import tile_sources as gvts
 from holoviews import DynamicMap, Overlay, Element
@@ -87,7 +88,7 @@ class PlotServer:
         self._update_callback = update_callback if update_callback is not None else lambda *args: None
 
         self._thread_pool = ThreadPoolExecutor()
-        self._current_bounds = make_bounds_polygon(50.87, -1.5, 51.00, -1.3)
+        self._current_bounds = make_bounds_polygon(50.85, -1.45, 50.95, -1.35)
 
         wait([self._thread_pool.submit(layer.preload_data) for layer in self.layers])
         self.generate_layers(self._current_bounds)
@@ -134,7 +135,9 @@ class PlotServer:
     def generate_map(self):
         if self.plot_on_action:
             self._plot_action_allowed = True
-            self.callback_streams[0].event(x_range=self._x_range, y_range=self._y_range)
+            doc = curdoc()
+            doc.add_next_tick_callback(
+                lambda *args: self.callback_streams[0].event(x_range=self._x_range, y_range=self._y_range))
 
     def compose_overlay_plot(self, x_range: Optional[Tuple[float, float]] = (-1.6, -1.2),
                              y_range: Optional[Tuple[float, float]] = (50.8, 51.05)) \
@@ -150,6 +153,7 @@ class PlotServer:
         :returns: overlay plot of stored layers
         """
         if not self.plot_on_action or self._plot_action_allowed:
+            self._plot_action_allowed = False
             if not is_null(x_range) and not is_null(y_range):
                 # Construct box around requested bounds
                 bounds_poly = make_bounds_polygon(x_range, y_range)
@@ -170,7 +174,6 @@ class PlotServer:
         plot = Overlay(list(self._generated_layers.values()))
 
         self._update_callback()
-        self._plot_action_allowed = False
         return plot.opts(width=self.plot_size[0], height=self.plot_size[1],
                          tools=self.tools, active_tools=self.active_tools)
 
@@ -207,7 +210,8 @@ class PlotServer:
             self._generated_layers.update({k: layers[k] for k in layers.keys() if k not in self._generated_layers})
 
     @staticmethod
-    def generate_layer(layer: Layer, bounds_poly: sg.Polygon, hour: int) -> Tuple[str, Geometry]:
+    def generate_layer(layer: Layer, bounds_poly: sg.Polygon, hour: int) -> Union[
+        Tuple[str, Geometry], Tuple[str, None]]:
         from_cache = False
         layer_bounds_poly = bounds_poly
         if bounds_poly.within(layer.cached_area):
@@ -218,7 +222,12 @@ class PlotServer:
             # Get only the area that needs to be generated
             layer_bounds_poly = bounds_poly.difference(layer.cached_area)
         layer.cached_area = so.unary_union([layer.cached_area, bounds_poly])
-        return layer.key, layer.generate(layer_bounds_poly, from_cache=from_cache, hour=hour)
+        try:
+            result = layer.key, layer.generate(layer_bounds_poly, from_cache=from_cache, hour=hour)
+            return result
+        except Exception as e:
+            print(e)
+            return layer.key + ' FAILED', None
 
     def set_rasterise(self, val: bool) -> None:
         self.rasterise = val

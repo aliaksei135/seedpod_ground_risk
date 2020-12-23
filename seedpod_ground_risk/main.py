@@ -1,15 +1,83 @@
+import multiprocessing
+
 import os
 import sys
 import time
-from multiprocessing.connection import Connection
 
-from PySide2.QtCore import Qt, QRect
+print("Builtin modules imported")
+from PySide2.QtCore import Qt, QRect, QObject, Signal, QRunnable, Slot, QThreadPool
+
+print("QTCore imported")
 from PySide2.QtGui import QPixmap, QTextDocument
-from PySide2.QtWidgets import QDialog, QMainWindow, QApplication, QAbstractItemView, QListWidgetItem, QSplashScreen, \
+
+print("QtGUI imported")
+from PySide2.QtWidgets import QDialog, QMainWindow, QApplication, QListWidgetItem, QSplashScreen, \
     QMessageBox, QFileDialog, QSlider, QLabel
 
+print("Qt modules imported")
 from seedpod_ground_risk.ui_resources.mainwindow import Ui_MainWindow
 from seedpod_ground_risk.ui_resources.textdialog import Ui_TextAboutDialog
+
+print("Layer modules imported")
+
+
+class PlotWorkerSignals(QObject):
+    init = Signal(str, bool)
+    ready = Signal(str)
+    set_time = Signal(int)
+    generate = Signal()
+    update_status = Signal(str)
+    update_layers = Signal(list)
+    add_geojson_layer = Signal(str)
+
+
+class PlotWorker(QRunnable):
+    def __init__(self, *args, **kwargs):
+        super(PlotWorker, self).__init__()
+
+        self.signals = PlotWorkerSignals()
+        self.signals.init.connect(self.init)
+        self.signals.generate.connect(self.generate)
+        self.signals.set_time.connect(self.set_time)
+        self.signals.add_geojson_layer.connect(self.add_geojson_layer)
+
+        self.plot_server = None
+
+    @Slot()
+    def run(self) -> None:
+        while True:
+            time.sleep(0.1)
+
+    @Slot(str, bool)
+    def init(self, tiles='Wikipedia', rasterise=True):
+        from seedpod_ground_risk.plot_server import PlotServer
+
+        self.plot_server = PlotServer(tiles=tiles,
+                                      rasterise=rasterise,
+                                      progress_callback=self.status_update,
+                                      update_callback=self.layers_update)
+        self.plot_server.start()
+        self.signals.ready.emit(self.plot_server.url)
+
+    @Slot()
+    def generate(self):
+        self.plot_server.generate_map()
+        self.status_update("Update queued, move map to trigger")
+
+    @Slot(str)
+    def add_geojson_layer(self, path):
+        self.plot_server.add_geojson_layer(path)
+
+    @Slot(int)
+    def set_time(self, hour):
+        self.plot_server.set_time(hour)
+
+    def layers_update(self):
+        layers = list(self.plot_server._generated_layers.keys())
+        self.signals.update_layers.emit(layers)
+
+    def status_update(self, status):
+        self.signals.update_status.emit(status)
 
 
 class TextAboutDialog(QDialog):
@@ -20,42 +88,25 @@ class TextAboutDialog(QDialog):
         self.setWindowTitle(title)
 
 
-def start_plot_server(pipe_in: Connection, rasterise):
-    from seedpod_ground_risk.plot_server import PlotServer
-
-    plot_server = PlotServer(tiles='Wikipedia',
-                             rasterise=rasterise, )
-
-    plot_server.start()
-    pipe_in.send(plot_server.url)
-    while True:
-        time.sleep(0.2)
-
-
 class MainWindow(QMainWindow, Ui_MainWindow):
 
     def __init__(self):
-
-        # pipe_out, pipe_in = Pipe(False)
-        # plot_proc = Process(target=start_plot_server, args=(pipe_in, rasterise), daemon=True)
-        # plot_proc.start()
-
         super(MainWindow, self).__init__()
         self.setupUi(self)
 
-        self.plot_server = PlotServer(tiles='Wikipedia',
-                                      rasterise=rasterise,
-                                      progress_callback=self.status_update,
-                                      update_callback=self.layers_update)
-        self.plot_server.start()
-
-        self.webview.load(self.plot_server.url)
-        self.webview.show()
+        threadpool = QThreadPool.globalInstance()
+        self.plot_worker = PlotWorker()
+        self.plot_worker.signals.update_layers.connect(self.layers_update)
+        self.plot_worker.signals.update_status.connect(self.status_update)
+        self.plot_worker.signals.ready.connect(self.plot_ready)
+        threadpool.start(self.plot_worker)
+        print("Initialising Plot Server")
+        self.plot_worker.signals.init.emit('Wikipedia', rasterise)
 
         self.listWidget.setEnabled(True)
-        self.listWidget.setDragDropMode(QAbstractItemView.InternalMove)
-        self.listWidget.setAcceptDrops(True)
-        self.listWidget.itemDropped.connect(self.layer_reorder)
+        # self.listWidget.setDragDropMode(QAbstractItemView.InternalMove)
+        # self.listWidget.setAcceptDrops(True)
+        # self.listWidget.itemDropped.connect(self.layer_reorder)
         self.listWidget.itemDoubleClicked.connect(self.layer_edit)
 
         self.timeSlider = QSlider(Qt.Horizontal)
@@ -78,14 +129,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionExport.triggered.connect(self.menu_file_export)
         self.actionAbout_Static_Sources.triggered.connect(self.menu_about_static_sources)
         self.actionAbout_App.triggered.connect(self.menu_about_app)
-        self.actionGenerate.triggered.connect(self.menu_generate)
-
-        # url = pipe_out.recv()
-        # self.webview.load(url)
-        # self.webview.show()
-
-    def menu_generate(self):
-        self.plot_server.generate_map()
+        self.actionGenerate.triggered.connect(self.plot_worker.signals.generate.emit)
 
     def menu_config_rasterise(self, checked):
         # TODO: Allow reliable on-the-fly rasterisation switching
@@ -98,7 +142,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         filepath = QFileDialog.getOpenFileName(self, "Import GeoJSON geometry...", os.getcwd(),
                                                "GeoJSON Files (*.json)")
         if filepath[0]:
-            self.plot_server.add_geojson_layer(filepath[0])
+            self.plot_worker.signals.add_geojson_layer.emit(filepath[0])
+            # self.plot_server.add_geojson_layer(filepath[0])
 
     def menu_file_export(self):
         from PySide2.QtCore import QFile
@@ -122,12 +167,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dialog.ui.textEdit.setDocument(doc)
         self.dialog.show()
 
+    @Slot(str)
+    def plot_ready(self, url):
+        self.webview.load(url)
+        self.webview.show()
+
+    @Slot(str)
     def status_update(self, update_str: str):
         self.statusBar.showMessage(update_str)
 
-    def layers_update(self):
+    @Slot(list)
+    def layers_update(self, layers):
         self.listWidget.clear()
-        for layer in self.plot_server._generated_layers.keys():
+        for layer in layers:
             item = QListWidgetItem(layer)
             item.setCheckState(Qt.CheckState.Checked)
             self.listWidget.addItem(item)
@@ -136,9 +188,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print('Editing ', item)
         pass
 
-    def layer_reorder(self):
-        print('Layers reordered')
-        self.plot_server.layer_order = [self.listWidget.item(n).text() for n in range(self.listWidget.count())]
+    # def layer_reorder(self):
+    #     print('Layers reordered')
+    #     self.plot_server.layer_order = [self.listWidget.item(n).text() for n in range(self.listWidget.count())]
 
     def time_changed(self, value):
         try:
@@ -146,7 +198,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except NameError:
             from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps
             labels = generate_week_timesteps()
-        self.plot_server.set_time(value)
+        self.plot_worker.signals.set_time.emit(value)
+        # self.plot_server.set_time(value)
         self.timeSliderLabel.setText(labels[value])
 
     def _read_file(self, file_path: str) -> str:
@@ -162,8 +215,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 if __name__ == '__main__':
+    multiprocessing.freeze_support()
+
     app = QApplication(sys.argv)
-    pixmap = QPixmap('seedpod_ground_risk/ui_resources/cascade_splash.png')
+    pixmap = QPixmap('ui_resources/cascade_splash.png')
     splash = QSplashScreen(pixmap)
     splash.setWindowFlags(Qt.WindowStaysOnTopHint)
     splash.setEnabled(False)
@@ -171,8 +226,6 @@ if __name__ == '__main__':
     splash.show()
     time.sleep(0.1)  # This seems to fix the splash mask displaying but not the actual image
     app.processEvents()
-
-    from seedpod_ground_risk.plot_server import PlotServer
 
     msg_box = QMessageBox()
     msg_box.setDefaultButton(QMessageBox.Yes)
