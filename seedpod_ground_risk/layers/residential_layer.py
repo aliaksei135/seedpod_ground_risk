@@ -30,20 +30,25 @@ class ResidentialLayer(Layer):
         self._landuse_polygons = gpd.GeoDataFrame()
 
     def preload_data(self):
+        print("Preloading Residential Layer")
         self.ingest_census_data()
 
     def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Geometry:
         t0 = time()
+        print("Generating Residential Layer Data")
+
         bounds = bounds_polygon.bounds
 
         if not from_cache:
             self.query_osm_landuse_polygons(bounds_polygon)
         bounded_census_wards = self._census_wards.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
+        print("Residential: Bounded census wards cumtime ", time() - t0)
 
         # Find landuse polygons intersecting/within census wards and merge left
         census_df = gpd.overlay(self._landuse_polygons,
                                 bounded_census_wards,
                                 how='intersection')
+        print("Residential: Overlaid geometries cumtime ", time() - t0)
         # Estimate the population of landuse polygons from the density of the census ward they are within
         # EPSG:4326 is *not* an equal area projection so would give gibberish areas
         # Project geometries to an equidistant/equal areq projection
@@ -65,6 +70,8 @@ class ResidentialLayer(Layer):
                   cmap=colorcet.CET_L18,
                   tools=['hover', 'crosshair'],
                   colorbar=True, colorbar_opts={'title': 'Population'}, show_legend=False)
+
+        print("Residential: Estimated and Scaled Populations cumtime ", time() - t0)
         if self.rasterise:
             raster = rasterize(gv_polys, aggregator=ds.sum('population'),
                                cmap=colorcet.CET_L18, dynamic=False).options(colorbar=True,

@@ -56,8 +56,9 @@ class RoadsLayer(Layer):
         self._roads_geometries = gpd.GeoDataFrame()  # Road Geometries in EPSG:27700 coords
 
     def preload_data(self) -> NoReturn:
+        print("Preloading Roads Layer")
         try:
-            # self.interpolated_road_populations = read_parquet_dask(
+            # self.interpolated_road_populations = spio.read_parquet_dask(
             #     os.sep.join(('static_data', 'timed_tfc.parq')))
             self.interpolated_road_populations = dsp.read_parquet(
                 os.sep.join(('static_data', 'timed_tfc.parq')))
@@ -82,11 +83,15 @@ class RoadsLayer(Layer):
 
             # Ingest and process static traffic counts
             self._ingest_traffic_counts()
+            print("Ingested Traffic Count Data")
             self._estimate_road_populations()
+            print("Estimated Traffic Populations")
             # Ingest simplified road geometries
             self._ingest_road_geometries()
+            print("Ingested Road Geometry Data")
             # Interpolate static traffic counts along road geometries
             all_points = self._interpolate_traffic_counts(resolution=20)
+            print("Interpolated Traffic Counts")
 
             try:
                 # Ingest relative weekly variations data and combine with static average traffic counts
@@ -97,11 +102,15 @@ class RoadsLayer(Layer):
 
     def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, hour: int = 0, **kwargs) -> Geometry:
         t0 = time()
+        print("Generating Roads Layer Data")
+
         bounds = bounds_polygon.bounds
         bounded_data = self.interpolated_road_populations[(self.interpolated_road_populations.lat > bounds[0]) &
                                                           (self.interpolated_road_populations.lon > bounds[1]) &
                                                           (self.interpolated_road_populations.lat < bounds[2]) &
                                                           (self.interpolated_road_populations.lon < bounds[3])]
+        # bounded_data = self.interpolated_road_populations.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
+        print("Roads: Bounded data cumtime ", time() - t0)
         points = gv.Points(bounded_data[bounded_data.hour == hour],
                            kdims=['lon', 'lat'], vdims=['population']).opts(colorbar=True, tools=['hover', 'crosshair'],
                                                                             cmap=colorcet.CET_L18, color='population')
@@ -160,26 +169,34 @@ class RoadsLayer(Layer):
         # Flatten into continuous list of hourly variations for the week
         relative_variations_flat = (relative_variations_df.iloc[:, 1:] / 100).melt()['value']
 
-        gv_timed_tfc_counts = None
+        print("Scaling hourly variations", end='')
+        stacks = []
         all_interp_points = np.array(all_points)
         # Iterate through each hour of the week
         for hour, hour_variation in enumerate(relative_variations_flat):
+            print(".", hour, end='')
             temp = all_interp_points[:, 2] * hour_variation  # Scale each pop/hr value by the relative variation
             # Vstack coords back with scaled pop/min values and append as list (for folium)
             stack = np.concatenate((all_interp_points[:, :2], temp[:, None], hour * np.ones(temp.shape)[:, None]),
                                    axis=1)
-            if gv_timed_tfc_counts is None:
-                gv_timed_tfc_counts = stack
-            else:
-                gv_timed_tfc_counts = np.concatenate((gv_timed_tfc_counts, stack), axis=0)
+            stacks.append(stack)
 
-        gv_timed_tfc_counts = np.array(gv_timed_tfc_counts)
-        gv_timed_tfc_counts_df = gpd.GeoDataFrame(
-            {'geometry': [sg.Point(xy) for xy in zip(gv_timed_tfc_counts[:, 0], gv_timed_tfc_counts[:, 1])],
-             'population': gv_timed_tfc_counts[:, 2],
-             'hour': gv_timed_tfc_counts[:, 3]})
-        dsp.to_parquet(gv_timed_tfc_counts_df, 'static_data/timed_tfc.parq', 'lat', 'lon', shuffle='disk',
-                       npartitions=32)
+        del all_points
+        del all_interp_points
+        print("Del points")
+        gv_timed_tfc_counts_df = delayed(pd.concat([sp.GeoDataFrame(
+            {'geometry': spg.PointArray((stack[:, 0], stack[:, 1])),
+             'population': stack[:, 2],
+             'hour': stack[:, 3]}) for stack in stacks], ignore_index=True))
+        del stacks
+        # print("Roads dataframe shape ", gv_timed_tfc_counts_df.shape)
+        dask_df = dd.from_pandas(gv_timed_tfc_counts_df, npartitions=64)
+        del gv_timed_tfc_counts_df
+        packed_ddf = dask_df.pack_partitions(npartitions=64)
+        del dask_df
+        packed_ddf.to_parquet('static_data/timed_tfc.parq')
+        # spio.to_parquet(gv_timed_tfc_counts_df, 'static_data/timed_tfc.parq', 'lat', 'lon', shuffle='disk',
+        #                 npartitions=32)
 
     def _ingest_road_geometries(self) -> NoReturn:
         """
@@ -194,10 +211,12 @@ class RoadsLayer(Layer):
         Interpolation points are created at frequency depending on resolution
         :param resolution: The distance in metres between interpolation points along a road
         """
+        print("Interpolating road traffic populations along geometries", end='')
         all_interp_points = []
         proj = Transformer.from_crs(27700, 4326, always_xy=True)
         unique_road_names = self._roads_geometries['RoadNumber'].unique()
         for road_name in unique_road_names:
+            print(".", end='')
             # Get the line segments that make up the road
             road_segments = self._roads_geometries[self._roads_geometries['RoadNumber'] == road_name]
             # Get all counts associated with this road
@@ -236,4 +255,5 @@ class RoadsLayer(Layer):
                 c = road_ls.interpolate(mark)
                 all_interp_points.append([*proj.transform(c.y, c.x), interp_flat_proj[idx]])
 
+        print(".")
         return all_interp_points
