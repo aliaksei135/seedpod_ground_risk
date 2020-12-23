@@ -7,12 +7,8 @@ import datashader as ds
 import datashader.spatial.points as dsp
 import geopandas as gpd
 import geoviews as gv
-import numpy as np
-import pandas as pd
-import shapely.ops as so
 from holoviews.element import Geometry
 from holoviews.operation.datashader import rasterize
-from pyproj import Transformer
 from shapely import geometry as sg
 from shapely import speedups
 
@@ -72,6 +68,18 @@ class RoadsLayer(Layer):
             # TODO: Prevent low-spec hardware from even attempting to generate the data
             # This takes ~15mins with an i7-7700, 16GiB of RAM with 20GiB of SSD swap for good measure
 
+            print("###########GENERATING NEW ROADS DATA. THIS WILL TAKE A WHILE##############")
+
+            import spatialpandas as sp
+            import spatialpandas.geometry as spg
+            import spatialpandas.io as spio
+            import dask.dataframe as dd
+            from dask import delayed
+            import numpy as np
+            import pandas as pd
+            from pyproj import Transformer
+            import shapely.ops as so
+
             # Ingest and process static traffic counts
             self._ingest_traffic_counts()
             self._estimate_road_populations()
@@ -80,8 +88,12 @@ class RoadsLayer(Layer):
             # Interpolate static traffic counts along road geometries
             all_points = self._interpolate_traffic_counts(resolution=20)
 
-            # Ingest relative weekly variations data and combine with static average traffic counts
-            self._apply_relative_traffic_variations(all_points)
+            try:
+                # Ingest relative weekly variations data and combine with static average traffic counts
+                self._apply_relative_traffic_variations(all_points)
+                print("Serialised to parquet")
+            except Exception as e:
+                print(e)
 
     def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, hour: int = 0, **kwargs) -> Geometry:
         t0 = time()
