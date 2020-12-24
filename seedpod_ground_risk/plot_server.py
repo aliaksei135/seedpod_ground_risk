@@ -1,25 +1,11 @@
-import threading
-from concurrent.futures import wait, as_completed
-from concurrent.futures.thread import ThreadPoolExecutor
-from time import time
 from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn, Optional, List, Sequence
 
-import colorcet
-import holoviews as hv
-import pyproj
 import shapely.geometry as sg
-import shapely.ops as so
-from bokeh.io import curdoc
-from bokeh.server.server import Server
-from geoviews import tile_sources as gvts
 from holoviews import Overlay, Element
 from holoviews.element import Geometry
-from numpy import isnan
+from tornado import gen
 
 from .layer import Layer
-from .layers.geojson_layer import GeoJSONLayer
-from .layers.residential_layer import ResidentialLayer
-from .layers.roads_layer import RoadsLayer
 
 
 def make_bounds_polygon(*args: Iterable[float]) -> sg.Polygon:
@@ -95,9 +81,13 @@ class PlotServer:
         self.url = 'http://localhost:{port}/{prefix}'.format(port=self.server.port, prefix=self.server.prefix) \
             if self.server.address is None else self.server.address
 
-    def _preload_layers(self):
+    @gen.coroutine
+    async def _preload_layers(self):
+        from concurrent.futures.thread import ThreadPoolExecutor
+        from tornado.gen import multi
+
         with ThreadPoolExecutor() as pool:
-            wait([pool.submit(layer.preload_data) for layer in self.layers])
+            await multi([pool.submit(layer.preload_data) for layer in self.layers])
             self._preload_complete = True
             self._progress_callback('Preload complete')
 
