@@ -1,16 +1,8 @@
-import os
-from time import time
 from typing import NoReturn, Optional
 
-import colorcet
-import datashader as ds
 import geopandas as gpd
-import geoviews as gv
-import pandas as pd
-import requests
 import shapely.geometry as sg
 from holoviews.element import Geometry
-from holoviews.operation.datashader import rasterize
 from shapely import speedups
 
 from seedpod_ground_risk.layer import Layer
@@ -34,6 +26,12 @@ class ResidentialLayer(Layer):
         self.ingest_census_data()
 
     def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Geometry:
+        from time import time
+        import colorcet
+        import datashader as ds
+        from holoviews.operation.datashader import rasterize
+        import geoviews as gv
+
         t0 = time()
         print("Generating Residential Layer Data")
 
@@ -95,6 +93,9 @@ class ResidentialLayer(Layer):
         """
         Ingest Census boundaries and density values and overlay/merge
         """
+        import pandas as pd
+        import os
+
         # Import Census boundaries in Ordnance Survey grid and reproject
         census_wards_df = gpd.read_file(os.sep.join(('static_data', 'england_wa_2011_clipped.shp'))).drop(
             ['altname', 'oldcode'], axis=1).to_crs('EPSG:4326')
@@ -114,6 +115,8 @@ class ResidentialLayer(Layer):
         :param shapely.Polygon bound_poly: bounding box around requested area in EPSG:4326 coordinates
         :param str landuse: OSM landuse key from https://wiki.openstreetmap.org/wiki/Landuse
         """
+        from time import time
+        import requests
 
         t0 = time()
         bounds = bound_poly.bounds

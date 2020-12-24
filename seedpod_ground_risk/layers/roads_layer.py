@@ -1,14 +1,9 @@
-import os
-from time import time
 from typing import NoReturn, List
 
-import colorcet
-import datashader as ds
-import datashader.spatial.points as dsp
 import geopandas as gpd
 import geoviews as gv
+import shapely.ops as so
 from holoviews.element import Geometry
-from holoviews.operation.datashader import rasterize
 from shapely import geometry as sg
 from shapely import speedups
 
@@ -56,6 +51,9 @@ class RoadsLayer(Layer):
         self._roads_geometries = gpd.GeoDataFrame()  # Road Geometries in EPSG:27700 coords
 
     def preload_data(self) -> NoReturn:
+        import datashader.spatial.points as dsp
+        import os
+
         print("Preloading Roads Layer")
         try:
             # self.interpolated_road_populations = spio.read_parquet_dask(
@@ -70,16 +68,6 @@ class RoadsLayer(Layer):
             # This takes ~15mins with an i7-7700, 16GiB of RAM with 20GiB of SSD swap for good measure
 
             print("###########GENERATING NEW ROADS DATA. THIS WILL TAKE A WHILE##############")
-
-            import spatialpandas as sp
-            import spatialpandas.geometry as spg
-            import spatialpandas.io as spio
-            import dask.dataframe as dd
-            from dask import delayed
-            import numpy as np
-            import pandas as pd
-            from pyproj import Transformer
-            import shapely.ops as so
 
             # Ingest and process static traffic counts
             self._ingest_traffic_counts()
@@ -101,6 +89,11 @@ class RoadsLayer(Layer):
                 print(e)
 
     def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, hour: int = 0, **kwargs) -> Geometry:
+        from holoviews.operation.datashader import rasterize
+        import datashader as ds
+        import colorcet
+        from time import time
+
         t0 = time()
         print("Generating Roads Layer Data")
 
@@ -135,6 +128,9 @@ class RoadsLayer(Layer):
         Ingest annualised average daily flow traffic counts
         Only the latest year of data is used.
         """
+        import pandas as pd
+        import os
+
         # Ingest raw data
         counts_df = pd.read_csv(os.sep.join(('static_data', 'dft_traffic_counts_aadf.csv')))
         # Select only desired columns
@@ -163,6 +159,14 @@ class RoadsLayer(Layer):
         """
         Apply the hourly relative variations from the week average for each count point
         """
+        import spatialpandas as sp
+        import spatialpandas.geometry as spg
+        import dask.dataframe as dd
+        from dask import delayed
+        import numpy as np
+        import pandas as pd
+        import os
+
         # Ingest data, ignoring header and footer info
         relative_variations_df = pd.read_excel(os.sep.join(('static_data', 'tra0307.ods')), engine='odf',
                                                header=5, skipfooter=8)
@@ -202,6 +206,8 @@ class RoadsLayer(Layer):
         """
         Ingest simplified road geometries in EPSG:27700 coords
         """
+        import os
+
         self._roads_geometries = gpd.read_file(os.sep.join(('static_data', '2018-MRDB-minimal.shp'))).set_crs(
             'EPSG:27700').rename(columns={'CP_Number': 'count_point_id'})
 
@@ -211,6 +217,9 @@ class RoadsLayer(Layer):
         Interpolation points are created at frequency depending on resolution
         :param resolution: The distance in metres between interpolation points along a road
         """
+        import numpy as np
+        from pyproj import Transformer
+
         print("Interpolating road traffic populations along geometries", end='')
         all_interp_points = []
         proj = Transformer.from_crs(27700, 4326, always_xy=True)

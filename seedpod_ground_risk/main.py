@@ -8,11 +8,11 @@ print("Builtin modules imported")
 from PySide2.QtCore import Qt, QRect, QObject, Signal, QRunnable, Slot, QThreadPool
 
 print("QTCore imported")
-from PySide2.QtGui import QPixmap, QTextDocument
+from PySide2.QtGui import QPixmap
 
 print("QtGUI imported")
-from PySide2.QtWidgets import QDialog, QMainWindow, QApplication, QListWidgetItem, QSplashScreen, \
-    QMessageBox, QFileDialog, QSlider, QLabel
+from PySide2.QtWidgets import QDialog, QMainWindow, QApplication, QListWidgetItem, QSplashScreen, QMessageBox, QSlider, \
+    QLabel
 
 print("Qt modules imported")
 from seedpod_ground_risk.ui_resources.mainwindow import Ui_MainWindow
@@ -139,6 +139,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             msg_box.warning(self, "Warning", "Not rasterising increases generation and render times significantly!")
 
     def menu_file_import(self):
+        from PySide2.QtWidgets import QFileDialog
         filepath = QFileDialog.getOpenFileName(self, "Import GeoJSON geometry...", os.getcwd(),
                                                "GeoJSON Files (*.json)")
         if filepath[0]:
@@ -147,6 +148,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def menu_file_export(self):
         from PySide2.QtCore import QFile
+        from PySide2.QtWidgets import QFileDialog
 
         file_dir = QFileDialog.getExistingDirectory(self, "Save plot image...", os.getcwd(), QFileDialog.ShowDirsOnly)
         if file_dir:
@@ -154,6 +156,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.webview.grab().save(file)
 
     def menu_about_static_sources(self):
+        from PySide2.QtGui import QTextDocument
         self.dialog = TextAboutDialog('About Data')
         doc = QTextDocument()
         doc.setMarkdown(self._read_file('static_data/DATA_SOURCES.md'))
@@ -161,6 +164,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dialog.show()
 
     def menu_about_app(self):
+        from PySide2.QtGui import QTextDocument
         self.dialog = TextAboutDialog('About')
         doc = QTextDocument()
         doc.setMarkdown(self._read_file('README.md'))

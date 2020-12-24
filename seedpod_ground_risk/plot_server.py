@@ -16,6 +16,8 @@ def make_bounds_polygon(*args: Iterable[float]) -> sg.Polygon:
 
 
 def is_null(values: Any) -> bool:
+    from numpy import isnan
+
     try:
         for value in values:
             if value is None or isnan(value):
@@ -28,7 +30,6 @@ def is_null(values: Any) -> bool:
 
 class PlotServer:
     layers: List[Layer]
-    server: Server
     plot_size: Tuple[int, int]
     _current_bounds: sg.Polygon
     _cached_area: sg.Polygon
@@ -57,9 +58,18 @@ class PlotServer:
         self.tools = ['hover', 'crosshair'] if tools is None else tools
         self.active_tools = ['wheel_zoom'] if active_tools is None else active_tools
         self.rasterise = rasterise
+
+        import colorcet
         self.cmap = getattr(colorcet, cmap)
-        self._time_idx = 0
+
+        from geoviews import tile_sources as gvts
         self._base_tiles = {'Base ' + tiles + ' tiles': getattr(gvts, tiles)}
+
+        self._time_idx = 0
+
+        from .layers.geojson_layer import GeoJSONLayer
+        from .layers.residential_layer import ResidentialLayer
+        from .layers.roads_layer import RoadsLayer
         self._generated_layers = {}
         self.layer_order = []
         self.layers = [GeoJSONLayer('static_data/test_path.json'),
@@ -75,6 +85,10 @@ class PlotServer:
         self._epsg3857_to_epsg4326_proj = None
         self._preload_started = False
         self._preload_complete = False
+
+        from bokeh.io import curdoc
+        from bokeh.server.server import Server
+
         self._current_plot = curdoc()
         self._server_thread = None
         self.server = Server({'/': self.plot}, num_procs=1)
@@ -96,6 +110,8 @@ class PlotServer:
         Start the plot server in a daemon thread
         """
         assert self.server is not None
+        import threading
+
         self._progress_callback('Plot Server starting...')
         self.server.start()
         self._server_thread = threading.Thread(target=self.server.io_loop.start, daemon=True)
@@ -113,6 +129,8 @@ class PlotServer:
                 self._progress_callback('Plot Server stopped')
 
     def _reproject_ranges(self):
+        import pyproj
+
         if self._epsg3857_to_epsg4326_proj is None:
             self._epsg3857_to_epsg4326_proj = pyproj.Transformer.from_crs(pyproj.CRS.from_epsg('3857'),
                                                                           pyproj.CRS.from_epsg('4326'),
@@ -123,6 +141,8 @@ class PlotServer:
                                                                                        self._y_range[1])
 
     def plot(self, doc):
+        import holoviews as hv
+
         if doc.roots:
             doc.clear()
             self._reproject_ranges()
@@ -181,6 +201,8 @@ class PlotServer:
                     # as polygons are already rendered
                     # If rasterising layers this must be called each map update to avoud loss of raster resolution
                     if self.rasterise or not self._current_bounds.contains(bounds_poly):
+                        from time import time
+
                         t0 = time()
                         self.generate_layers(bounds_poly)
                         # self._current_bounds = bounds_poly
@@ -210,6 +232,8 @@ class PlotServer:
         """
         # Polygons aren't much use without a base map context
         assert self.layers is not None
+        from concurrent.futures import as_completed
+        from concurrent.futures.thread import ThreadPoolExecutor
 
         layers = {}
         self._progress_callback('Generating layer data')
@@ -238,6 +262,8 @@ class PlotServer:
     @staticmethod
     def generate_layer(layer: Layer, bounds_poly: sg.Polygon, hour: int) -> Union[
         Tuple[str, Geometry], Tuple[str, None]]:
+        import shapely.ops as so
+
         from_cache = False
         layer_bounds_poly = bounds_poly
         if bounds_poly.within(layer.cached_area):
@@ -264,6 +290,8 @@ class PlotServer:
         self._time_idx = hour
 
     def add_geojson_layer(self, filepath: str) -> None:
+        from .layers.geojson_layer import GeoJSONLayer
+
         layer = GeoJSONLayer(filepath)
         layer.preload_data()
         self.layers.append(layer)
