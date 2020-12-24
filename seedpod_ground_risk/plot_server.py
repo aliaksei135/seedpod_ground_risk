@@ -12,7 +12,7 @@ import shapely.ops as so
 from bokeh.io import curdoc
 from bokeh.server.server import Server
 from geoviews import tile_sources as gvts
-from holoviews import DynamicMap, Overlay, Element
+from holoviews import Overlay, Element
 from holoviews.element import Geometry
 from numpy import isnan
 
@@ -84,18 +84,22 @@ class PlotServer:
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
         self._update_callback = update_callback if update_callback is not None else lambda *args: None
 
-        self._thread_pool = ThreadPoolExecutor()
         self._x_range, self._y_range = [-1.45, -1.35], [50.85, 50.95]
 
-        self._epsg3857_to_epsg4326_proj = pyproj.Transformer.from_crs(pyproj.CRS.from_epsg('3857'),
-                                                                      pyproj.CRS.from_epsg('4326'), always_xy=True)
-
-        wait([self._thread_pool.submit(layer.preload_data) for layer in self.layers])
-
+        self._epsg3857_to_epsg4326_proj = None
+        self._preload_started = False
+        self._preload_complete = False
         self._current_plot = curdoc()
+        self._server_thread = None
         self.server = Server({'/': self.plot}, num_procs=1)
         self.url = 'http://localhost:{port}/{prefix}'.format(port=self.server.port, prefix=self.server.prefix) \
             if self.server.address is None else self.server.address
+
+    def _preload_layers(self):
+        with ThreadPoolExecutor() as pool:
+            wait([pool.submit(layer.preload_data) for layer in self.layers])
+            self._preload_complete = True
+            self._progress_callback('Preload complete')
 
     def start(self) -> NoReturn:
         """
@@ -119,6 +123,10 @@ class PlotServer:
                 self._progress_callback('Plot Server stopped')
 
     def _reproject_ranges(self):
+        if self._epsg3857_to_epsg4326_proj is None:
+            self._epsg3857_to_epsg4326_proj = pyproj.Transformer.from_crs(pyproj.CRS.from_epsg('3857'),
+                                                                          pyproj.CRS.from_epsg('4326'),
+                                                                          always_xy=True)
         self._x_range[0], self._y_range[0] = self._epsg3857_to_epsg4326_proj.transform(self._x_range[0],
                                                                                        self._y_range[0])
         self._x_range[1], self._y_range[1] = self._epsg3857_to_epsg4326_proj.transform(self._x_range[1],
@@ -155,7 +163,7 @@ class PlotServer:
 
     def compose_overlay_plot(self, x_range: Optional[Sequence[float]] = (-1.6, -1.2),
                              y_range: Optional[Sequence[float]] = (50.8, 51.05)) \
-            -> Union[Overlay, Element, DynamicMap]:
+            -> Union[Overlay, Element]:
         """
         Compose all generated HoloViews layers in self.layers into a single overlay plot.
         Overlaid in a first-on-the-bottom manner.
@@ -167,7 +175,14 @@ class PlotServer:
         :returns: overlay plot of stored layers
         """
         try:
-            if not is_null(x_range) and not is_null(y_range):
+            if not self._preload_complete:
+                if not self._preload_started:
+                    self._preload_started = True
+                    self._current_plot.add_next_tick_callback(self._preload_layers)
+                # If layers aren't preloaded yet just return the map tiles
+                self._progress_callback('Still preloading layer data...')
+                plot = list(self._base_tiles.values())[0]
+            else:
                 # Construct box around requested bounds
                 bounds_poly = make_bounds_polygon(x_range, y_range)
                 # Ensure bounds are small enough to render without OOM or heat death of universe
@@ -182,16 +197,20 @@ class PlotServer:
                         self._progress_callback("Rendering new map...")
                         print("Generated all layers in ", time() - t0)
                 else:
-                    self._progress_callback('Area too large to render')
+                    self._progress_callback('Area too large to render!')
 
-            plot = Overlay(list(self._generated_layers.values()))
+                plot = Overlay(list(self._generated_layers.values()))
 
-            self._update_callback()
-            return plot.opts(width=self.plot_size[0], height=self.plot_size[1],
-                             tools=self.tools, active_tools=self.active_tools)
+                self._update_callback()
+
         except Exception as e:
+            # Catch-all to prevent plot blanking out and/or crashing app
+            # Just display map tiles in case this was transient
             print(e)
-            return Overlay([list(self._base_tiles.values())[0]])
+            plot = list(self._base_tiles.values())[0]
+
+        return plot.opts(width=self.plot_size[0], height=self.plot_size[1],
+                         tools=self.tools, active_tools=self.active_tools)
 
     def generate_layers(self, bounds_poly: sg.Polygon) -> NoReturn:
         """
@@ -204,8 +223,9 @@ class PlotServer:
 
         layers = {}
         self._progress_callback('Generating layer data')
-        layer_futures = [self._thread_pool.submit(self.generate_layer, layer, bounds_poly, self._time_idx) for layer in
-                         self.layers]
+        with ThreadPoolExecutor() as pool:
+            layer_futures = [pool.submit(self.generate_layer, layer, bounds_poly, self._time_idx) for layer in
+                             self.layers]
         # Store generated layers as they are completed
         for future in as_completed(layer_futures):
             layer_key, geom = future.result()
