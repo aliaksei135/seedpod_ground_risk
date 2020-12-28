@@ -204,10 +204,13 @@ class PlotServer:
                         # self._current_bounds = bounds_poly
                         self._progress_callback("Rendering new map...")
                         print("Generated all layers in ", time() - t0)
+                    plot = Overlay(list(self._generated_layers.values()))
                 else:
                     self._progress_callback('Area too large to render!')
-
-                plot = Overlay(list(self._generated_layers.values()))
+                    if not self._generated_layers:
+                        plot = list(self._base_tiles.values())[0]
+                    else:
+                        plot = Overlay(list(self._generated_layers.values()))
 
                 self._update_callback()
 
