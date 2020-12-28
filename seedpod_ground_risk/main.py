@@ -8,7 +8,7 @@ print("Builtin modules imported")
 from PySide2.QtCore import Qt, QRect, QObject, Signal, QRunnable, Slot, QThreadPool
 
 print("QTCore imported")
-from PySide2.QtGui import QPixmap
+from PySide2.QtGui import QPixmap, QCloseEvent
 
 print("QtGUI imported")
 from PySide2.QtWidgets import QDialog, QMainWindow, QApplication, QListWidgetItem, QSplashScreen, QMessageBox, QSlider, \
@@ -24,6 +24,8 @@ print("Layer modules imported")
 class PlotWorkerSignals(QObject):
     init = Signal(str, bool)
     ready = Signal(str)
+    stop = Signal()
+
     set_time = Signal(int)
     generate = Signal()
     update_status = Signal(str)
@@ -37,15 +39,19 @@ class PlotWorker(QRunnable):
 
         self.signals = PlotWorkerSignals()
         self.signals.init.connect(self.init)
+        self.signals.stop.connect(self.stop)
         self.signals.generate.connect(self.generate)
         self.signals.set_time.connect(self.set_time)
         self.signals.add_geojson_layer.connect(self.add_geojson_layer)
 
         self.plot_server = None
+        self.stop = False
 
     @Slot()
     def run(self) -> None:
         while True:
+            if self.stop:
+                return
             time.sleep(0.1)
 
     @Slot(str, bool)
@@ -58,6 +64,10 @@ class PlotWorker(QRunnable):
                                       update_callback=self.layers_update)
         self.plot_server.start()
         self.signals.ready.emit(self.plot_server.url)
+
+    @Slot()
+    def stop(self):
+        self.stop = True
 
     @Slot()
     def generate(self):
@@ -191,6 +201,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def layer_edit(self, item):
         print('Editing ', item)
         pass
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        self.plot_worker.signals.stop.emit()
 
     # def layer_reorder(self):
     #     print('Layers reordered')
