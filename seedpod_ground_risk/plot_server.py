@@ -3,7 +3,6 @@ from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn, Option
 import shapely.geometry as sg
 from holoviews import Overlay, Element
 from holoviews.element import Geometry
-from tornado import gen
 
 from .layer import Layer
 
@@ -92,10 +91,10 @@ class PlotServer:
         self._current_plot = curdoc()
         self._server_thread = None
         self.server = Server({'/': self.plot}, num_procs=1)
+        self.server.io_loop.spawn_callback(self._preload_layers)
         self.url = 'http://localhost:{port}/{prefix}'.format(port=self.server.port, prefix=self.server.prefix) \
             if self.server.address is None else self.server.address
 
-    @gen.coroutine
     async def _preload_layers(self):
         from concurrent.futures.thread import ThreadPoolExecutor
         from tornado.gen import multi
@@ -103,7 +102,7 @@ class PlotServer:
         with ThreadPoolExecutor() as pool:
             await multi([pool.submit(layer.preload_data) for layer in self.layers])
             self._preload_complete = True
-            self._progress_callback('Preload complete')
+            self._progress_callback('Preload complete. First generation will take a minute longer')
 
     def start(self) -> NoReturn:
         """
@@ -186,9 +185,6 @@ class PlotServer:
         """
         try:
             if not self._preload_complete:
-                if not self._preload_started:
-                    self._preload_started = True
-                    self._current_plot.add_next_tick_callback(self._preload_layers)
                 # If layers aren't preloaded yet just return the map tiles
                 self._progress_callback('Still preloading layer data...')
                 plot = list(self._base_tiles.values())[0]
