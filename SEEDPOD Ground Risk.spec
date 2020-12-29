@@ -17,6 +17,8 @@ from PyInstaller.building.build_main import Analysis
 
 block_cipher = None
 
+one_dir_mode = True
+
 binaries = []
 if sys.platform.startswith('win'):
     qt_plugins_path = os.path.join(PySide2.__path__[0], "plugins")
@@ -32,6 +34,13 @@ elif sys.platform.startswith('linux'):
         (os.path.join(sys.base_prefix, "lib", "libspatialindex_c.so"), '.'),
         # (os.path.join(PySide2.__path__[0], "Qt", "plugins", "platforms"), '.')
     ]
+
+upx = False  # UPX does not play with anything Qt
+upx_exclude = [
+    'PySide2',
+    'shiboken2',
+    'qwindows.dll'
+]
 
 a = Analysis(['seedpod_ground_risk/main.py'],
              # pathex=['/home/aliaksei/PycharmProjects/seedpod_gr_app'],
@@ -54,20 +63,20 @@ a = Analysis(['seedpod_ground_risk/main.py'],
                  ('static_data/tra0307.ods', 'static_data'),
                  ("seedpod_ground_risk/ui_resources/cascade_splash.png", "ui_resources"),
                  ("README.md", '.'),
-                 (PySide2.__path__[0], "PySide2"),
+                 # (PySide2.__path__[0], "PySide2"),
                  (os.path.join(pyviz_comms.comm_path, "notebook.js"), "pyviz_comms"),
                  (panel.__path__[0], "panel"),
                  (datashader.__path__[0], "datashader"),
                  (distributed.__path__[0], "distributed"),
-                 (fiona.__path__[0], "fiona"),  # Geospatial primitives
+                 (os.path.join(fiona.__path__[0], "*.pyd"), "fiona"),  # Geospatial primitives
                  (os.path.join(geopandas.__path__[0], "datasets"), "geopandas/datasets"),
                  # Geopandas requires access to its data dir
                  (shiboken2.__path__[0], "shiboken2"),  # C++ bindings
              ],
              hiddenimports=[
-                 "PySide2",  # Qt,
+                 # "PySide2",  # Qt,
                  "PySide2.QtPrintSupport",
-                 "shiboken2",  # PySide2 C++ bindings
+                 # "shiboken2",  # PySide2 C++ bindings
                  "uu",  # Binary data en/decode over ASCII sockets
                  "json",
                  "spatialpandas",
@@ -77,7 +86,7 @@ a = Analysis(['seedpod_ground_risk/main.py'],
                  "numba.cuda",  # CUDA routines
                  "pyarrow.compute",  # native routines
              ],
-             # hookspath=['hooks'],
+             hookspath=[],
              runtime_hooks=[],
              excludes=[
                  "PyQt5",
@@ -94,21 +103,38 @@ a = Analysis(['seedpod_ground_risk/main.py'],
              noarchive=False)
 pyz = PYZ(a.pure, a.zipped_data,
           cipher=block_cipher)
-exe = EXE(pyz,
-          a.scripts,
-          [],
-          exclude_binaries=True,
-          name='SEEDPOD Ground Risk',
-          debug=True,
-          bootloader_ignore_signals=False,
-          strip=False,
-          upx=False,
-          console=True)
-coll = COLLECT(exe,
-               a.binaries,
-               a.zipfiles,
-               a.datas,
-               strip=False,
-               upx=False,
-               upx_exclude=[],
-               name='SEEDPOD Ground Risk')
+
+if one_dir_mode:
+    exe = EXE(pyz,
+              a.scripts,
+              [],
+              exclude_binaries=True,
+              name='SEEDPOD Ground Risk',
+              debug=True,
+              bootloader_ignore_signals=False,
+              strip=False,
+              upx=upx,
+              upx_exclude=upx_exclude,
+              console=True)
+    coll = COLLECT(exe,
+                   a.binaries,
+                   a.zipfiles,
+                   a.datas,
+                   strip=False,
+                   upx=upx,
+                   upx_exclude=upx_exclude,
+                   name='SEEDPOD Ground Risk')
+else:
+    exe = EXE(pyz,
+              a.scripts,
+              a.binaries,
+              a.zipfiles,
+              a.datas,
+              exclude_binaries=False,
+              name='SEEDPOD Ground Risk',
+              debug=True,
+              bootloader_ignore_signals=False,
+              strip=False,
+              upx=upx,
+              upx_exclude=upx_exclude,
+              console=True)
