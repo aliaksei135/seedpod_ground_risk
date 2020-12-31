@@ -1,8 +1,6 @@
 from typing import NoReturn, List
 
 import geopandas as gpd
-import geoviews as gv
-import shapely.ops as so
 from holoviews.element import Geometry
 from shapely import geometry as sg
 from shapely import speedups
@@ -42,7 +40,12 @@ class RoadsLayer(Layer):
     _traffic_counts: gpd.GeoDataFrame
 
     def __init__(self, key, **kwargs):
+        from pyproj import Transformer
+
         super(RoadsLayer, self).__init__(key, **kwargs)
+
+        self.proj = Transformer.from_crs(27700, 4326, always_xy=True)
+        self.reverse_proj = Transformer.from_crs(4326, 27700, always_xy=True)
 
         self.week_timesteps = generate_week_timesteps()
 
@@ -60,6 +63,7 @@ class RoadsLayer(Layer):
 
     def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, hour: int = 0, **kwargs) -> Geometry:
         from holoviews.operation.datashader import rasterize
+        import geoviews as gv
         import datashader as ds
         import colorcet
         import numpy as np
@@ -146,7 +150,7 @@ class RoadsLayer(Layer):
         self._roads_geometries = gpd.read_file(os.sep.join(('static_data', '2018-MRDB-minimal.shp'))).set_crs(
             'EPSG:27700').rename(columns={'CP_Number': 'count_point_id'})
 
-    def _interpolate_traffic_counts(self, bounds_poly: sg.Polygon, resolution: int = 20) -> List[
+    def _interpolate_traffic_counts(self, bounds_poly: sg.Polygon, resolution: int = 25) -> List[
         List[float]]:
         """
         Interpolate traffic count values between count points along all roads.
@@ -155,17 +159,16 @@ class RoadsLayer(Layer):
         :param resolution: The distance in metres between interpolation points along a road
         """
         import numpy as np
-        from pyproj import Transformer
-
-        all_interp_points = []
-        proj = Transformer.from_crs(27700, 4326, always_xy=True)
+        import shapely.ops as so
 
         b = bounds_poly.bounds
-        reverse_proj = Transformer.from_crs(4326, 27700, always_xy=True)
         bounds = [0] * 4
-        bounds[0], bounds[1] = reverse_proj.transform(b[1], b[0])
-        bounds[2], bounds[3] = reverse_proj.transform(b[3], b[2])
+        bounds[0], bounds[1] = self.reverse_proj.transform(b[1], b[0])
+        bounds[2], bounds[3] = self.reverse_proj.transform(b[3], b[2])
         unique_road_names = self._roads_geometries.cx[bounds[0]:bounds[2], bounds[1]:bounds[3]]['RoadNumber'].unique()
+
+        all_interp_points = []
+        all_interp_points_append = all_interp_points.append
         for road_name in unique_road_names:
             print(".", end='')
             # Get the line segments that make up the road
@@ -176,19 +179,22 @@ class RoadsLayer(Layer):
             # Iterate over all road segments
             # Add all road segment coords to flat list of all road coords
             all_segments = []
+            all_segments_append = all_segments.append
+
             flat_proj = [(0, 0)]  # A 1D projection of the road as a line in form (length_coord, value)
+            flat_proj_append = flat_proj.append
             carried_length = 0  # Holder for any carried over road length if a segment is missing a counter
             for _, seg in road_segments.iterrows():
                 # Flip the coords around for folium
                 coords = np.array(seg['geometry'].coords)[:, [1, 0]]
-                all_segments.append(coords)
+                all_segments_append(coords)
                 # Lookup ID of counter on this segment of road
                 pop = counts.loc[counts['count_point_id'] == seg['count_point_id']]['population_per_hour']
                 # Check if counter actually exists on this segment
                 if pop.size > 0:
                     # If exists append and accumulate this segments length onto
                     #  the 1D projection of this road with the pop/hr value
-                    flat_proj.append((seg['geometry'].length + flat_proj[-1][0] + carried_length, pop.item()))
+                    flat_proj_append((seg['geometry'].length + flat_proj[-1][0] + carried_length, pop.item()))
                     carried_length = 0
                 else:
                     # If not, carry the length of this segment in the hope the next one will have a counter!
@@ -205,7 +211,7 @@ class RoadsLayer(Layer):
             # Recover the true road geometry along with the interpolated values
             for idx, mark in enumerate(coord_spacing):
                 c = road_ls.interpolate(mark)
-                all_interp_points.append([*proj.transform(c.y, c.x), interp_flat_proj[idx]])
+                all_interp_points_append([*self.proj.transform(c.y, c.x), interp_flat_proj[idx]])
 
         print(".")
         return all_interp_points
