@@ -30,7 +30,6 @@ def is_null(values: Any) -> bool:
 class PlotServer:
     layers: List[Layer]
     plot_size: Tuple[int, int]
-    _current_bounds: sg.Polygon
     _cached_area: sg.Polygon
     _generated_layers: Dict[str, Geometry]
 
@@ -193,17 +192,13 @@ class PlotServer:
                 bounds_poly = make_bounds_polygon(x_range, y_range)
                 # Ensure bounds are small enough to render without OOM or heat death of universe
                 if bounds_poly.area < 0.2:
-                    # If new bounds are contained within existing bounds do nothing
-                    # as polygons are already rendered
-                    # If rasterising layers this must be called each map update to avoud loss of raster resolution
-                    if self.rasterise or not self._current_bounds.contains(bounds_poly):
-                        from time import time
+                    from time import time
 
-                        t0 = time()
-                        self.generate_layers(bounds_poly)
-                        # self._current_bounds = bounds_poly
-                        self._progress_callback("Rendering new map...")
-                        print("Generated all layers in ", time() - t0)
+                    t0 = time()
+                    self.generate_layers(bounds_poly)
+                    # self._current_bounds = bounds_poly
+                    self._progress_callback("Rendering new map...")
+                    print("Generated all layers in ", time() - t0)
                     plot = Overlay(list(self._generated_layers.values()))
                 else:
                     self._progress_callback('Area too large to render!')
