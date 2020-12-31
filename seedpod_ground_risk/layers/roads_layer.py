@@ -81,12 +81,11 @@ class RoadsLayer(Layer):
         print("Roads: Bounded data cumtime ", time() - t0)
         points = gv.Points(tfc_df,
                            kdims=['Longitude', 'Latitude'], vdims=['population']).opts(colorbar=True,
-                                                                                       tools=['hover', 'crosshair'],
                                                                                        cmap=colorcet.CET_L18,
                                                                                        color='population')
         if self.rasterise:
             raster = rasterize(points, aggregator=ds.mean('population'),
-                               dynamic=False).opts(colorbar=True, cmap=colorcet.CET_L18, tools=['hover', 'crosshair'])
+                               dynamic=False).opts(colorbar=True, cmap=colorcet.CET_L18)
             t1 = time()
             print('Roads with raster: ', t1 - t0)
             return raster

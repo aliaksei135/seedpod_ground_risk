@@ -66,7 +66,6 @@ class ResidentialLayer(Layer):
         gv_polys = gv.Polygons(census_df, vdims=['name', 'population']) \
             .opts(color='population',
                   cmap=colorcet.CET_L18,
-                  tools=['hover', 'crosshair'],
                   colorbar=True, colorbar_opts={'title': 'Population'}, show_legend=False)
 
         print("Residential: Estimated and Scaled Populations cumtime ", time() - t0)
@@ -74,7 +73,6 @@ class ResidentialLayer(Layer):
             raster = rasterize(gv_polys, aggregator=ds.sum('population'),
                                cmap=colorcet.CET_L18, dynamic=False).options(colorbar=True,
                                                                              cmap=colorcet.CET_L18,
-                                                                             tools=['hover', 'crosshair'],
                                                                              clipping_colors={'0': 'transparent',
                                                                                               'NaN': 'transparent',
                                                                                               '-NaN': 'transparent'})
