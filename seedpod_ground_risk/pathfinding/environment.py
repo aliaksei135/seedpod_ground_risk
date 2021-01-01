@@ -40,7 +40,13 @@ class Environment(abc.ABC):
             return self.graph
 
     def get_neighbours(self, node: Node) -> Sequence[Node]:
+        if not self.graph:
+            self.graph = self._generate_graph()
         return self.graph[node]
+
+    @abc.abstractmethod
+    def f_cost(self, node: Node, goal: Node) -> float:
+        pass
 
     @abc.abstractmethod
     def _generate_graph(self) -> Dict[Node, Sequence[Node]]:
