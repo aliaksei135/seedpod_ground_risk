@@ -11,12 +11,12 @@ class Heuristic(abc.ABC):
 
 class EuclideanHeuristic(Heuristic):
     def h(self, node: Node, goal: Node):
-        pass
+        return ((node.x - goal.x) ** 2 + (node.y - goal.y) ** 2) ** 0.5
 
 
 class ManhattanHeuristic(Heuristic):
     def h(self, node: Node, goal: Node):
-        pass
+        return abs((node.x + node.y) - (goal.x + goal.y))
 
 
 class EuclideanRiskHeuristic(Heuristic):
