@@ -14,8 +14,8 @@ class GridEnvironmentNoDiagonalsTestCase(unittest.TestCase):
     def test_grid_to_graph(self):
         self.maxDiff = None
         graph = self.small_environment._generate_graph()
-        self.assertEqual(len(graph), SMALL_TEST_GRID.shape[0] * SMALL_TEST_GRID.shape[1])
-        self.assertDictEqual(SMALL_TEST_GRAPH_NO_DIAGONAL, graph)
+        self.assertEqual(len(graph), SMALL_TEST_GRID.shape[0] * SMALL_TEST_GRID.shape[1], "Graph has wrong length")
+        self.assertDictEqual(SMALL_TEST_GRAPH_NO_DIAGONAL, graph, "Graph Malformed")
 
 
 class GridEnvironmentWithDiagonalsTestCase(unittest.TestCase):

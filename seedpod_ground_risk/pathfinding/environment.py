@@ -104,11 +104,11 @@ class GridEnvironment(Environment):
                         topleft = Node(idx[1] - 1, idx[0] - 1, self.grid[idx[0] - 1, idx[1] - 1])
                         neighbours.append(topleft)
                     if has_right:
-                        topright = Node(idx[1] - 1, idx[0] + 1, self.grid[idx[0] + 1, idx[1] - 1])
+                        topright = Node(idx[1] + 1, idx[0] - 1, self.grid[idx[0] - 1, idx[1] + 1])
                         neighbours.append(topright)
                 if has_bottom:
                     if has_left:
-                        bottomleft = Node(idx[1] + 1, idx[0] - 1, self.grid[idx[0] - 1, idx[1] + 1])
+                        bottomleft = Node(idx[1] - 1, idx[0] + 1, self.grid[idx[0] + 1, idx[1] - 1])
                         neighbours.append(bottomleft)
                     if has_right:
                         bottomright = Node(idx[1] + 1, idx[0] + 1, self.grid[idx[0] + 1, idx[1] + 1])
