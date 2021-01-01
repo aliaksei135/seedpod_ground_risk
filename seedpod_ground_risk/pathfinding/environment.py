@@ -11,6 +11,20 @@ class Node:
         self.lon = lon
         self.lat = lat
 
+    def __eq__(self, other):
+        if self.x == other.x and self.y == other.y and self.n == other.n:
+            return True
+        return False
+
+    def __hash__(self):
+        return hash((self.x, self.y, self.n))
+
+    def __lt__(self, other):
+        return self.n < other.n
+
+    def __str__(self):
+        return f'Node at x={self.x}, y={self.y} with n={self.n}'
+
 
 class Environment(abc.ABC):
     graph: Dict[Node, Sequence[Node]]
