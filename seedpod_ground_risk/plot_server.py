@@ -289,3 +289,6 @@ class PlotServer:
         layer = GeoJSONLayer(filepath)
         layer.preload_data()
         self.layers.append(layer)
+
+    def set_layer_order(self, layer_order):
+        self.layer_order = layer_order

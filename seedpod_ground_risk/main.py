@@ -12,7 +12,7 @@ from PySide2.QtGui import QPixmap, QCloseEvent
 
 print("QtGUI imported")
 from PySide2.QtWidgets import QDialog, QMainWindow, QApplication, QListWidgetItem, QSplashScreen, QMessageBox, QSlider, \
-    QLabel
+    QLabel, QAbstractItemView
 
 print("Qt modules imported")
 from seedpod_ground_risk.ui_resources.mainwindow import Ui_MainWindow
@@ -30,6 +30,7 @@ class PlotWorkerSignals(QObject):
     generate = Signal()
     update_status = Signal(str)
     update_layers = Signal(list)
+    reorder_layers = Signal(list)
     add_geojson_layer = Signal(str)
 
 
@@ -42,6 +43,7 @@ class PlotWorker(QRunnable):
         self.signals.stop.connect(self.stop)
         self.signals.generate.connect(self.generate)
         self.signals.set_time.connect(self.set_time)
+        self.signals.reorder_layers.connect(self.layers_reorder)
         self.signals.add_geojson_layer.connect(self.add_geojson_layer)
 
         self.plot_server = None
@@ -82,6 +84,10 @@ class PlotWorker(QRunnable):
     def set_time(self, hour):
         self.plot_server.set_time(hour)
 
+    @Slot(list)
+    def layers_reorder(self, layer_order):
+        self.plot_server.set_layer_order(layer_order)
+
     def layers_update(self):
         layers = list(self.plot_server._generated_layers.keys())
         self.signals.update_layers.emit(layers)
@@ -114,9 +120,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.plot_worker.signals.init.emit('Wikipedia', rasterise)
 
         self.listWidget.setEnabled(True)
-        # self.listWidget.setDragDropMode(QAbstractItemView.InternalMove)
-        # self.listWidget.setAcceptDrops(True)
-        # self.listWidget.itemDropped.connect(self.layer_reorder)
+        self.listWidget.setDragDropMode(QAbstractItemView.InternalMove)
+        self.listWidget.setAcceptDrops(True)
+        self.listWidget.itemDropped.connect(self.layer_reorder)
         self.listWidget.itemDoubleClicked.connect(self.layer_edit)
 
         self.timeSlider = QSlider(Qt.Horizontal)
@@ -124,7 +130,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.timeSlider.setGeometry(QRect(760, 0, 441, 22))
         self.timeSlider.setMaximum(167)
         self.timeSlider.setPageStep(3)
-        # self.timeSlider.setOrientation(Qt.Horizontal)
         self.timeSlider.setTickPosition(QSlider.TicksAbove)
         self.timeSlider.setTickInterval(12)
         self.toolBar.addWidget(self.timeSlider)
@@ -143,7 +148,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def menu_config_rasterise(self, checked):
         # TODO: Allow reliable on-the-fly rasterisation switching
-        # self.plot_server.set_rasterise(checked)
         if not checked:
             msg_box = QMessageBox()
             msg_box.warning(self, "Warning", "Not rasterising increases generation and render times significantly!")
@@ -154,7 +158,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                "GeoJSON Files (*.json)")
         if filepath[0]:
             self.plot_worker.signals.add_geojson_layer.emit(filepath[0])
-            # self.plot_server.add_geojson_layer(filepath[0])
 
     def menu_file_export(self):
         from PySide2.QtCore import QFile
@@ -205,9 +208,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def closeEvent(self, event: QCloseEvent) -> None:
         self.plot_worker.signals.stop.emit()
 
-    # def layer_reorder(self):
-    #     print('Layers reordered')
-    #     self.plot_server.layer_order = [self.listWidget.item(n).text() for n in range(self.listWidget.count())]
+    def layer_reorder(self):
+        print('Layers reordered')
+        self.plot_worker.signals.reorder_layers.emit(
+            [self.listWidget.item(n).text() for n in range(self.listWidget.count())])
 
     def time_changed(self, value):
         try:
@@ -216,7 +220,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps
             labels = generate_week_timesteps()
         self.plot_worker.signals.set_time.emit(value)
-        # self.plot_server.set_time(value)
         self.timeSliderLabel.setText(labels[value])
 
     def _read_file(self, file_path: str) -> str:
