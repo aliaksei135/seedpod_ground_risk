@@ -26,7 +26,7 @@ if sys.platform.startswith('win'):
         # (os.path.join(sys.base_prefix, "Library", "bin", "spatialindex_c-64.dll"), '.'),
         # (os.path.join(sys.base_prefix, "Library", "bin", "mkl_intel_thread.dll"), '.'),  # LAPACK etc. routines
         (os.path.join(rtree.__path__[0], 'lib'), 'rtree/lib'),
-        (os.path.join(PySide2.__path__[0], "plugins"), '.')
+        (os.path.join(PySide2.__path__[0], "plugins"), 'PySide2')
     ]
 elif sys.platform.startswith('linux'):
     qt_plugins_path = os.path.join(PySide2.__path__[0], "Qt", "plugins", "platforms")
@@ -43,7 +43,6 @@ upx_exclude = [
 ]
 
 a = Analysis(['seedpod_ground_risk/main.py'],
-             # pathex=['/home/aliaksei/PycharmProjects/seedpod_gr_app'],
              binaries=binaries,
              datas=[
                  ('static_data/2018-MRDB-minimal.dbf', 'static_data'),
@@ -58,25 +57,19 @@ a = Analysis(['seedpod_ground_risk/main.py'],
                  ('static_data/england_wa_2011_clipped.shp', 'static_data'),
                  ('static_data/england_wa_2011_clipped.shx', 'static_data'),
                  ('static_data/test_path.json', 'static_data'),
-                 # ('static_data/timed_tfc.parq.res20.7z', ' static_data'),
-                 ('static_data/timed_tfc.parq', 'static_data/timed_tfc.parq'),
                  ('static_data/tra0307.ods', 'static_data'),
                  ("seedpod_ground_risk/ui_resources/cascade_splash.png", "ui_resources"),
                  ("README.md", '.'),
-                 # (PySide2.__path__[0], "PySide2"),
                  (os.path.join(pyviz_comms.comm_path, "notebook.js"), "pyviz_comms"),
                  (panel.__path__[0], "panel"),
                  (datashader.__path__[0], "datashader"),
                  (distributed.__path__[0], "distributed"),
                  (os.path.join(fiona.__path__[0], "*.pyd"), "fiona"),  # Geospatial primitives
-                 (os.path.join(geopandas.__path__[0], "datasets"), "geopandas/datasets"),
                  # Geopandas requires access to its data dir
+                 (os.path.join(geopandas.__path__[0], "datasets"), "geopandas/datasets"),
                  (shiboken2.__path__[0], "shiboken2"),  # C++ bindings
              ],
              hiddenimports=[
-                 # "PySide2",  # Qt,
-                 "PySide2.QtPrintSupport",
-                 # "shiboken2",  # PySide2 C++ bindings
                  "uu",  # Binary data en/decode over ASCII sockets
                  "json",
                  "spatialpandas",
@@ -89,13 +82,30 @@ a = Analysis(['seedpod_ground_risk/main.py'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[
+                 "PySide2.Qt3DCore",
+                 "PySide2.Qt3DInput",
+                 "PySide2.Qt3DAnimation",
+                 "PySide2.Qt3DExtras",
+                 "PySide2.Qt3DLogic",
+                 "PySide2.Qt3DRender",
+                 "PySide2.QtQuick",
+                 "PySide2.QtMultimedia",
+                 "Pyside2.QtCharts",
+                 "PySide2.QtDataVisualization",
+                 "PySide2.QtLocation",
+                 "PySide2.QtTextToSpeech",
+                 "PySide2.QtSql",
+                 "PySide2.QtSerialPort",
+                 "PySide2.QtSensors",
+                 "PySide2.QtScript"
                  "PyQt5",
                  "PyQt4",
                  "tkinter",
                  "pydoc",
                  "pdb",
                  "IPython",
-                 "jupyter"
+                 "jupyter",
+                 "coverage"
              ],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
