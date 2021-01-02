@@ -146,8 +146,10 @@ class RoadsLayer(Layer):
         """
         import os
 
-        self._roads_geometries = gpd.read_file(os.sep.join(('static_data', '2018-MRDB-minimal.shp'))).set_crs(
-            'EPSG:27700').rename(columns={'CP_Number': 'count_point_id'})
+        self._roads_geometries = gpd.read_file(os.sep.join(('static_data', '2018-MRDB-minimal.shp'))).rename(
+            columns={'CP_Number': 'count_point_id'})
+        if not self._roads_geometries.crs:
+            self._roads_geometries = self._roads_geometries.set_crs('EPSG:27700')
 
     def _interpolate_traffic_counts(self, bounds_poly: sg.Polygon, resolution: int = 25) -> List[
         List[float]]:
