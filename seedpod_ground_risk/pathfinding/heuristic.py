@@ -16,7 +16,7 @@ class EuclideanHeuristic(Heuristic):
 
 class ManhattanHeuristic(Heuristic):
     def h(self, node: Node, goal: Node):
-        return abs((node.x + node.y) - (goal.x + goal.y))
+        return abs((node.x - goal.x)) + abs((node.y - goal.y))
 
 
 class EuclideanRiskHeuristic(Heuristic):
