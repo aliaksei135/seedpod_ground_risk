@@ -22,10 +22,11 @@ class ManhattanHeuristic(Heuristic):
 class EuclideanRiskHeuristic(Heuristic):
     from seedpod_ground_risk.pathfinding.environment import Environment
 
-    def __init__(self, environment: Environment):
+    def __init__(self, environment: Environment, risk_multiplier=1):
         from seedpod_ground_risk.pathfinding.a_star import AStar
 
         self.environment = environment
+        self.k = risk_multiplier
         self.pathfinder = AStar()
 
     def h(self, node: Node, goal: Node):
@@ -33,4 +34,4 @@ class EuclideanRiskHeuristic(Heuristic):
         cumulative_val = 0
         for node in path_to_goal:
             cumulative_val += node.n
-        return cumulative_val
+        return self.k * cumulative_val
