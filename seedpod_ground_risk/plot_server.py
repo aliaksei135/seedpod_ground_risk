@@ -28,10 +28,10 @@ def is_null(values: Any) -> bool:
 
 
 class PlotServer:
-    layers: List[Layer]
+    data_layers: List[Layer]
     plot_size: Tuple[int, int]
     _cached_area: sg.Polygon
-    _generated_layers: Dict[str, Geometry]
+    _generated_data_layers: Dict[str, Geometry]
 
     # noinspection PyTypeChecker
     def __init__(self, tiles: str = 'Wikipedia', tools: Optional[Iterable[str]] = None,
@@ -68,11 +68,13 @@ class PlotServer:
         from .layers.geojson_layer import GeoJSONLayer
         from .layers.residential_layer import ResidentialLayer
         from .layers.roads_layer import RoadsLayer
-        self._generated_layers = {}
-        self.layer_order = []
-        self.layers = [GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300),
-                       ResidentialLayer('Residential Population', rasterise=rasterise),
-                       RoadsLayer('Road Traffic Population per Hour', rasterise=rasterise)]
+        self._generated_data_layers = {}
+        self.data_layer_order = []
+        self.data_layers = [GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300),
+                            ResidentialLayer('Residential Population', rasterise=rasterise),
+                            RoadsLayer('Road Traffic Population per Hour', rasterise=rasterise)]
+
+        self.modifier_layers = []
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
@@ -99,7 +101,7 @@ class PlotServer:
         from tornado.gen import multi
 
         with ThreadPoolExecutor() as pool:
-            await multi([pool.submit(layer.preload_data) for layer in self.layers])
+            await multi([pool.submit(layer.preload_data) for layer in self.data_layers])
             self._preload_complete = True
             self._progress_callback('Preload complete. First generation will take a minute longer')
 
@@ -173,7 +175,7 @@ class PlotServer:
                              y_range: Optional[Sequence[float]] = (50.8, 51.05)) \
             -> Union[Overlay, Element]:
         """
-        Compose all generated HoloViews layers in self.layers into a single overlay plot.
+        Compose all generated HoloViews layers in self.data_layers into a single overlay plot.
         Overlaid in a first-on-the-bottom manner.
 
         If plot bounds has moved outside of data bounds, generate more as required.
@@ -182,6 +184,8 @@ class PlotServer:
         :param tuple y_range: (min, max) latitude range in EPSG:4326 coordinates
         :returns: overlay plot of stored layers
         """
+        import numpy as np
+
         try:
             if not self._preload_complete:
                 # If layers aren't preloaded yet just return the map tiles
@@ -196,16 +200,30 @@ class PlotServer:
 
                     t0 = time()
                     self.generate_layers(bounds_poly)
-                    # self._current_bounds = bounds_poly
                     self._progress_callback("Rendering new map...")
                     print("Generated all layers in ", time() - t0)
-                    plot = Overlay(list(self._generated_layers.values()))
+                    plot = Overlay(list(self._generated_data_layers.values()))
+                    if self.modifier_layers:
+                        raster = None
+                        for img in plot.Image:
+                            dataset = img.data
+                            data_vars = dataset.data_vars.variables.mapping
+                            for _, var in data_vars.items():
+                                arr = np.copy(var.values)
+                                if raster is None:
+                                    raster = arr
+                                else:
+                                    raster += arr
+
+                        for layer in self.modifier_layers:
+                            # TODO: Feed raster grid into modifier layers, get results out and overlay on data
+                            pass
                 else:
                     self._progress_callback('Area too large to render!')
-                    if not self._generated_layers:
+                    if not self._generated_data_layers:
                         plot = list(self._base_tiles.values())[0]
                     else:
-                        plot = Overlay(list(self._generated_layers.values()))
+                        plot = Overlay(list(self._generated_data_layers.values()))
 
                 self._update_callback()
 
@@ -225,7 +243,7 @@ class PlotServer:
         :param shapely.geometry.Polygon bounds_poly: the bounding polygon for which to generate the map
         """
         # Polygons aren't much use without a base map context
-        assert self.layers is not None
+        assert self.data_layers is not None
         from concurrent.futures import as_completed
         from concurrent.futures.thread import ThreadPoolExecutor
 
@@ -233,7 +251,7 @@ class PlotServer:
         self._progress_callback('Generating layer data')
         with ThreadPoolExecutor() as pool:
             layer_futures = [pool.submit(self.generate_layer, layer, bounds_poly, self._time_idx) for layer in
-                             self.layers]
+                             self.data_layers]
         # Store generated layers as they are completed
         for future in as_completed(layer_futures):
             layer_key, geom = future.result()
@@ -243,15 +261,16 @@ class PlotServer:
 
         # Remove layers with explicit ordering
         # so they are can be reinserted in the correct order instead of updated in place
-        self._generated_layers.clear()
-        self._generated_layers.update(self._base_tiles)
-        if not self.layer_order:
-            self._generated_layers.update(dict(list(layers.items())[::-1]))
+        self._generated_data_layers.clear()
+        self._generated_data_layers.update(self._base_tiles)
+        if not self.data_layer_order:
+            self._generated_data_layers.update(dict(list(layers.items())[::-1]))
         else:
             # Add layers in order
-            self._generated_layers.update({k: layers[k] for k in self.layer_order if k in layers})
+            self._generated_data_layers.update({k: layers[k] for k in self.data_layer_order if k in layers})
             # # Add any new layers last
-            self._generated_layers.update({k: layers[k] for k in layers.keys() if k not in self._generated_layers})
+            self._generated_data_layers.update(
+                {k: layers[k] for k in layers.keys() if k not in self._generated_data_layers})
 
     @staticmethod
     def generate_layer(layer: Layer, bounds_poly: sg.Polygon, hour: int) -> Union[
@@ -277,7 +296,7 @@ class PlotServer:
 
     def set_rasterise(self, val: bool) -> None:
         self.rasterise = val
-        for layer in self.layers:
+        for layer in self.data_layers:
             layer.rasterise = val
 
     def set_time(self, hour: int) -> None:
@@ -288,7 +307,7 @@ class PlotServer:
 
         layer = GeoJSONLayer(filepath)
         layer.preload_data()
-        self.layers.append(layer)
+        self.data_layers.append(layer)
 
     def set_layer_order(self, layer_order):
-        self.layer_order = layer_order
+        self.data_layer_order = layer_order
