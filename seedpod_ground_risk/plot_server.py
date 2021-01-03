@@ -70,7 +70,7 @@ class PlotServer:
         from .layers.roads_layer import RoadsLayer
         self._generated_layers = {}
         self.layer_order = []
-        self.layers = [GeoJSONLayer('static_data/test_path.json', buffer=300),
+        self.layers = [GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300),
                        ResidentialLayer('Residential Population', rasterise=rasterise),
                        RoadsLayer('Road Traffic Population per Hour', rasterise=rasterise)]
 

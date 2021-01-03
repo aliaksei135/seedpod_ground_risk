@@ -8,10 +8,7 @@ from seedpod_ground_risk.layer import Layer
 
 class GeoJSONLayer(Layer):
 
-    def __init__(self, geojson_filepath, buffer: float = None, **kwargs):
-        import os
-
-        key = os.path.basename(geojson_filepath)
+    def __init__(self, key: str, geojson_filepath: str, buffer: float = None, **kwargs):
         super(GeoJSONLayer, self).__init__(key, **kwargs)
         self.filepath = geojson_filepath
         self.buffer_dist = buffer
