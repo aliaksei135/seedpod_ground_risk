@@ -5,7 +5,7 @@ from holoviews.element import Geometry
 from shapely import geometry as sg
 from shapely import speedups
 
-from seedpod_ground_risk.layer import Layer
+from seedpod_ground_risk.layers.data_layer import DataLayer
 
 gpd.options.use_pygeos = True  # Use GEOS optimised C++ routines
 speedups.enable()  # Enable shapely speedups
@@ -36,7 +36,7 @@ def generate_week_timesteps():
     return timestep_index
 
 
-class RoadsLayer(Layer):
+class RoadsLayer(DataLayer):
     _traffic_counts: gpd.GeoDataFrame
 
     def __init__(self, key, **kwargs):

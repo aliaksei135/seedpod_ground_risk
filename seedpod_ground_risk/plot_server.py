@@ -4,7 +4,7 @@ import shapely.geometry as sg
 from holoviews import Overlay, Element
 from holoviews.element import Geometry
 
-from .layer import Layer
+from seedpod_ground_risk.layers.data_layer import DataLayer
 
 
 def make_bounds_polygon(*args: Iterable[float]) -> sg.Polygon:
@@ -28,7 +28,7 @@ def is_null(values: Any) -> bool:
 
 
 class PlotServer:
-    data_layers: List[Layer]
+    data_layers: List[DataLayer]
     plot_size: Tuple[int, int]
     _cached_area: sg.Polygon
     _generated_data_layers: Dict[str, Geometry]
@@ -74,7 +74,7 @@ class PlotServer:
                             ResidentialLayer('Residential Population', rasterise=rasterise),
                             RoadsLayer('Road Traffic Population per Hour', rasterise=rasterise)]
 
-        self.modifier_layers = []
+        self.annotation_layers = []
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
@@ -273,7 +273,7 @@ class PlotServer:
                 {k: layers[k] for k in layers.keys() if k not in self._generated_data_layers})
 
     @staticmethod
-    def generate_layer(layer: Layer, bounds_poly: sg.Polygon, hour: int) -> Union[
+    def generate_layer(layer: DataLayer, bounds_poly: sg.Polygon, hour: int) -> Union[
         Tuple[str, Geometry], Tuple[str, None]]:
         import shapely.ops as so
 

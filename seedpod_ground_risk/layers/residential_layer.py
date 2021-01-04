@@ -5,13 +5,13 @@ import shapely.geometry as sg
 from holoviews.element import Geometry
 from shapely import speedups
 
-from seedpod_ground_risk.layer import Layer
+from seedpod_ground_risk.layers.data_layer import DataLayer
 
 gpd.options.use_pygeos = True  # Use GEOS optimised C++ routines
 speedups.enable()  # Enable shapely speedups
 
 
-class ResidentialLayer(Layer):
+class ResidentialLayer(DataLayer):
     _census_wards: gpd.GeoDataFrame
     _landuse_polygons: gpd.GeoDataFrame
 

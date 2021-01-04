@@ -1,12 +1,12 @@
-from typing import NoReturn
+from typing import NoReturn, List
 
+import geopandas as gpd
 from holoviews.element import Geometry, Overlay
-from shapely import geometry as sg
 
-from seedpod_ground_risk.layer import Layer
+from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 
 
-class GeoJSONLayer(Layer):
+class GeoJSONLayer(AnnotationLayer):
 
     def __init__(self, key: str, geojson_filepath: str, buffer: float = None, **kwargs):
         super(GeoJSONLayer, self).__init__(key, **kwargs)
@@ -18,14 +18,13 @@ class GeoJSONLayer(Layer):
         self.buffer_poly = None
 
     def preload_data(self) -> NoReturn:
-        import geopandas as gpd
 
         self.dataframe = gpd.read_file(self.filepath)
         if self.buffer_dist:
             epsg27700_geom = self.dataframe.to_crs('EPSG:27700').geometry
             self.buffer_poly = epsg27700_geom.buffer(self.buffer_dist).to_crs('EPSG:4326')
 
-    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Geometry:
+    def annotate(self, data: List[gpd.GeoDataFrame], **kwargs) -> Geometry:
         import geoviews as gv
 
         if self.buffer_poly is not None:
