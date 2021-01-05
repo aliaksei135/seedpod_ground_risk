@@ -4,6 +4,7 @@ import shapely.geometry as sg
 from holoviews import Overlay, Element
 from holoviews.element import Geometry
 
+from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.layers.data_layer import DataLayer
 
 
@@ -29,6 +30,7 @@ def is_null(values: Any) -> bool:
 
 class PlotServer:
     data_layers: List[DataLayer]
+    annotation_layers: List[AnnotationLayer]
     plot_size: Tuple[int, int]
     _cached_area: sg.Polygon
     _generated_data_layers: Dict[str, Geometry]
@@ -70,11 +72,10 @@ class PlotServer:
         from .layers.roads_layer import RoadsLayer
         self._generated_data_layers = {}
         self.data_layer_order = []
-        self.data_layers = [GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300),
-                            ResidentialLayer('Residential Population', rasterise=rasterise),
+        self.data_layers = [ResidentialLayer('Residential Population', rasterise=rasterise),
                             RoadsLayer('Road Traffic Population per Hour', rasterise=rasterise)]
 
-        self.annotation_layers = []
+        self.annotation_layers = [GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300)]
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
@@ -99,9 +100,10 @@ class PlotServer:
     async def _preload_layers(self):
         from concurrent.futures.thread import ThreadPoolExecutor
         from tornado.gen import multi
+        from itertools import chain
 
         with ThreadPoolExecutor() as pool:
-            await multi([pool.submit(layer.preload_data) for layer in self.data_layers])
+            await multi([pool.submit(layer.preload_data) for layer in chain(self.data_layers, self.annotation_layers)])
             self._preload_complete = True
             self._progress_callback('Preload complete. First generation will take a minute longer')
 
@@ -184,7 +186,6 @@ class PlotServer:
         :param tuple y_range: (min, max) latitude range in EPSG:4326 coordinates
         :returns: overlay plot of stored layers
         """
-        import numpy as np
 
         try:
             if not self._preload_complete:
@@ -203,21 +204,18 @@ class PlotServer:
                     self._progress_callback("Rendering new map...")
                     print("Generated all layers in ", time() - t0)
                     plot = Overlay(list(self._generated_data_layers.values()))
-                    if self.modifier_layers:
-                        raster = None
-                        for img in plot.Image:
-                            dataset = img.data
-                            data_vars = dataset.data_vars.variables.mapping
-                            for _, var in data_vars.items():
-                                arr = np.copy(var.values)
-                                if raster is None:
-                                    raster = arr
-                                else:
-                                    raster += arr
+                    if self.annotation_layers:
+                        raw_datas = []
+                        for _, img in plot.Image.data.items():
+                            raw_datas.append(img.dataset.data)
+                        annotations = []
+                        for layer in self.annotation_layers:
+                            annotation = layer.annotate(raw_datas)
+                            annotations.append(annotation)
 
-                        for layer in self.modifier_layers:
-                            # TODO: Feed raster grid into modifier layers, get results out and overlay on data
-                            pass
+                        annotation_overlay = Overlay(annotations)
+                        plot = Overlay([plot, annotation_overlay]).collate()
+
                 else:
                     self._progress_callback('Area too large to render!')
                     if not self._generated_data_layers:

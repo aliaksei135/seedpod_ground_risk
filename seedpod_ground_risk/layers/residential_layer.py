@@ -50,7 +50,7 @@ class ResidentialLayer(DataLayer):
         # Estimate the population of landuse polygons from the density of the census ward they are within
         # EPSG:4326 is *not* an equal area projection so would give gibberish areas
         # Project geometries to an equidistant/equal areq projection
-        census_df['population'] = census_df['density'] * census_df['geometry'].to_crs('EPSG:4088').area
+        census_df['population'] = census_df['density'] * census_df['geometry'].to_crs('EPSG:3395').area
 
         # Scale to reduce error for smaller, less dense wards
         # This was found empirically minimising the population error in 10 random villaegs in Hampshire
