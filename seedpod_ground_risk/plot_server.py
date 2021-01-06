@@ -300,12 +300,12 @@ class PlotServer:
     def set_time(self, hour: int) -> None:
         self._time_idx = hour
 
-    def add_geojson_layer(self, filepath: str) -> None:
+    def add_geojson_layer(self, filepath: str, buffer: float = None) -> None:
         from .layers.geojson_layer import GeoJSONLayer
 
-        layer = GeoJSONLayer(filepath)
+        layer = GeoJSONLayer(filepath.split('.')[0], filepath, buffer=buffer)
         layer.preload_data()
-        self.data_layers.append(layer)
+        self.annotation_layers.append(layer)
 
     def set_layer_order(self, layer_order):
         self.data_layer_order = layer_order

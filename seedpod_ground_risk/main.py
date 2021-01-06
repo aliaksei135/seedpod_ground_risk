@@ -31,7 +31,7 @@ class PlotWorkerSignals(QObject):
     update_status = Signal(str)
     update_layers = Signal(list)
     reorder_layers = Signal(list)
-    add_geojson_layer = Signal(str)
+    add_geojson_layer = Signal(str, float)
 
 
 class PlotWorker(QRunnable):
@@ -76,9 +76,12 @@ class PlotWorker(QRunnable):
         self.plot_server.generate_map()
         self.status_update("Update queued, move map to trigger")
 
-    @Slot(str)
-    def add_geojson_layer(self, path):
-        self.plot_server.add_geojson_layer(path)
+    @Slot(str, float)
+    def add_geojson_layer(self, path, buffer):
+        if buffer and buffer > 10:
+            self.plot_server.add_geojson_layer(path, buffer=buffer)
+        else:
+            self.plot_server.add_geojson_layer(path)
 
     @Slot(int)
     def set_time(self, hour):
@@ -154,10 +157,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def menu_file_import(self):
         from PySide2.QtWidgets import QFileDialog
+        from PySide2.QtWidgets import QInputDialog
+
         filepath = QFileDialog.getOpenFileName(self, "Import GeoJSON geometry...", os.getcwd(),
                                                "GeoJSON Files (*.json)")
         if filepath[0]:
-            self.plot_worker.signals.add_geojson_layer.emit(filepath[0])
+            buffer, ok = QInputDialog.getDouble(self, "Set Path Buffer", "Buffer in metres:", 0, 0, 1500, 1)
+            if ok:
+                self.plot_worker.signals.add_geojson_layer.emit(filepath[0], buffer)
+            else:
+                self.plot_worker.signals.add_geojson_layer.emit(filepath[0], 0)
 
     def menu_file_export(self):
         from PySide2.QtCore import QFile
