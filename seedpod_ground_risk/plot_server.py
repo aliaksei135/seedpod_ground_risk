@@ -189,6 +189,7 @@ class PlotServer:
         from itertools import chain
         from geoviews import WMTS
         from holoviews.element import Image
+        import numpy as np
 
         try:
             if not self._preload_complete:
@@ -209,17 +210,24 @@ class PlotServer:
                     plot = Overlay(list(self._generated_data_layers.values()))
                     if self.annotation_layers:
                         raw_datas = []
+                        raster_grid = None
                         for layer in plot:
                             if isinstance(layer, WMTS):
                                 continue
                             elif isinstance(layer, Image):
+                                for _, var in layer.data.data_vars.items():
+                                    if raster_grid is None:
+                                        # raster_grid cannot be assigned directly to var.data,
+                                        # this results in the raster grid disappearing during render
+                                        raster_grid = np.zeros(var.data.shape)
+                                    raster_grid += var.data
                                 raw_datas.append(layer.dataset.data)
                             else:
                                 raw_datas.append(layer.data)
 
                         annotations = []
                         for layer in self.annotation_layers:
-                            annotation = layer.annotate(raw_datas)
+                            annotation = layer.annotate(raw_datas, raster_grid)
                             annotations.append(annotation)
 
                         annotation_overlay = Overlay(annotations)
