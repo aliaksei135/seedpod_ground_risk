@@ -42,7 +42,7 @@ class PlotServer:
                  cmap: str = 'CET_L18',
                  plot_size: Tuple[int, int] = (760, 735),
                  progress_callback: Optional[Callable[[str], None]] = None,
-                 update_callback: Optional[Callable[[], None]] = None):
+                 update_callback: Optional[Callable[[str], None]] = None):
         """
         Initialise a Plot Server
 
@@ -186,6 +186,7 @@ class PlotServer:
         :param tuple y_range: (min, max) latitude range in EPSG:4326 coordinates
         :returns: overlay plot of stored layers
         """
+        from itertools import chain
 
         try:
             if not self._preload_complete:
@@ -223,7 +224,7 @@ class PlotServer:
                     else:
                         plot = Overlay(list(self._generated_data_layers.values()))
 
-                self._update_callback()
+                self._update_callback([layer.key for layer in chain(self.data_layers, self.annotation_layers)])
 
         except Exception as e:
             # Catch-all to prevent plot blanking out and/or crashing app

@@ -91,8 +91,7 @@ class PlotWorker(QRunnable):
     def layers_reorder(self, layer_order):
         self.plot_server.set_layer_order(layer_order)
 
-    def layers_update(self):
-        layers = list(self.plot_server._generated_data_layers.keys())
+    def layers_update(self, layers):
         self.signals.update_layers.emit(layers)
 
     def status_update(self, status):
