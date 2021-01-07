@@ -11,11 +11,12 @@ from seedpod_ground_risk.layers.data_layer import DataLayer
 class OSMTagLayer(DataLayer):
     _landuse_polygons: gpd.GeoDataFrame
 
-    def __init__(self, key, rasterise: bool = False, osm_tag: str = 'landuse=residential'):
+    def __init__(self, key, rasterise: bool = False, osm_tag: str = 'landuse=residential', colour: str = None):
         super().__init__(key, rasterise)
         self._osm_tag = osm_tag
         # Set a random colour
-        self._colour = "#" + ''.join([random.choice('0123456789ABCDEF') for i in range(6)])
+        self._colour = colour if colour is not None else "#" + ''.join(
+            [random.choice('0123456789ABCDEF') for _ in range(6)])
         self._landuse_polygons = gpd.GeoDataFrame()
 
     def preload_data(self) -> NoReturn:

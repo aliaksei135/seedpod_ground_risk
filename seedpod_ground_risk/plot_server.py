@@ -75,7 +75,8 @@ class PlotServer:
         self.data_layer_order = []
         self.data_layers = [ResidentialLayer('Residential Population', rasterise=rasterise),
                             RoadsLayer('Road Traffic Population per Hour', rasterise=rasterise),
-                            OSMTagLayer('Military Airfields', osm_tag='military=airfield')]
+                            OSMTagLayer('Nature Reserves', osm_tag='leisure=nature_reserve', colour='green'),
+                            OSMTagLayer('Military Airfields', osm_tag='military=airfield', colour='red')]
 
         self.annotation_layers = [GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300)]
 
