@@ -224,6 +224,8 @@ class PlotServer:
                                 raw_datas.append(layer.dataset.data)
                             else:
                                 raw_datas.append(layer.data)
+                        nans = np.isnan(raster_grid)
+                        raster_grid[nans] = 0
 
                         annotations = []
                         for layer in self.annotation_layers:
