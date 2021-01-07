@@ -6,6 +6,7 @@ from holoviews.element import Geometry
 
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.layers.data_layer import DataLayer
+from seedpod_ground_risk.layers.osm_tag_layer import OSMTagLayer
 
 
 def make_bounds_polygon(*args: Iterable[float]) -> sg.Polygon:
@@ -73,7 +74,8 @@ class PlotServer:
         self._generated_data_layers = {}
         self.data_layer_order = []
         self.data_layers = [ResidentialLayer('Residential Population', rasterise=rasterise),
-                            RoadsLayer('Road Traffic Population per Hour', rasterise=rasterise)]
+                            RoadsLayer('Road Traffic Population per Hour', rasterise=rasterise),
+                            OSMTagLayer('Military Airfields', osm_tag='military=airfield')]
 
         self.annotation_layers = [GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300)]
 

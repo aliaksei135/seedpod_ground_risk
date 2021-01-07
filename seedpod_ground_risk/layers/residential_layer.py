@@ -81,9 +81,6 @@ class ResidentialLayer(OSMTagLayer):
             print('Residential no raster: ', t1 - t0)
             return gv_polys
 
-    def clear_cache(self):
-        self._landuse_polygons = gpd.GeoDataFrame()
-
     def ingest_census_data(self) -> NoReturn:
         """
         Ingest Census boundaries and density values and overlay/merge

@@ -1,18 +1,35 @@
-import abc
+import random
 from typing import NoReturn
 
 import geopandas as gpd
 import shapely.geometry as sg
+from holoviews.element import Geometry
 
 from seedpod_ground_risk.layers.data_layer import DataLayer
 
 
-class OSMTagLayer(DataLayer, abc.ABC):
+class OSMTagLayer(DataLayer):
     _landuse_polygons: gpd.GeoDataFrame
 
     def __init__(self, key, rasterise: bool = False, osm_tag: str = 'landuse=residential'):
         super().__init__(key, rasterise)
         self._osm_tag = osm_tag
+        # Set a random colour
+        self._colour = "#" + ''.join([random.choice('0123456789ABCDEF') for i in range(6)])
+        self._landuse_polygons = gpd.GeoDataFrame()
+
+    def preload_data(self) -> NoReturn:
+        pass
+
+    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Geometry:
+        import geoviews as gv
+
+        self.query_osm_polygons(bounds_polygon)
+        if self._landuse_polygons.empty:
+            return None
+        return gv.Polygons(self._landuse_polygons).opts(style={'alpha': 0.8, 'color': self._colour})
+
+    def clear_cache(self):
         self._landuse_polygons = gpd.GeoDataFrame()
 
     def query_osm_polygons(self, bound_poly: sg.Polygon) -> NoReturn:
