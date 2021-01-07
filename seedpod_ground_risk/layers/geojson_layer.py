@@ -32,6 +32,8 @@ class GeoJSONLayer(AnnotationLayer):
         if self.buffer_poly is not None:
             annotation_layers = []
             for gdf in data:
+                if 'density' not in gdf:
+                    continue
                 if not gdf.crs:
                     # If CRS is not set, set EPSG4326 without reprojection as it must be EPSG4326 to display properly
                     gdf.set_crs(epsg=4326, inplace=True)
