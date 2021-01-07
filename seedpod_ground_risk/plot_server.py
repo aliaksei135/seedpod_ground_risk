@@ -266,7 +266,8 @@ class PlotServer:
             layer_key, geom = future.result()
             # Store layer
             # Lock not needed as this loop is synchronous
-            layers[layer_key] = geom
+            if geom:
+                layers[layer_key] = geom
 
         # Remove layers with explicit ordering
         # so they are can be reinserted in the correct order instead of updated in place
