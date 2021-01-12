@@ -1,8 +1,9 @@
 import multiprocessing
-
 import os
 import sys
 import time
+
+from seedpod_ground_risk.core.plot_worker import PlotWorker
 
 print("Builtin modules imported")
 from PySide2.QtCore import Qt, QRect, QObject, Signal, QRunnable, Slot, QThreadPool

@@ -68,9 +68,9 @@ class PlotServer:
 
         self._time_idx = 0
 
-        from .layers.geojson_layer import GeoJSONLayer
-        from .layers.residential_layer import ResidentialLayer
-        from .layers.roads_layer import RoadsLayer
+        from seedpod_ground_risk.layers.geojson_layer import GeoJSONLayer
+        from seedpod_ground_risk.layers.residential_layer import ResidentialLayer
+        from seedpod_ground_risk.layers.roads_layer import RoadsLayer
         self._generated_data_layers = {}
         self.data_layer_order = []
         self.data_layers = [ResidentialLayer('Residential Population', rasterise=rasterise),
@@ -314,7 +314,7 @@ class PlotServer:
         self._time_idx = hour
 
     def add_geojson_layer(self, filepath: str, buffer: float = None) -> None:
-        from .layers.geojson_layer import GeoJSONLayer
+        from seedpod_ground_risk.layers.geojson_layer import GeoJSONLayer
 
         layer = GeoJSONLayer(filepath.split('.')[0], filepath, buffer=buffer)
         layer.preload_data()
