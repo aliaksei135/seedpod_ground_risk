@@ -63,7 +63,7 @@ class PlotServer:
         self.cmap = getattr(colorcet, cmap)
 
         from geoviews import tile_sources as gvts
-        self._base_tiles = {'Base ' + tiles + ' tiles': getattr(gvts, tiles)}
+        self._base_tiles = getattr(gvts, tiles)
 
         self._time_idx = 0
 
@@ -195,7 +195,7 @@ class PlotServer:
             if not self._preload_complete:
                 # If layers aren't preloaded yet just return the map tiles
                 self._progress_callback('Still preloading layer data...')
-                plot = list(self._base_tiles.values())[0]
+                plot = self._base_tiles
             else:
                 # Construct box around requested bounds
                 bounds_poly = make_bounds_polygon(x_range, y_range)
@@ -224,6 +224,7 @@ class PlotServer:
                                 raw_datas.append(layer.dataset.data)
                             else:
                                 raw_datas.append(layer.data)
+                        # Set nans to zero
                         nans = np.isnan(raster_grid)
                         raster_grid[nans] = 0
 
@@ -233,14 +234,16 @@ class PlotServer:
                             annotations.append(annotation)
 
                         annotation_overlay = Overlay(annotations)
-                        plot = Overlay([plot, annotation_overlay]).collate()
+                        plot = Overlay([self._base_tiles, plot, annotation_overlay]).collate()
+                    else:
+                        plot = Overlay([self._base_tiles, plot]).collate()
 
                 else:
                     self._progress_callback('Area too large to render!')
                     if not self._generated_data_layers:
-                        plot = list(self._base_tiles.values())[0]
+                        plot = self._base_tiles
                     else:
-                        plot = Overlay(list(self._generated_data_layers.values()))
+                        plot = Overlay([self._base_tiles, *list(self._generated_data_layers.values())])
 
                 self._update_callback([layer.key for layer in chain(self.data_layers, self.annotation_layers)])
 
@@ -248,7 +251,7 @@ class PlotServer:
             # Catch-all to prevent plot blanking out and/or crashing app
             # Just display map tiles in case this was transient
             print(e)
-            plot = list(self._base_tiles.values())[0]
+            plot = self._base_tiles
 
         return plot.opts(width=self.plot_size[0], height=self.plot_size[1],
                          tools=self.tools, active_tools=self.active_tools)
@@ -279,7 +282,6 @@ class PlotServer:
         # Remove layers with explicit ordering
         # so they are can be reinserted in the correct order instead of updated in place
         self._generated_data_layers.clear()
-        self._generated_data_layers.update(self._base_tiles)
         if not self.data_layer_order:
             self._generated_data_layers.update(dict(list(layers.items())[::-1]))
         else:
