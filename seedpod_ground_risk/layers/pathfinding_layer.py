@@ -21,6 +21,7 @@ class PathfindingLayer(AnnotationLayer):
     def annotate(self, data: List[gpd.GeoDataFrame], raster_data: Tuple[Dict[str, np.array], np.array],
                  **kwargs) -> Geometry:
         from seedpod_ground_risk.pathfinding import environment, a_star
+        from seedpod_ground_risk.pathfinding import heuristic
         import geoviews as gv
 
         snapped_start_lat_idx = np.argmin(np.abs(raster_data[0]['Latitude'] - self.start_coords[1]))
@@ -32,7 +33,7 @@ class PathfindingLayer(AnnotationLayer):
         end_node = environment.Node(snapped_end_lon_idx, snapped_end_lat_idx)
 
         env = environment.GridEnvironment(raster_data[1], diagonals=True)
-        algo = a_star.AStar()
+        algo = a_star.AStar(heuristic=heuristic.EuclideanRiskHeuristic(env))
         path = algo.find_path(env, start_node, end_node)
         print(len(path))
 
@@ -42,7 +43,7 @@ class PathfindingLayer(AnnotationLayer):
             lon = raster_data[0]['Longitude'][node.x]
             snapped_path.append((lon, lat))
 
-        return gv.EdgePaths(snapped_path)
+        return gv.Path(snapped_path)
 
     def clear_cache(self) -> NoReturn:
         pass
