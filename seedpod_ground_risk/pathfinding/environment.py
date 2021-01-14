@@ -3,7 +3,7 @@ from typing import Dict, Sequence
 
 
 class Node:
-    def __init__(self, x, y, n, lon=0, lat=0):
+    def __init__(self, x, y, n=0, lon=0, lat=0):
         self.x = x
         self.y = y
         self.n = n
@@ -12,7 +12,7 @@ class Node:
         self.lat = lat
 
     def __eq__(self, other):
-        if self.x == other.x and self.y == other.y and self.n == other.n:
+        if self.x == other.x and self.y == other.y:
             return True
         return False
 
