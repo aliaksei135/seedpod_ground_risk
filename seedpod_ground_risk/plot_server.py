@@ -210,6 +210,7 @@ class PlotServer:
                     plot = Overlay(list(self._generated_data_layers.values()))
                     if self.annotation_layers:
                         raw_datas = []
+                        raster_indices = []
                         raster_grid = None
                         for layer in plot:
                             if isinstance(layer, WMTS):
@@ -221,12 +222,24 @@ class PlotServer:
                                         # this results in the raster grid disappearing during render
                                         raster_grid = np.zeros(var.data.shape)
                                     raster_grid += var.data
+                                raster_indices.append(dict(layer.data.coords.indexes))
                                 raw_datas.append(layer.dataset.data)
                             else:
                                 raw_datas.append(layer.data)
                         # Set nans to zero
                         nans = np.isnan(raster_grid)
                         raster_grid[nans] = 0
+
+                        merged_indices = {}
+                        # Merge indices
+                        # Get unique keys
+                        keys = set([key for d in raster_indices for key in d.keys()])
+                        for k in keys:
+                            values = []
+                            for d in raster_indices:
+                                if k in d:
+                                    values.append(d[k])
+                            merged_indices[k] = np.mean(values, axis=0)
 
                         annotations = []
                         for layer in self.annotation_layers:
