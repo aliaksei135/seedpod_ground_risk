@@ -48,19 +48,40 @@ class Ui_MainWindow(object):
         self.centralwidget.setMinimumSize(QSize(1216, 757))
         self.splitter = QSplitter(self.centralwidget)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setGeometry(QRect(0, 0, 1211, 781))
+        self.splitter.setGeometry(QRect(0, 0, 1221, 771))
         sizePolicy.setHeightForWidth(self.splitter.sizePolicy().hasHeightForWidth())
         self.splitter.setSizePolicy(sizePolicy)
-        self.splitter.setMinimumSize(QSize(1211, 781))
-        self.splitter.setMaximumSize(QSize(16777215, 16777215))
+        self.splitter.setMinimumSize(QSize(1221, 771))
         self.splitter.setOrientation(Qt.Horizontal)
-        self.listWidget = MapLayersListWidget(self.splitter)
+        self.verticalLayoutWidget = QWidget(self.splitter)
+        self.verticalLayoutWidget.setObjectName(u"verticalLayoutWidget")
+        self.verticalLayout = QVBoxLayout(self.verticalLayoutWidget)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.listWidget = MapLayersListWidget(self.verticalLayoutWidget)
         self.listWidget.setObjectName(u"listWidget")
         self.listWidget.setEnabled(False)
         sizePolicy.setHeightForWidth(self.listWidget.sizePolicy().hasHeightForWidth())
         self.listWidget.setSizePolicy(sizePolicy)
-        self.listWidget.setMinimumSize(QSize(410, 781))
-        self.splitter.addWidget(self.listWidget)
+        self.listWidget.setMinimumSize(QSize(410, 500))
+
+        self.verticalLayout.addWidget(self.listWidget)
+
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.addOSMLayerButton = QPushButton(self.verticalLayoutWidget)
+        self.addOSMLayerButton.setObjectName(u"addOSMLayerButton")
+
+        self.horizontalLayout.addWidget(self.addOSMLayerButton)
+
+        self.removeLayerButton = QPushButton(self.verticalLayoutWidget)
+        self.removeLayerButton.setObjectName(u"removeLayerButton")
+
+        self.horizontalLayout.addWidget(self.removeLayerButton)
+
+        self.verticalLayout.addLayout(self.horizontalLayout)
+
+        self.splitter.addWidget(self.verticalLayoutWidget)
         self.webview = QWebEngineView(self.splitter)
         self.webview.setObjectName(u"webview")
         sizePolicy.setHeightForWidth(self.webview.sizePolicy().hasHeightForWidth())
@@ -102,6 +123,8 @@ class Ui_MainWindow(object):
         # if QT_CONFIG(tooltip)
         self.actionGenerate.setToolTip(QCoreApplication.translate("MainWindow", u"Generate Map for current view", None))
         # endif // QT_CONFIG(tooltip)
+        self.addOSMLayerButton.setText(QCoreApplication.translate("MainWindow", u"Add OSM Layer", None))
+        self.removeLayerButton.setText(QCoreApplication.translate("MainWindow", u"Remove Layer", None))
         self.toolBar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
     # retranslateUi
 

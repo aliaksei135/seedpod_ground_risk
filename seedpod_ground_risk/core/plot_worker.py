@@ -12,9 +12,11 @@ class PlotWorkerSignals(QObject):
     update_layers = Signal(list)
     reorder_layers = Signal(list)
     add_geojson_layer = Signal(str, float)
+    add_osm_layer = Signal(str, bool)
 
 
 class PlotWorker(QRunnable):
+
     def __init__(self, *args, **kwargs):
         super(PlotWorker, self).__init__()
 
@@ -25,6 +27,7 @@ class PlotWorker(QRunnable):
         self.signals.set_time.connect(self.set_time)
         self.signals.reorder_layers.connect(self.layers_reorder)
         self.signals.add_geojson_layer.connect(self.add_geojson_layer)
+        self.signals.add_osm_layer.connect(self.add_osm_layer)
 
         self.plot_server = None
         self.stop = False
@@ -63,6 +66,10 @@ class PlotWorker(QRunnable):
             self.plot_server.add_geojson_layer(path, buffer=buffer)
         else:
             self.plot_server.add_geojson_layer(path)
+
+    @Slot(str, bool)
+    def add_osm_layer(self, kv, blocking):
+        self.plot_server.add_osm_layer(kv, blocking)
 
     @Slot(int)
     def set_time(self, hour):

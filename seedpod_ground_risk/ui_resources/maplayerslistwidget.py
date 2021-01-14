@@ -4,6 +4,7 @@ from PySide2.QtWidgets import QListWidget
 
 class MapLayersListWidget(QListWidget):
     itemDropped = Signal()
+    rightClickAddOSMLayer = Signal()
 
     def __init__(self, *args, **kwargs):
         super(MapLayersListWidget, self).__init__(*args, **kwargs)

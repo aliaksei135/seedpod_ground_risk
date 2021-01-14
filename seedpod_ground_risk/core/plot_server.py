@@ -320,5 +320,11 @@ class PlotServer:
         layer.preload_data()
         self.annotation_layers.append(layer)
 
+    def add_osm_layer(self, kv: str, blocking: bool):
+        # TODO Add blocking layers
+        layer = OSMTagLayer(kv, osm_tag=kv)
+        layer.preload_data()
+        self.data_layers.append(layer)
+
     def set_layer_order(self, layer_order):
         self.data_layer_order = layer_order

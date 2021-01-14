@@ -6,7 +6,7 @@ import time
 from seedpod_ground_risk.core.plot_worker import PlotWorker
 
 print("Builtin modules imported")
-from PySide2.QtCore import Qt, QRect, QObject, Signal, QRunnable, Slot, QThreadPool
+from PySide2.QtCore import Qt, QRect, Slot, QThreadPool
 
 print("QTCore imported")
 from PySide2.QtGui import QPixmap, QCloseEvent
@@ -20,83 +20,6 @@ from seedpod_ground_risk.ui_resources.mainwindow import Ui_MainWindow
 from seedpod_ground_risk.ui_resources.textdialog import Ui_TextAboutDialog
 
 print("Layer modules imported")
-
-
-class PlotWorkerSignals(QObject):
-    init = Signal(str, bool)
-    ready = Signal(str)
-    stop = Signal()
-
-    set_time = Signal(int)
-    generate = Signal()
-    update_status = Signal(str)
-    update_layers = Signal(list)
-    reorder_layers = Signal(list)
-    add_geojson_layer = Signal(str, float)
-
-
-class PlotWorker(QRunnable):
-    def __init__(self, *args, **kwargs):
-        super(PlotWorker, self).__init__()
-
-        self.signals = PlotWorkerSignals()
-        self.signals.init.connect(self.init)
-        self.signals.stop.connect(self.stop)
-        self.signals.generate.connect(self.generate)
-        self.signals.set_time.connect(self.set_time)
-        self.signals.reorder_layers.connect(self.layers_reorder)
-        self.signals.add_geojson_layer.connect(self.add_geojson_layer)
-
-        self.plot_server = None
-        self.stop = False
-
-    @Slot()
-    def run(self) -> None:
-        while True:
-            if self.stop:
-                return
-            time.sleep(0.1)
-
-    @Slot(str, bool)
-    def init(self, tiles='Wikipedia', rasterise=True):
-        from seedpod_ground_risk.plot_server import PlotServer
-
-        self.plot_server = PlotServer(tiles=tiles,
-                                      rasterise=rasterise,
-                                      progress_callback=self.status_update,
-                                      update_callback=self.layers_update)
-        self.plot_server.start()
-        self.signals.ready.emit(self.plot_server.url)
-
-    @Slot()
-    def stop(self):
-        self.stop = True
-
-    @Slot()
-    def generate(self):
-        self.plot_server.generate_map()
-        self.status_update("Update queued, move map to trigger")
-
-    @Slot(str, float)
-    def add_geojson_layer(self, path, buffer):
-        if buffer and buffer > 10:
-            self.plot_server.add_geojson_layer(path, buffer=buffer)
-        else:
-            self.plot_server.add_geojson_layer(path)
-
-    @Slot(int)
-    def set_time(self, hour):
-        self.plot_server.set_time(hour)
-
-    @Slot(list)
-    def layers_reorder(self, layer_order):
-        self.plot_server.set_layer_order(layer_order)
-
-    def layers_update(self, layers):
-        self.signals.update_layers.emit(layers)
-
-    def status_update(self, status):
-        self.signals.update_status.emit(status)
 
 
 class TextAboutDialog(QDialog):
@@ -127,6 +50,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.listWidget.setAcceptDrops(True)
         self.listWidget.itemDropped.connect(self.layer_reorder)
         self.listWidget.itemDoubleClicked.connect(self.layer_edit)
+        self.listWidget.rightClickAddOSMLayer.connect(self.layer_add_osm)
 
         self.timeSlider = QSlider(Qt.Horizontal)
         self.timeSlider.setObjectName(u"timeSlider")
@@ -141,6 +65,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.timeSliderLabel.setGeometry(QRect(590, 0, 161, 20))
         self.toolBar.addWidget(self.timeSliderLabel)
         self.timeSlider.valueChanged.connect(self.time_changed)
+
+        self.addOSMLayerButton.clicked.connect(self.layer_add_osm)
+        # self.removeLayerButton.connect()
 
         self.actionRasterise.triggered.connect(self.menu_config_rasterise)
         self.actionImport.triggered.connect(self.menu_file_import)
@@ -209,6 +136,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             item = QListWidgetItem(layer)
             item.setCheckState(Qt.CheckState.Checked)
             self.listWidget.addItem(item)
+
+    def layer_add_osm(self):
+        from PySide2.QtWidgets import QInputDialog
+        import re
+
+        kv_str, ok = QInputDialog.getText(self, "Set OSM key=value string", "Pair in key=value format")
+        if ok:
+            r = re.compile('\w+=\w+')
+            if r.match(kv_str) is not None:
+                self.plot_worker.signals.add_osm_layer.emit(kv_str, False)
+            else:
+                self.layer_add_osm()
 
     def layer_edit(self, item):
         print('Editing ', item)

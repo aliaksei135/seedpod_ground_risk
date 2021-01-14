@@ -47,10 +47,10 @@
    <widget class="QSplitter" name="splitter">
     <property name="geometry">
      <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>1211</width>
-      <height>781</height>
+         <x>0</x>
+         <y>0</y>
+         <width>1221</width>
+         <height>771</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -59,47 +59,65 @@
       <verstretch>0</verstretch>
      </sizepolicy>
     </property>
-    <property name="minimumSize">
-     <size>
-      <width>1211</width>
-      <height>781</height>
-     </size>
-    </property>
-    <property name="maximumSize">
-     <size>
-      <width>16777215</width>
-      <height>16777215</height>
-     </size>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-    <widget class="MapLayersListWidget" name="listWidget">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="minimumSize">
-      <size>
-       <width>410</width>
-       <height>781</height>
-      </size>
-     </property>
-    </widget>
-    <widget class="QWebEngineView" name="webview" native="true">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="minimumSize">
-      <size>
+       <property name="minimumSize">
+           <size>
+               <width>1221</width>
+               <height>771</height>
+           </size>
+       </property>
+       <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+       </property>
+       <widget class="QWidget" name="verticalLayoutWidget">
+           <layout class="QVBoxLayout" name="verticalLayout">
+               <item>
+                   <widget class="MapLayersListWidget" name="listWidget">
+                       <property name="enabled">
+                           <bool>false</bool>
+                       </property>
+                       <property name="sizePolicy">
+                           <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                           </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                           <size>
+                               <width>410</width>
+                               <height>500</height>
+                           </size>
+                       </property>
+                   </widget>
+               </item>
+               <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout">
+                       <item>
+                           <widget class="QPushButton" name="addOSMLayerButton">
+                               <property name="text">
+                                   <string>Add OSM Layer</string>
+                               </property>
+                           </widget>
+                       </item>
+                       <item>
+                           <widget class="QPushButton" name="removeLayerButton">
+                               <property name="text">
+                                   <string>Remove Layer</string>
+                               </property>
+                           </widget>
+                       </item>
+                   </layout>
+               </item>
+           </layout>
+       </widget>
+       <widget class="QWebEngineView" name="webview" native="true">
+           <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+               </sizepolicy>
+           </property>
+           <property name="minimumSize">
+               <size>
        <width>800</width>
        <height>781</height>
       </size>
