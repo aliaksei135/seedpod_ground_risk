@@ -25,8 +25,9 @@ class AStar(Algorithm):
             for neighbour in environment.get_neighbours(node):
                 cost = current_cost + environment.f_cost(node, neighbour)
                 if neighbour not in costs or costs[neighbour] > cost:
-                    costs[neighbour] = cost
-                    open.put((cost + self.heuristic(neighbour, end), neighbour))
+                    neighbour_cost = cost + self.heuristic(neighbour, end)
+                    costs[neighbour] = neighbour_cost
+                    open.put((neighbour_cost, neighbour))
                     closed[neighbour] = node
         return None
 
