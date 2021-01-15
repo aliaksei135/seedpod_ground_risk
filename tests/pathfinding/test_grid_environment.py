@@ -4,11 +4,11 @@ from seedpod_ground_risk.pathfinding.environment import GridEnvironment
 from tests.pathfinding.test_data import SMALL_TEST_GRID, LARGE_TEST_GRID, SMALL_TEST_GRAPH_NO_DIAGONAL
 
 
-class GridEnvironmentNoDiagonalsTestCase(unittest.TestCase):
+class GridEnvironmentNoDiagonalsNoPruningTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.small_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=False)
+        self.small_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=False, pruning=False)
         self.large_environment = GridEnvironment(LARGE_TEST_GRID, diagonals=False)
 
     def test_grid_to_graph(self):

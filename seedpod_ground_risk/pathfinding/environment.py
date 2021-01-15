@@ -1,15 +1,14 @@
 import abc
 from typing import Dict, Sequence
 
+import numpy as np
+
 
 class Node:
-    def __init__(self, x, y, n=0, lon=0, lat=0):
+    def __init__(self, x, y, n=0):
         self.x = x
         self.y = y
         self.n = n
-
-        self.lon = lon
-        self.lat = lat
 
     def __eq__(self, other):
         if self.x == other.x and self.y == other.y:
@@ -62,62 +61,83 @@ class GridEnvironment(Environment):
 
     grid: np.array
 
-    def __init__(self, grid: np.array, *args, diagonals=False, **kwargs):
+    def __init__(self, grid: np.array, *args, diagonals=False, pruning=True, **kwargs):
         super().__init__(*args, **kwargs)
         self.grid = grid
+        self.shape = self.grid.shape
         self.diagonals = diagonals
+        self.pruning = pruning
+        self._empty_nodes = np.full(grid.shape, False)
 
     def f_cost(self, node: Node, goal: Node) -> float:
         # Simple Euclidean distance as movement cost
         return ((node.x - goal.x) ** 2 + (node.y - goal.y) ** 2) ** 0.5
 
     def _generate_graph(self) -> Dict[Node, Sequence[Node]]:
-        import numpy as np
 
         graph = {}
-        shape = self.grid.shape
-        for idx, val in np.ndenumerate(self.grid):
-            neighbours = []
 
-            has_top = has_bottom = has_left = has_right = False
+        for idx, orig_val in np.ndenumerate(self.grid):
+            if self.pruning and self._empty_nodes[idx]:
+                continue
+            # elif self.grid[idx] == 0 and graph:
+            #     self._empty_nodes[idx] = True
+            #     continue
 
-            if idx[1] - 1 >= 0:
-                has_left = True
-                left = Node(idx[1] - 1, idx[0], self.grid[idx[0], idx[1] - 1])
-                neighbours.append(left)
-            if idx[1] + 1 < shape[1]:
-                has_right = True
-                right = Node(idx[1] + 1, idx[0], self.grid[idx[0], idx[1] + 1])
-                neighbours.append(right)
-            if idx[0] - 1 >= 0:
-                has_top = True
-                top = Node(idx[1], idx[0] - 1, self.grid[idx[0] - 1, idx[1]])
-                neighbours.append(top)
-            if idx[0] + 1 < shape[0]:
-                has_bottom = True
-                bottom = Node(idx[1], idx[0] + 1, self.grid[idx[0] + 1, idx[1]])
-                neighbours.append(bottom)
-
-            if self.diagonals:
-                if has_top:
-                    if has_left:
-                        topleft = Node(idx[1] - 1, idx[0] - 1, self.grid[idx[0] - 1, idx[1] - 1])
-                        neighbours.append(topleft)
-                    if has_right:
-                        topright = Node(idx[1] + 1, idx[0] - 1, self.grid[idx[0] - 1, idx[1] + 1])
-                        neighbours.append(topright)
-                if has_bottom:
-                    if has_left:
-                        bottomleft = Node(idx[1] - 1, idx[0] + 1, self.grid[idx[0] + 1, idx[1] - 1])
-                        neighbours.append(bottomleft)
-                    if has_right:
-                        bottomright = Node(idx[1] + 1, idx[0] + 1, self.grid[idx[0] + 1, idx[1] + 1])
-                        neighbours.append(bottomright)
-
+            neighbours = self._find_neighbours(idx, set())
             node = Node(idx[1], idx[0], self.grid[idx[0], idx[1]])
             graph[node] = neighbours
 
         return graph
+
+    def _find_neighbours(self, idx, neighbours):
+        has_top = has_bottom = has_left = has_right = False
+
+        def eval_node(y, x):
+            val = self.grid[y, x]
+            nonlocal neighbours
+            if self.pruning and val == 0:
+                self._empty_nodes[y, x] = True
+                neighbours += self._find_neighbours((y, x), neighbours)
+            elif val >= 0:
+                neighbours.add(Node(x, y, val))
+
+        if idx[1] - 1 >= 0:
+            has_left = True
+            y, x = idx[0], idx[1] - 1
+            eval_node(y, x)
+
+        if idx[1] + 1 < self.shape[1]:
+            has_right = True
+            y, x = idx[0], idx[1] + 1
+            eval_node(y, x)
+        if idx[0] - 1 >= 0:
+            has_top = True
+            y, x = idx[0] - 1, idx[1]
+            eval_node(y, x)
+        if idx[0] + 1 < self.shape[0]:
+            has_bottom = True
+            y, x = idx[0] + 1, idx[1]
+            eval_node(y, x)
+
+        if self.diagonals:
+            if has_top:
+                y = idx[0] - 1
+                if has_left:
+                    x = idx[1] - 1
+                    eval_node(y, x)
+                if has_right:
+                    x = idx[1] + 1
+                    eval_node(y, x)
+            if has_bottom:
+                y = idx[0] + 1
+                if has_left:
+                    x = idx[1] - 1
+                    eval_node(y, x)
+                if has_right:
+                    x = idx[1] + 1
+                    eval_node(y, x)
+        return neighbours
 
     def _print_environment(self):
         pass
