@@ -224,14 +224,15 @@ class PlotServer:
                                         # raster_grid cannot be assigned directly to var.data,
                                         # this results in the raster grid disappearing during render
                                         raster_grid = np.zeros(var.data.shape)
-                                    raster_grid += var.data
+                                    layer_raster_grid = np.copy(var.data)
+                                    # Set nans to zero
+                                    nans = np.isnan(layer_raster_grid)
+                                    layer_raster_grid[nans] = 0
+                                    raster_grid += layer_raster_grid
                                 raster_indices.append(dict(layer.data.coords.indexes))
                                 raw_datas.append(layer.dataset.data)
                             else:
                                 raw_datas.append(layer.data)
-                        # Set nans to zero
-                        nans = np.isnan(raster_grid)
-                        raster_grid[nans] = 0
 
                         merged_indices = {}
                         # Merge indices
