@@ -9,8 +9,8 @@ class AStarTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.diag_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=True)
-        self.no_diag_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=False)
+        self.diag_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=True, pruning=False)
+        self.no_diag_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=False, pruning=False)
         self.algo = AStar()
         self.start = Node(0, 0, 0)
         self.end = Node(4, 4, 0)
