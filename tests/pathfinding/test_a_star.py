@@ -2,7 +2,6 @@ import unittest
 
 from seedpod_ground_risk.pathfinding.a_star import AStar
 from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
-from seedpod_ground_risk.pathfinding.heuristic import EuclideanRiskHeuristic
 from tests.pathfinding.test_data import SMALL_TEST_GRID
 
 
@@ -12,7 +11,7 @@ class AStarTestCase(unittest.TestCase):
         super().setUp()
         self.diag_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=True)
         self.no_diag_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=False)
-        self.algo = AStar(heuristic=EuclideanRiskHeuristic(self.no_diag_environment))
+        self.algo = AStar()
         self.start = Node(0, 0, 0)
         self.end = Node(4, 4, 0)
 
