@@ -1,6 +1,8 @@
 from queue import PriorityQueue
 from typing import List, Dict, Union
 
+import numpy as np
+
 from seedpod_ground_risk.pathfinding.algorithm import Algorithm
 from seedpod_ground_risk.pathfinding.environment import Environment, Node
 from seedpod_ground_risk.pathfinding.heuristic import Heuristic, EuclideanHeuristic
@@ -14,20 +16,24 @@ class AStar(Algorithm):
         open = PriorityQueue()
         open.put((0, start), False)
         closed = {start: None}
-        costs = {start: 0}
+        costs = np.full(environment.grid.shape, np.inf)
+        costs[start.y, start.x] = 0
+        debug_heuristic_cost = np.full(environment.grid.shape, np.inf)
 
         while not open.empty():
             node = open.get()[1]
             if node == end:
                 return self._reconstruct_path(end, closed)
 
-            current_cost = costs[node]
+            current_cost = costs[node.y, node.x]
             for neighbour in environment.get_neighbours(node):
+                x, y = neighbour.x, neighbour.y
                 cost = current_cost + environment.f_cost(node, neighbour)
-                if neighbour not in costs or costs[neighbour] > cost:
-                    neighbour_cost = cost + self.heuristic(neighbour, end)
-                    costs[neighbour] = neighbour_cost
-                    open.put((neighbour_cost, neighbour))
+                if costs[y, x] > cost:
+                    costs[neighbour.y, neighbour.x] = cost
+                    n = cost + self.heuristic(neighbour, end)
+                    open.put((n, neighbour))
+                    debug_heuristic_cost[y, x] = n
                     closed[neighbour] = node
         return None
 
