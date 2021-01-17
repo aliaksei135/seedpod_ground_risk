@@ -90,15 +90,16 @@ class GridEnvironment(Environment):
 
         return graph
 
-    def _find_neighbours(self, idx, neighbours):
+    def _find_neighbours(self, idx, existing_neighbours):
         has_top = has_bottom = has_left = has_right = False
+        neighbours = set(existing_neighbours)
 
         def eval_node(y, x):
             val = self.grid[y, x]
             nonlocal neighbours
             if self.pruning and val == 0:
                 self._empty_nodes[y, x] = True
-                neighbours += self._find_neighbours((y, x), neighbours)
+                neighbours.update(self._find_neighbours((y, x), neighbours))
             elif val >= 0:
                 neighbours.add(Node(x, y, val))
 
