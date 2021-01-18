@@ -26,11 +26,13 @@ class PathfindingLayer(AnnotationLayer):
 
         snapped_start_lat_idx = np.argmin(np.abs(raster_data[0]['Latitude'] - self.start_coords[1]))
         snapped_start_lon_idx = np.argmin(np.abs(raster_data[0]['Longitude'] - self.start_coords[0]))
-        start_node = environment.Node(snapped_start_lon_idx, snapped_start_lat_idx)
+        start_node = environment.Node(snapped_start_lon_idx, snapped_start_lat_idx,
+                                      raster_data[1][snapped_start_lat_idx, snapped_start_lon_idx])
 
         snapped_end_lat_idx = np.argmin(np.abs(raster_data[0]['Latitude'] - self.end_coords[1]))
         snapped_end_lon_idx = np.argmin(np.abs(raster_data[0]['Longitude'] - self.end_coords[0]))
-        end_node = environment.Node(snapped_end_lon_idx, snapped_end_lat_idx)
+        end_node = environment.Node(snapped_end_lon_idx, snapped_end_lat_idx,
+                                    raster_data[1][snapped_end_lat_idx, snapped_end_lon_idx])
 
         env = environment.GridEnvironment(raster_data[1], diagonals=True)
         algo = a_star.AStar(heuristic=heuristic.EuclideanRiskHeuristic(env))
