@@ -24,20 +24,19 @@ class ManhattanHeuristic(Heuristic):
 class EuclideanRiskHeuristic(Heuristic):
     from seedpod_ground_risk.pathfinding.environment import Environment
 
-    def __init__(self, environment: Environment, risk_multiplier=1e9, resolution=1):
-        from scipy.interpolate import RectBivariateSpline
-
+    def __init__(self, environment: Environment, risk_multiplier=1e-6, distance_multiplier=1, resolution=1):
         self.environment = environment
         self.resolution = resolution
-        self.interpolater = RectBivariateSpline(range(400), range(400), environment.grid)
-        self.k = risk_multiplier
+        self.kr = risk_multiplier
+        self.kd = distance_multiplier
 
     def h(self, node: Node, goal: Node):
         dist = ((node.x - goal.x) ** 2 + (node.y - goal.y) ** 2) ** 0.5
-        line_2d = np.linspace(start=(node.x, node.y), stop=(goal.x, goal.y), num=int(dist / self.resolution),
+        n = int(dist / self.resolution)
+        line_2d = np.linspace(start=(node.x, node.y), stop=(goal.x, goal.y), num=n,
                               endpoint=True)
-        cs = np.cumsum(np.sqrt(np.sum(np.diff(line_2d, axis=0) ** 2, axis=1)))
-        interp_2d = self.interpolater.ev(line_2d[:, 0], line_2d[:, 1])
-        integral_val = np.trapz(interp_2d[:-1], cs)
+        grid_coords = np.array(np.round(line_2d), dtype=np.intp)
+        grid_vals = self.environment.grid[grid_coords[:, 0], grid_coords[:, 1]]
+        integral_val = np.trapz(grid_vals)
 
-        return self.k * integral_val
+        return self.kr * integral_val  # + self.kd * dist
