@@ -23,17 +23,21 @@ class AStar(Algorithm):
         while not open.empty():
             node = open.get()[1]
             if node == end:
+                import matplotlib.pyplot as mpl
+                mpl.matshow(costs)
+                mpl.matshow(debug_heuristic_cost)
+                mpl.show()
                 return self._reconstruct_path(end, closed)
 
             current_cost = costs[node.y, node.x]
             for neighbour in environment.get_neighbours(node):
                 x, y = neighbour.x, neighbour.y
-                cost = current_cost + environment.f_cost(node, neighbour)
+                cost = current_cost + environment.f_cost(node, neighbour) + self.heuristic(start, neighbour)
                 if costs[y, x] > cost:
                     costs[neighbour.y, neighbour.x] = cost
-                    n = cost + self.heuristic(neighbour, end)
-                    open.put((n, neighbour))
-                    debug_heuristic_cost[y, x] = n
+                    h = self.heuristic(neighbour, end)
+                    open.put((cost + h, neighbour))
+                    debug_heuristic_cost[y, x] = h
                     closed[neighbour] = node
         return None
 
