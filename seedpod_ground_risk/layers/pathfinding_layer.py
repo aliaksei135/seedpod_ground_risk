@@ -45,7 +45,7 @@ class PathfindingLayer(AnnotationLayer):
             lon = raster_data[0]['Longitude'][node.x]
             snapped_path.append((lon, lat))
 
-        return gv.Path(snapped_path)
+        return gv.EdgePaths(snapped_path)
 
     def clear_cache(self) -> NoReturn:
         pass
