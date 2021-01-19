@@ -1,6 +1,7 @@
 from typing import NoReturn, List, Tuple, Dict
 
 import geopandas as gpd
+import matplotlib.pyplot as mpl
 import numpy as np
 from holoviews.element import Geometry
 
@@ -34,8 +35,12 @@ class PathfindingLayer(AnnotationLayer):
         end_node = environment.Node(snapped_end_lon_idx, snapped_end_lat_idx,
                                     raster_data[1][snapped_end_lat_idx, snapped_end_lon_idx])
 
-        env = environment.GridEnvironment(raster_data[1], diagonals=True)
-        algo = a_star.AStar(heuristic=heuristic.EuclideanRiskHeuristic(env))
+        mpl.matshow(raster_data[1])
+        mpl.show()
+
+        env = environment.GridEnvironment(raster_data[1], diagonals=False, pruning=False)
+        algo = a_star.GridAStar(
+            heuristic=heuristic.EuclideanRiskHeuristic(env, risk_multiplier=5e-6, distance_multiplier=1))
         path = algo.find_path(env, start_node, end_node)
         print(len(path))
 
