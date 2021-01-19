@@ -1,4 +1,4 @@
-from queue import PriorityQueue
+from heapq import *
 from typing import List, Dict, Union
 
 import numpy as np
@@ -14,19 +14,18 @@ class GridAStar(Algorithm):
         self.heuristic = heuristic.h
 
     def find_path(self, environment: Environment, start: Node, end: Node) -> Union[List[Node], None]:
-        open = PriorityQueue()
-        open.put((0, start), False)
+        # Use heapq;the thread safety provided by ProrityQueue is not needed, as we only exec on a single thread
+        open = []
+        heappush(open, (0, start))
         closed = {start: None}
         costs = np.full(environment.grid.shape, np.inf)
         costs[start.y, start.x] = 0
-        debug_heuristic_cost = np.full(environment.grid.shape, np.inf)
 
-        while not open.empty():
-            node = open.get()[1]
+        while open:
+            node = heappop(open)[1]
             if node == end:
                 import matplotlib.pyplot as mpl
                 mpl.matshow(costs)
-                mpl.matshow(debug_heuristic_cost)
                 mpl.show()
                 return self._reconstruct_path(end, closed)
 
@@ -36,9 +35,7 @@ class GridAStar(Algorithm):
                 cost = current_cost + environment.f_cost(node, neighbour)
                 if costs[y, x] > cost:
                     costs[neighbour.y, neighbour.x] = cost
-                    h = self.heuristic(neighbour, end)
-                    open.put((cost + h, neighbour))
-                    debug_heuristic_cost[y, x] = h
+                    heappush(open, (cost + self.heuristic(neighbour, end), neighbour))
                     closed[neighbour] = node
         return None
 
@@ -61,15 +58,16 @@ class RiskGridAStar(GridAStar):
         super().__init__(heuristic)
 
     def find_path(self, environment: Environment, start: Node, end: Node) -> Union[List[Node], None]:
-        open = PriorityQueue()
-        open.put((0, start), False)
+        # Use heapq;the thread safety provided by ProrityQueue is not needed, as we only exec on a single thread
+        open = []
+        heappush(open, (0, start))
         closed = {start: None}
         costs = np.full(environment.grid.shape, np.inf)
         costs[start.y, start.x] = 0
         debug_heuristic_cost = np.full(environment.grid.shape, np.inf)
 
-        while not open.empty():
-            node = open.get()[1]
+        while open:
+            node = heappop(open)[1]
             if node == end:
                 import matplotlib.pyplot as mpl
                 mpl.matshow(costs)
@@ -84,7 +82,7 @@ class RiskGridAStar(GridAStar):
                 if costs[y, x] > cost:
                     costs[neighbour.y, neighbour.x] = cost
                     h = self.heuristic(neighbour, end)
-                    open.put((cost + h, neighbour))
+                    heappush(open, (cost + h, neighbour))
                     debug_heuristic_cost[y, x] = h
                     closed[neighbour] = node
         return None
