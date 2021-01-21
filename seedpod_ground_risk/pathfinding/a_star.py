@@ -161,7 +161,7 @@ class JumpPointSearchAStar(GridAStar):
         return self._jump(ny, nx, dy, dx)
 
     def _is_passable(self, y, x):
-        if 0 < y < self._max_y or 0 < x < self._max_x:
+        if 0 > y > self._max_y or 0 > x > self._max_x:
             return False
 
         return self.environment.grid[y, x] != -1
