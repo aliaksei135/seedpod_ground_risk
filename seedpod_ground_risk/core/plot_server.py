@@ -64,13 +64,14 @@ class PlotServer:
         self.cmap = getattr(colorcet, cmap)
 
         from geoviews import tile_sources as gvts
-        self._base_tiles = {'Base ' + tiles + ' tiles': getattr(gvts, tiles)}
+        self._base_tiles = getattr(gvts, tiles)
 
         self._time_idx = 0
 
         from seedpod_ground_risk.layers.geojson_layer import GeoJSONLayer
         from seedpod_ground_risk.layers.residential_layer import ResidentialLayer
         from seedpod_ground_risk.layers.roads_layer import RoadsLayer
+        from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
         self._generated_data_layers = {}
         self.data_layer_order = []
         self.data_layers = [ResidentialLayer('Residential Population', rasterise=rasterise),
@@ -78,7 +79,9 @@ class PlotServer:
                             OSMTagLayer('Nature Reserves', osm_tag='leisure=nature_reserve', colour='green'),
                             OSMTagLayer('Military Airfields', osm_tag='military=airfield', colour='red')]
 
-        self.annotation_layers = [GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300)]
+        self.annotation_layers = [GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300),
+                                  PathfindingLayer('Pathfinding Layer', start_coords=(-1.5, 50.88),
+                                                   end_coords=(-1.35, 50.98))]
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
@@ -192,12 +195,13 @@ class PlotServer:
         from itertools import chain
         from geoviews import WMTS
         from holoviews.element import Image
+        import numpy as np
 
         try:
             if not self._preload_complete:
                 # If layers aren't preloaded yet just return the map tiles
                 self._progress_callback('Still preloading layer data...')
-                plot = list(self._base_tiles.values())[0]
+                plot = self._base_tiles
             else:
                 # Construct box around requested bounds
                 bounds_poly = make_bounds_polygon(x_range, y_range)
@@ -211,29 +215,59 @@ class PlotServer:
                     print("Generated all layers in ", time() - t0)
                     plot = Overlay(list(self._generated_data_layers.values()))
                     if self.annotation_layers:
+                        import matplotlib.pyplot as mpl
                         raw_datas = []
+                        raster_indices = []
+                        raster_grid = None
                         for layer in plot:
                             if isinstance(layer, WMTS):
                                 continue
                             elif isinstance(layer, Image):
+                                for _, var in layer.data.data_vars.items():
+                                    if raster_grid is None:
+                                        # raster_grid cannot be assigned directly to var.data,
+                                        # this results in the raster grid disappearing during render
+                                        raster_grid = np.zeros(var.data.shape)
+                                    layer_raster_grid = np.copy(var.data)
+                                    # Set nans to zero
+                                    nans = np.isnan(layer_raster_grid)
+                                    layer_raster_grid[nans] = 0
+                                    mpl.matshow(np.flipud(layer_raster_grid), cmap='jet')
+                                    mpl.colorbar()
+                                    raster_grid += layer_raster_grid
+                                raster_indices.append(dict(layer.data.coords.indexes))
                                 raw_datas.append(layer.dataset.data)
                             else:
                                 raw_datas.append(layer.data)
 
+                        mpl.show()
+                        merged_indices = {}
+                        # Merge indices
+                        # Get unique keys
+                        keys = set([key for d in raster_indices for key in d.keys()])
+                        for k in keys:
+                            values = []
+                            for d in raster_indices:
+                                if k in d:
+                                    values.append(d[k])
+                            merged_indices[k] = np.max(values, axis=0)
+
                         annotations = []
                         for layer in self.annotation_layers:
-                            annotation = layer.annotate(raw_datas)
+                            annotation = layer.annotate(raw_datas, (merged_indices, raster_grid))
                             annotations.append(annotation)
 
                         annotation_overlay = Overlay(annotations)
-                        plot = Overlay([plot, annotation_overlay]).collate()
+                        plot = Overlay([self._base_tiles, plot, annotation_overlay]).collate()
+                    else:
+                        plot = Overlay([self._base_tiles, plot]).collate()
 
                 else:
                     self._progress_callback('Area too large to render!')
                     if not self._generated_data_layers:
-                        plot = list(self._base_tiles.values())[0]
+                        plot = self._base_tiles
                     else:
-                        plot = Overlay(list(self._generated_data_layers.values()))
+                        plot = Overlay([self._base_tiles, *list(self._generated_data_layers.values())])
 
                 self._update_callback([layer.key for layer in chain(self.data_layers, self.annotation_layers)])
 
@@ -241,7 +275,7 @@ class PlotServer:
             # Catch-all to prevent plot blanking out and/or crashing app
             # Just display map tiles in case this was transient
             print(e)
-            plot = list(self._base_tiles.values())[0]
+            plot = self._base_tiles
 
         return plot.opts(width=self.plot_size[0], height=self.plot_size[1],
                          tools=self.tools, active_tools=self.active_tools)
@@ -273,7 +307,6 @@ class PlotServer:
         # Remove layers with explicit ordering
         # so they are can be reinserted in the correct order instead of updated in place
         self._generated_data_layers.clear()
-        self._generated_data_layers.update(self._base_tiles)
         if not self.data_layer_order:
             self._generated_data_layers.update(dict(list(layers.items())[::-1]))
         else:

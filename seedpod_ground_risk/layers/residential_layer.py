@@ -60,7 +60,7 @@ class ResidentialLayer(OSMTagLayer):
         # Actually perform the populations scaling
         census_df['population'] = census_df['population'].apply(scale_pop)
         # Construct the GeoViews Polygons
-        gv_polys = gv.Polygons(census_df, vdims=['name', 'population']) \
+        gv_polys = gv.Polygons(census_df, kdims=['Longitude', 'Latitude'], vdims=['name', 'population']) \
             .opts(color='population',
                   cmap=colorcet.CET_L18,
                   colorbar=True, colorbar_opts={'title': 'Population'}, show_legend=False)
@@ -68,6 +68,7 @@ class ResidentialLayer(OSMTagLayer):
         print("Residential: Estimated and Scaled Populations cumtime ", time() - t0)
         if self.rasterise:
             raster = rasterize(gv_polys, aggregator=ds.sum('population'),
+                               x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]),
                                cmap=colorcet.CET_L18, dynamic=False).options(colorbar=True,
                                                                              cmap=colorcet.CET_L18,
                                                                              clipping_colors={'0': 'transparent',

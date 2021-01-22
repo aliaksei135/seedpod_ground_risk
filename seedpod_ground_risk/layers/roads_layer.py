@@ -84,7 +84,9 @@ class RoadsLayer(DataLayer):
                                                                                        cmap=colorcet.CET_L18,
                                                                                        color='population')
         if self.rasterise:
+            bounds = bounds_polygon.bounds
             raster = rasterize(points, aggregator=ds.mean('population'),
+                               x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]),
                                dynamic=False).opts(colorbar=True, cmap=colorcet.CET_L18)
             t1 = time()
             print('Roads with raster: ', t1 - t0)

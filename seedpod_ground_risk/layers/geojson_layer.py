@@ -1,6 +1,7 @@
-from typing import NoReturn, List
+from typing import NoReturn, List, Tuple, Dict
 
 import geopandas as gpd
+import numpy as np
 from holoviews.element import Geometry, Overlay
 
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
@@ -26,7 +27,8 @@ class GeoJSONLayer(AnnotationLayer):
                 {'geometry': epsg27700_geom.buffer(self.buffer_dist).to_crs('EPSG:4326')}
             )
 
-    def annotate(self, data: List[gpd.GeoDataFrame], **kwargs) -> Geometry:
+    def annotate(self, data: List[gpd.GeoDataFrame], raster_data: Tuple[Dict[str, np.array], np.array],
+                 **kwargs) -> Geometry:
         import geoviews as gv
 
         if self.buffer_poly is not None:
