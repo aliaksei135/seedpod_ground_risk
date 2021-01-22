@@ -35,7 +35,8 @@ class PathfindingLayer(AnnotationLayer):
         end_node = environment.Node(snapped_end_lon_idx, snapped_end_lat_idx,
                                     raster_data[1][snapped_end_lat_idx, snapped_end_lon_idx])
 
-        mpl.matshow(raster_data[1])
+        mpl.matshow(np.flipud(raster_data[1]), cmap='jet')
+        mpl.colorbar()
         mpl.show()
 
         env = environment.GridEnvironment(raster_data[1], diagonals=False, pruning=False)

@@ -212,6 +212,7 @@ class PlotServer:
                     print("Generated all layers in ", time() - t0)
                     plot = Overlay(list(self._generated_data_layers.values()))
                     if self.annotation_layers:
+                        import matplotlib.pyplot as mpl
                         raw_datas = []
                         raster_indices = []
                         raster_grid = None
@@ -228,12 +229,15 @@ class PlotServer:
                                     # Set nans to zero
                                     nans = np.isnan(layer_raster_grid)
                                     layer_raster_grid[nans] = 0
+                                    mpl.matshow(np.flipud(layer_raster_grid), cmap='jet')
+                                    mpl.colorbar()
                                     raster_grid += layer_raster_grid
                                 raster_indices.append(dict(layer.data.coords.indexes))
                                 raw_datas.append(layer.dataset.data)
                             else:
                                 raw_datas.append(layer.data)
 
+                        mpl.show()
                         merged_indices = {}
                         # Merge indices
                         # Get unique keys
@@ -243,7 +247,7 @@ class PlotServer:
                             for d in raster_indices:
                                 if k in d:
                                     values.append(d[k])
-                            merged_indices[k] = np.mean(values, axis=0)
+                            merged_indices[k] = np.max(values, axis=0)
 
                         annotations = []
                         for layer in self.annotation_layers:
