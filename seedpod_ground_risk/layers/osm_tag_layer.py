@@ -11,9 +11,12 @@ from seedpod_ground_risk.layers.data_layer import DataLayer
 class OSMTagLayer(DataLayer):
     _landuse_polygons: gpd.GeoDataFrame
 
-    def __init__(self, key, rasterise: bool = False, osm_tag: str = 'landuse=residential', colour: str = None):
+    def __init__(self, key, osm_tag, rasterise: bool = False, colour: str = None,
+                 blocking=False, buffer_dist=0):
         super().__init__(key, rasterise)
         self._osm_tag = osm_tag
+        self.blocking = blocking
+        self.buffer_dist = buffer_dist
         # Set a random colour
         self._colour = colour if colour is not None else "#" + ''.join(
             [random.choice('0123456789ABCDEF') for _ in range(6)])
