@@ -219,12 +219,13 @@ class PlotServer:
                         raw_datas = []
                         raster_indices = []
                         raster_grid = None
+
                         for layer in plot:
                             if isinstance(layer, WMTS):
                                 continue
                             elif isinstance(layer, Image):
                                 for _, var in layer.data.data_vars.items():
-                                    if raster_grid is None:
+                                    if raster_grid is None and self.rasterise:
                                         # raster_grid cannot be assigned directly to var.data,
                                         # this results in the raster grid disappearing during render
                                         raster_grid = np.zeros(var.data.shape)
@@ -240,7 +241,7 @@ class PlotServer:
                             else:
                                 raw_datas.append(layer.data)
 
-                        mpl.show()
+                            mpl.show()
                         merged_indices = {}
                         # Merge indices
                         # Get unique keys
