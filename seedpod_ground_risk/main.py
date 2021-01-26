@@ -143,7 +143,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         kv_str, ok = QInputDialog.getText(self, "Set OSM key=value string", "Pair in key=value format")
         if ok:
-            r = re.compile('\w+=\w+')
+            r = re.compile('(\w+=\w+)|(\w+)')
             if r.match(kv_str) is not None:
                 self.plot_worker.signals.add_osm_layer.emit(kv_str, False)
             else:
