@@ -16,6 +16,7 @@ class ResidentialLayer(OSMTagLayer):
 
     def __init__(self, key, **kwargs):
         super(ResidentialLayer, self).__init__(key, 'landuse=residential', **kwargs)
+        delattr(self, '_colour')
         self._census_wards = gpd.GeoDataFrame()
 
     def preload_data(self):
@@ -49,16 +50,16 @@ class ResidentialLayer(OSMTagLayer):
         # Project geometries to an equidistant/equal areq projection
         census_df['population'] = census_df['density'] * census_df['geometry'].to_crs('EPSG:3395').area
 
-        # Scale to reduce error for smaller, less dense wards
-        # This was found empirically minimising the population error in 10 random villaegs in Hampshire
-        def scale_pop(x):
-            if 0 < x < 3000:
-                return 0.998 * x + 6
-            else:
-                return x
-
-        # Actually perform the populations scaling
-        census_df['population'] = census_df['population'].apply(scale_pop)
+        # # Scale to reduce error for smaller, less dense wards
+        # # This was found empirically minimising the population error in 10 random villaegs in Hampshire
+        # def scale_pop(x):
+        #     if 0 < x < 3000:
+        #         return 0.998 * x + 6
+        #     else:
+        #         return x
+        #
+        # # Actually perform the populations scaling
+        # census_df['population'] = census_df['population'].apply(scale_pop)
         # Construct the GeoViews Polygons
         gv_polys = gv.Polygons(census_df, kdims=['Longitude', 'Latitude'], vdims=['name', 'population']) \
             .opts(color='population',
