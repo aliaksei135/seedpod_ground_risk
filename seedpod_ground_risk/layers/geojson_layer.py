@@ -34,8 +34,6 @@ class GeoJSONLayer(AnnotationLayer):
         if self.buffer_poly is not None:
             annotation_layers = []
             for gdf in data:
-                if 'density' not in gdf:
-                    continue
                 if not gdf.crs:
                     # If CRS is not set, set EPSG4326 without reprojection as it must be EPSG4326 to display properly
                     gdf.set_crs(epsg=4326, inplace=True)
@@ -43,6 +41,8 @@ class GeoJSONLayer(AnnotationLayer):
 
                 geom_type = overlay.geometry.geom_type.all()
                 if geom_type == 'Polygon':
+                    if 'density' not in gdf:
+                        continue
                     proj_gdf = overlay.to_crs('epsg:3395')
                     proj_gdf['population'] = proj_gdf.geometry.area * proj_gdf.density
                     print("Geometry Swept Population: ", proj_gdf['population'].sum())
