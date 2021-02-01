@@ -4,16 +4,17 @@ import sys
 import time
 
 from seedpod_ground_risk.core.plot_worker import PlotWorker
+from seedpod_ground_risk.ui_resources.layerlistdelegate import Ui_delegate
 
 print("Builtin modules imported")
 from PySide2.QtCore import Qt, QRect, Slot, QThreadPool
 
 print("QTCore imported")
-from PySide2.QtGui import QPixmap, QCloseEvent
+from PySide2.QtGui import QPixmap, QCloseEvent, QPalette, QColor
 
 print("QtGUI imported")
 from PySide2.QtWidgets import QDialog, QMainWindow, QApplication, QListWidgetItem, QSplashScreen, QMessageBox, QSlider, \
-    QLabel, QAbstractItemView
+    QLabel, QAbstractItemView, QWidget, QColorDialog
 
 print("Qt modules imported")
 from seedpod_ground_risk.ui_resources.mainwindow import Ui_MainWindow
@@ -28,6 +29,41 @@ class TextAboutDialog(QDialog):
         self.ui = Ui_TextAboutDialog()
         self.ui.setupUi(self)
         self.setWindowTitle(title)
+
+
+class LayerItemDelegate(QWidget):
+    def __init__(self, layer):
+        super(LayerItemDelegate, self).__init__()
+        self.ui = Ui_delegate()
+        self.ui.setupUi(self)
+        self._layer = layer
+        self.colour_set = False
+        self.ui.pushButton.setAutoFillBackground(True)
+        self.ui.pushButton.clicked.connect(self.change_colour)
+
+    @property
+    def key(self):
+        return self.ui.nameLabel.text()
+
+    def set_name(self, name: str):
+        self.ui.nameLabel.setText(name)
+
+    def set_data_tag(self, text: str):
+        self.ui.dataTagLabel.setText(text)
+
+    def set_colour(self, colour: str):
+        self.colour_set = True
+        pal = QPalette()
+        pal.setColor(QPalette.Button, QColor(colour))
+        self.ui.pushButton.setPalette(pal)
+
+    def change_colour(self):
+        if self.colour_set:
+            dialog = QColorDialog()
+            colour = dialog.getColor(Qt.white, self, )
+            if colour.isValid():
+                self.set_colour(colour)
+                self._layer._colour = colour.name()
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -133,13 +169,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def layers_update(self, layers):
         self.listWidget.clear()
         for layer in layers:
-            item = QListWidgetItem(layer)
-            item.setCheckState(Qt.CheckState.Checked)
+            item = QListWidgetItem(self.listWidget)
             self.listWidget.addItem(item)
+            delegate = LayerItemDelegate(layer)
+            item.setSizeHint(delegate.size())
+            delegate.set_name(layer.key)
+            if hasattr(layer, '_colour'):
+                delegate.set_colour(layer._colour)
+            if hasattr(layer, '_osm_tag'):
+                delegate.set_data_tag(layer._osm_tag)
+            self.listWidget.setItemWidget(item, delegate)
 
     def layer_add_osm(self):
         from PySide2.QtWidgets import QInputDialog
         import re
+        # TODO validate these tags
 
         kv_str, ok = QInputDialog.getText(self, "Set OSM key=value string", "Pair in key=value format")
         if ok:

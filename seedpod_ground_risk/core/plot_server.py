@@ -71,7 +71,6 @@ class PlotServer:
         from seedpod_ground_risk.layers.geojson_layer import GeoJSONLayer
         from seedpod_ground_risk.layers.residential_layer import ResidentialLayer
         from seedpod_ground_risk.layers.roads_layer import RoadsLayer
-        from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
         self._generated_data_layers = {}
         self.data_layer_order = []
         self.data_layers = [ResidentialLayer('Residential Population', rasterise=rasterise),
@@ -79,9 +78,9 @@ class PlotServer:
                             OSMTagLayer('Nature Reserves', osm_tag='leisure=nature_reserve', colour='green'),
                             OSMTagLayer('Military Airfields', osm_tag='military=airfield', colour='red')]
 
-        self.annotation_layers = [GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300),
-                                  PathfindingLayer('Pathfinding Layer', start_coords=(-1.5, 50.88),
-                                                   end_coords=(-1.35, 50.98))]
+        self.annotation_layers = [GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300), ]
+        # PathfindingLayer('Pathfinding Layer', start_coords=(-1.5, 50.88),
+        #                end_coords=(-1.35, 50.98))]
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
@@ -270,7 +269,16 @@ class PlotServer:
                     else:
                         plot = Overlay([self._base_tiles, *list(self._generated_data_layers.values())])
 
-                self._update_callback([layer.key for layer in chain(self.data_layers, self.annotation_layers)])
+                layers = []
+                for layer in chain(self.data_layers, self.annotation_layers):
+                    d = {'key': layer.key}
+                    if hasattr(layer, '_colour'):
+                        d.update(colour=layer._colour)
+                    if hasattr(layer, '_osm_tag'):
+                        d.update(dataTag=layer._osm_tag)
+                    layers.append(d)
+
+                self._update_callback(list(chain(self.data_layers, self.annotation_layers)))
 
         except Exception as e:
             # Catch-all to prevent plot blanking out and/or crashing app
@@ -355,8 +363,7 @@ class PlotServer:
         self.annotation_layers.append(layer)
 
     def add_osm_layer(self, kv: str, blocking: bool):
-        # TODO Add blocking layers
-        layer = OSMTagLayer(kv, osm_tag=kv)
+        layer = OSMTagLayer(kv, kv, blocking=blocking)
         layer.preload_data()
         self.data_layers.append(layer)
 
