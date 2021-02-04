@@ -24,13 +24,15 @@ class ManhattanHeuristic(Heuristic):
 class EuclideanRiskHeuristic(Heuristic):
     from seedpod_ground_risk.pathfinding.environment import Environment
 
-    def __init__(self, environment: Environment, risk_multiplier=1e-6, distance_multiplier=1, resolution=1):
+    def __init__(self, environment: Environment, risk_to_dist_ratio=1, resolution=1):
         self.environment = environment
         self.resolution = resolution
-        self.kr = risk_multiplier
-        self.kd = distance_multiplier
+        self.max = environment.grid.max()
+        self.k = risk_to_dist_ratio
 
     def h(self, node: Node, goal: Node):
+        if node == goal:
+            return 0
         dist = ((node.x - goal.x) ** 2 + (node.y - goal.y) ** 2) ** 0.5
         n = int(dist / self.resolution)
         line_2d = np.linspace(start=(node.x, node.y), stop=(goal.x, goal.y), num=n,
@@ -39,4 +41,4 @@ class EuclideanRiskHeuristic(Heuristic):
         grid_vals = self.environment.grid[grid_coords[:, 0], grid_coords[:, 1]]
         integral_val = np.trapz(grid_vals)
 
-        return self.kr * integral_val  # + self.kd * dist
+        return (self.k / dist) * integral_val + dist
