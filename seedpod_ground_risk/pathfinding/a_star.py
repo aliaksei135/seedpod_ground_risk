@@ -64,15 +64,17 @@ class RiskGridAStar(GridAStar):
         closed = {start: None}
         costs = np.full(environment.grid.shape, np.inf)
         costs[start.y, start.x] = 0
-        debug_heuristic_cost = np.full(environment.grid.shape, np.inf)
+        if __debug__:
+            debug_heuristic_cost = np.full(environment.grid.shape, np.inf)
 
         while open:
             node = heappop(open)[1]
             if node == end:
-                import matplotlib.pyplot as mpl
-                mpl.matshow(costs)
-                mpl.matshow(debug_heuristic_cost)
-                mpl.show()
+                if __debug__:
+                    import matplotlib.pyplot as mpl
+                    mpl.matshow(np.flipud(costs))
+                    mpl.matshow(np.flipud(debug_heuristic_cost))
+                    mpl.show()
                 return self._reconstruct_path(end, closed)
 
             current_cost = costs[node.y, node.x]
@@ -83,8 +85,9 @@ class RiskGridAStar(GridAStar):
                     costs[neighbour.y, neighbour.x] = cost
                     h = self.heuristic(neighbour, end)
                     heappush(open, (cost + h, neighbour))
-                    debug_heuristic_cost[y, x] = h
                     closed[neighbour] = node
+                    if __debug__:
+                        debug_heuristic_cost[y, x] = h
         return None
 
 
@@ -101,15 +104,17 @@ class JumpPointSearchAStar(GridAStar):
         closed = {start: None}
         costs = np.full(environment.grid.shape, np.inf)
         costs[start.y, start.x] = 0
-        debug_heuristic_cost = np.full(environment.grid.shape, np.inf)
+        if __debug__:
+            debug_heuristic_cost = np.full(environment.grid.shape, np.inf)
 
         while open:
             node = heappop(open)[1]
             if node == end:
-                import matplotlib.pyplot as mpl
-                mpl.matshow(costs)
-                mpl.matshow(debug_heuristic_cost)
-                mpl.show()
+                if __debug__:
+                    import matplotlib.pyplot as mpl
+                    mpl.matshow(costs)
+                    mpl.matshow(debug_heuristic_cost)
+                    mpl.show()
                 return self._reconstruct_path(end, closed)
 
             cy, cx = node.y, node.x
@@ -128,8 +133,9 @@ class JumpPointSearchAStar(GridAStar):
                     costs[y, x] = cost
                     h = self.heuristic(successor, end)
                     heappush(open, (cost + h, successor))
-                    debug_heuristic_cost[y, x] = h
                     closed[successor] = node
+                    if __debug__:
+                        debug_heuristic_cost[y, x] = h
         return None
 
     def _jump(self, cy: int, cx: int, dy: int, dx: int) -> Node:
