@@ -141,20 +141,23 @@ class JumpPointSearchAStar(GridAStar):
     def _jump(self, cy: int, cx: int, dy: int, dx: int) -> Node:
         ny, nx = cy + dy, cx + dx
 
-        if self._is_passable(ny, nx):
+        if not self._is_passable(ny, nx):
             return None
 
         if nx == self.goal.x and ny == self.goal.y:
             return Node(nx, ny, self.environment.grid[ny, nx])
 
         if dx and dy:
+            # Diagonal case
             if (self._is_passable(nx - dx, ny + dy) and not self._is_passable(nx - dx, ny)) or \
                     (self._is_passable(nx + dx, ny - dy) and not self._is_passable(nx, ny - dy)):
                 return Node(nx, ny, self.environment.grid[ny, nx])
 
+            # Orthogonal searches
             if self._jump(ny, nx, dy, 0) or self._jump(ny, nx, 0, dx):
                 return Node(nx, ny, self.environment.grid[ny, nx])
         else:
+            # Orthogonal case
             if dx:
                 if (self._is_passable(nx + dx, ny + 1) and not self._is_passable(nx, ny + 1)) or \
                         (self._is_passable(nx + dx, ny - 1) and not self._is_passable(nx, ny - 1)):
@@ -167,7 +170,7 @@ class JumpPointSearchAStar(GridAStar):
         return self._jump(ny, nx, dy, dx)
 
     def _is_passable(self, y, x):
-        if 0 > y > self._max_y or 0 > x > self._max_x:
+        if y < 0 or y > self._max_y or x < 0 or x > self._max_x:
             return False
 
         return self.environment.grid[y, x] != -1
