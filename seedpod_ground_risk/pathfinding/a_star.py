@@ -77,10 +77,10 @@ class RiskGridAStar(GridAStar):
                     mpl.show()
                 return self._reconstruct_path(end, closed)
 
-            current_cost = costs[node.y, node.x]
+            # current_cost = costs[node.y, node.x]
             for neighbour in environment.get_neighbours(node):
                 x, y = neighbour.x, neighbour.y
-                cost = current_cost + environment.f_cost(node, neighbour) + self.heuristic(start, neighbour)
+                cost = self.heuristic(start, neighbour)
                 if costs[y, x] > cost:
                     costs[neighbour.y, neighbour.x] = cost
                     h = self.heuristic(neighbour, end)
@@ -128,7 +128,7 @@ class JumpPointSearchAStar(GridAStar):
 
             for successor in successors:
                 x, y = successor.x, successor.y
-                cost = current_cost + environment.f_cost(node, successor) + self.heuristic(start, successor)
+                cost = current_cost + environment.f_cost(node, successor)
                 if costs[y, x] > cost:
                     costs[y, x] = cost
                     h = self.heuristic(successor, end)
