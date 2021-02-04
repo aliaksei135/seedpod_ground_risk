@@ -30,4 +30,3 @@ class DataLayer(Layer, abc.ABC):
         :return: an Overlay-able holoviews layer with specific options
         """
         pass
-
