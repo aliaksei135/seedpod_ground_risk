@@ -95,7 +95,7 @@ class JumpPointSearchAStar(GridAStar):
 
     def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[List[Node], None]:
         self.environment = environment
-        self._max_y, self._max_x = self.environment.grid.shape
+        self._max_y, self._max_x = self.environment.grid.shape[0] - 1, self.environment.grid.shape[1] - 1
         self.goal = end
 
         # Use heapq;the thread safety provided by ProrityQueue is not needed, as we only exec on a single thread
