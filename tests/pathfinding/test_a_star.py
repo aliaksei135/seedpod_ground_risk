@@ -135,14 +135,7 @@ class JumpPointSearchAStarTestCase(AStarTestCase):
         """
         Test simplest case of direct path on small grid with no diagonals ignoring node values
         """
-        # path = self.algo.find_path(self.small_no_diag_environment, self.start, self.end)
-        self.assertRaises(TypeError, self.algo.find_path, self.small_no_diag_environment, self.start, self.end)
-
-        # self.assertEqual(path[0], self.start, 'Start node not included in path')
-        # self.assertEqual(path[-1], self.end, 'Goal node not included in path')
-        # # Could take either zigzag path both of which are correct but have same path length
-        # # There are no other paths of length 9 other than these zigzag paths, so tests for either of these
-        # self.assertEqual(len(path), 9, 'Path wrong length (not direct?)')
+        self.assertRaises(ValueError, self.algo.find_path, self.small_no_diag_environment, self.start, self.end)
 
     def test_direct_with_diagonals(self):
         """

@@ -95,7 +95,7 @@ class JumpPointSearchAStar(GridAStar):
 
     def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[List[Node], None]:
         if not environment.diagonals:
-            raise TypeError('JPS relies on a grid environment with diagonals')
+            raise ValueError('JPS relies on a grid environment with diagonals')
 
         self.environment = environment
         self._max_y, self._max_x = self.environment.grid.shape[0] - 1, self.environment.grid.shape[1] - 1
@@ -183,9 +183,9 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
 
     def __init__(self, heuristic: Heuristic = ManhattanHeuristic(), jump_gap=0):
         if not isinstance(heuristic, EuclideanRiskHeuristic):
-            raise TypeError('Risk based A* can only use Risk based heuristics')
+            raise ValueError('Risk based A* can only use Risk based heuristics')
         if not heuristic.environment.diagonals:
-            raise TypeError('JPS relies on a grid environment with diagonals')
+            raise ValueError('JPS relies on a grid environment with diagonals')
         super().__init__(heuristic)
         self._jump_gap = jump_gap
 
@@ -193,6 +193,10 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
         self.environment = environment
         self._max_y, self._max_x = self.environment.grid.shape[0] - 1, self.environment.grid.shape[1] - 1
         self.goal = end
+
+        # Check if start and goal are the same
+        if start == end:
+            return [start]
 
         # Use heapq;the thread safety provided by ProrityQueue is not needed, as we only exec on a single thread
         open = []
