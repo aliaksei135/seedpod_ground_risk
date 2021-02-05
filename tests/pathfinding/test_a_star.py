@@ -7,7 +7,7 @@ from seedpod_ground_risk.pathfinding.heuristic import EuclideanRiskHeuristic
 from tests.pathfinding.test_data import SMALL_TEST_GRID, LARGE_TEST_GRID, SMALL_DEADEND_TEST_GRID
 
 
-class AStarTestCase(unittest.TestCase):
+class BaseAStarTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         super().setUp()
@@ -23,6 +23,9 @@ class AStarTestCase(unittest.TestCase):
         """
         Test case of start and goal being the same node
         """
+        # Do not test base class!
+        if self.__class__ is BaseAStarTestCase:
+            return
         path = self.algo.find_path(self.small_diag_environment, self.start, self.start)
 
         self.assertEqual(path, [self.start])
@@ -31,12 +34,15 @@ class AStarTestCase(unittest.TestCase):
         """
         Test behaviour when path is impossible due to obstacles
         """
+        # Do not test base class!
+        if self.__class__ is BaseAStarTestCase:
+            return
         path = self.algo.find_path(self.small_deadend_environment, self.start, self.end)
 
         self.assertEqual(path, None, "Impossible path should be None")
 
 
-class GridAStarTestCase(AStarTestCase):
+class GridAStarTestCase(BaseAStarTestCase):
 
     def setUp(self) -> None:
         super().setUp()
@@ -72,7 +78,7 @@ class GridAStarTestCase(AStarTestCase):
                          "Incorrect path")
 
 
-class RiskGridAStarTestCase(AStarTestCase):
+class RiskGridAStarTestCase(BaseAStarTestCase):
 
     def setUp(self) -> None:
         super().setUp()
@@ -109,7 +115,7 @@ class RiskGridAStarTestCase(AStarTestCase):
                          "Incorrect path")
 
 
-class JumpPointSearchAStarTestCase(AStarTestCase):
+class JumpPointSearchAStarTestCase(BaseAStarTestCase):
 
     def setUp(self) -> None:
         super().setUp()
@@ -136,7 +142,7 @@ class JumpPointSearchAStarTestCase(AStarTestCase):
                          "Incorrect path")
 
 
-class RiskJumpPointSearchAStarTestCase(AStarTestCase):
+class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
 
     def setUp(self) -> None:
         super().setUp()
