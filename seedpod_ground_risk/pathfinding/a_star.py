@@ -188,8 +188,14 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
             raise ValueError('JPS relies on a grid environment with diagonals')
         super().__init__(heuristic)
         self._jump_gap = jump_gap
+        self.heuristic_env_hash = hash(heuristic.environment)
 
     def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[List[Node], None]:
+        if not environment.diagonals:
+            raise ValueError('JPS relies on a grid environment with diagonals')
+        if self.heuristic_env_hash != hash(environment):
+            raise ValueError("Risk based heuristic and algorithm should have the same environment")
+
         self.environment = environment
         self._max_y, self._max_x = self.environment.grid.shape[0] - 1, self.environment.grid.shape[1] - 1
         self.goal = end
