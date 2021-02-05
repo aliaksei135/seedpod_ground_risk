@@ -94,6 +94,9 @@ class RiskGridAStar(GridAStar):
 class JumpPointSearchAStar(GridAStar):
 
     def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[List[Node], None]:
+        if not environment.diagonals:
+            raise TypeError('JPS relies on a grid environment with diagonals')
+
         self.environment = environment
         self._max_y, self._max_x = self.environment.grid.shape[0] - 1, self.environment.grid.shape[1] - 1
         self.goal = end
