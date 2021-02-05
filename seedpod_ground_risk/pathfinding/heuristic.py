@@ -34,11 +34,11 @@ class EuclideanRiskHeuristic(Heuristic):
         if node == goal:
             return 0
         dist = ((node.x - goal.x) ** 2 + (node.y - goal.y) ** 2) ** 0.5
-        n = int(dist / self.resolution)
+        n = int(dist / self.resolution) + 1
         line_2d = np.linspace(start=(node.x, node.y), stop=(goal.x, goal.y), num=n,
                               endpoint=True)
         grid_coords = np.array(np.round(line_2d), dtype=np.intp)
         grid_vals = self.environment.grid[grid_coords[:, 0], grid_coords[:, 1]]
-        integral_val = np.trapz(grid_vals)
+        integral_val = np.trapz(grid_vals, dx=dist / (n - 1))
 
-        return (self.k / dist) * integral_val + dist
+        return ((self.k / dist) * integral_val) + dist
