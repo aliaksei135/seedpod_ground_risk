@@ -43,7 +43,8 @@ class PathfindingLayer(AnnotationLayer):
         env = environment.GridEnvironment(raster_data[1], diagonals=True, pruning=False)
         # algo = a_star.RiskGridAStar(
         #     heuristic=heuristic.EuclideanRiskHeuristic(env, risk_to_dist_ratio=1))
-        algo = a_star.RiskJumpPointSearchAStar(EuclideanRiskHeuristic(env, risk_to_dist_ratio=1), jump_gap=0)
+        algo = a_star.RiskJumpPointSearchAStar(EuclideanRiskHeuristic(env, risk_to_dist_ratio=20), jump_gap=0,
+                                               jump_limit=20)
         t0 = time()
         path = algo.find_path(env, start_node, end_node)
         print('Path generated in ', time() - t0)

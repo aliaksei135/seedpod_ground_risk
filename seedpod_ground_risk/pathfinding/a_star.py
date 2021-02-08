@@ -181,13 +181,14 @@ class JumpPointSearchAStar(GridAStar):
 
 class RiskJumpPointSearchAStar(JumpPointSearchAStar):
 
-    def __init__(self, heuristic: Heuristic = ManhattanHeuristic(), jump_gap=0):
+    def __init__(self, heuristic: Heuristic = ManhattanHeuristic(), jump_gap=0, jump_limit=200):
         if not isinstance(heuristic, EuclideanRiskHeuristic):
             raise ValueError('Risk based A* can only use Risk based heuristics')
         if not heuristic.environment.diagonals:
             raise ValueError('JPS relies on a grid environment with diagonals')
         super().__init__(heuristic)
         self._jump_gap = jump_gap
+        self._jump_limit = jump_limit
         self.heuristic_env_hash = hash(heuristic.environment)
 
     def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[List[Node], None]:
@@ -265,7 +266,7 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
             mpl.show()
         return None
 
-    def _jump(self, cy: int, cx: int, dy: int, dx: int, start_cost: float) -> List[Node]:
+    def _jump(self, cy: int, cx: int, dy: int, dx: int, start_cost: float, jump_count=0) -> List[Node]:
         ny, nx = cy + dy, cx + dx
 
         if not self._is_passable(ny, nx):
@@ -278,6 +279,9 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
         if abs(self.environment.grid[ny, nx] - start_cost) > self._jump_gap:
             return [Node(cx, cy, self.environment.grid[cy, cx])]
 
+        if jump_count > self._jump_limit:
+            return [Node(cx, cy, self.environment.grid[cy, cx])]
+
         if dx and dy:
             # Diagonal case
             if (self._is_passable(nx - dx, ny + dy) and not self._is_passable(nx - dx, ny)) or \
@@ -285,8 +289,8 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
                 return [Node(nx, ny, self.environment.grid[ny, nx])]
 
             # Orthogonal searches
-            y_orthogonal_jump = self._jump(ny, nx, dy, 0, start_cost)
-            x_orthogonal_jump = self._jump(ny, nx, 0, dx, start_cost)
+            y_orthogonal_jump = self._jump(ny, nx, dy, 0, start_cost, jump_count=jump_count + 1)
+            x_orthogonal_jump = self._jump(ny, nx, 0, dx, start_cost, jump_count=jump_count + 1)
             if y_orthogonal_jump or x_orthogonal_jump:
                 jumps = [Node(nx, ny, self.environment.grid[ny, nx])]
                 if y_orthogonal_jump:
@@ -305,4 +309,4 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
                         (self._is_passable(nx - 1, ny) and not self._is_passable(nx - 1, ny - dy)):
                     return [Node(nx, ny, self.environment.grid[ny, nx])]
 
-        return self._jump(ny, nx, dy, dx, start_cost)
+        return self._jump(ny, nx, dy, dx, start_cost, jump_count=jump_count + 1)
