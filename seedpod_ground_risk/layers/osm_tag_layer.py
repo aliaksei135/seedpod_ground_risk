@@ -3,7 +3,7 @@ from typing import NoReturn
 
 import geopandas as gpd
 import shapely.geometry as sg
-from holoviews.element import Geometry
+from holoviews.element import Geometry, Image
 
 from seedpod_ground_risk.layers.data_layer import DataLayer
 
@@ -27,11 +27,26 @@ class OSMTagLayer(DataLayer):
 
     def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Geometry:
         import geoviews as gv
+        from holoviews.operation.datashader import rasterize
+        import numpy as np
+
+        bounds = bounds_polygon.bounds
 
         self.query_osm_polygons(bounds_polygon)
         if self._landuse_polygons.empty:
             return None
-        return gv.Polygons(self._landuse_polygons).opts(style={'alpha': 0.8, 'color': self._colour})
+        polys = gv.Polygons(self._landuse_polygons).opts(style={'alpha': 0.8, 'color': self._colour})
+        if self.rasterise:
+            raster = rasterize(polys,
+                               x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]),
+                               cmap=self._colour, dynamic=False)
+            if self.blocking:
+                grid = list(raster.data.data_vars.items())[0][1].data.astype(np.int)
+                grid[grid != 0] = np.iinfo(np.int).min
+                raster = Image(grid, bounds=(bounds[1], bounds[0], bounds[3], bounds[2]))
+            return raster
+        else:
+            return polys
 
     def clear_cache(self):
         self._landuse_polygons = gpd.GeoDataFrame()

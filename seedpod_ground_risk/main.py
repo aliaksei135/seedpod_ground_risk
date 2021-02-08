@@ -189,7 +189,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if ok:
             r = re.compile('(\w+=\w+)|(\w+)')
             if r.match(kv_str) is not None:
-                self.plot_worker.signals.add_osm_layer.emit(kv_str, False)
+                result = QMessageBox.question(self, "Blocking Layer",
+                                              "Does this layer consist of obstacles that must be avoided?")
+                self.plot_worker.signals.add_osm_layer.emit(kv_str, result == QMessageBox.Yes)
             else:
                 self.layer_add_osm()
 

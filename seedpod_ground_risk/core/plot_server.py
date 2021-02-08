@@ -68,7 +68,6 @@ class PlotServer:
 
         self._time_idx = 0
 
-        from seedpod_ground_risk.layers.geojson_layer import GeoJSONLayer
         from seedpod_ground_risk.layers.residential_layer import ResidentialLayer
         from seedpod_ground_risk.layers.roads_layer import RoadsLayer
         from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
@@ -76,8 +75,10 @@ class PlotServer:
         self.data_layer_order = []
         self.data_layers = [ResidentialLayer('Residential Population', rasterise=rasterise),
                             RoadsLayer('Road Traffic Population per Hour', rasterise=rasterise),
-                            OSMTagLayer('Nature Reserves', osm_tag='leisure=nature_reserve', colour='green'),
-                            OSMTagLayer('Military Airfields', osm_tag='military=airfield', colour='red')]
+                            OSMTagLayer('Nature Reserves', osm_tag='leisure=nature_reserve', colour='green',
+                                        rasterise=rasterise, blocking=True),
+                            OSMTagLayer('Military Airfields', osm_tag='military=airfield', colour='red',
+                                        rasterise=rasterise, blocking=True)]
 
         self.annotation_layers = [  # GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300),
             PathfindingLayer('Pathfinding Layer', start_coords=(-1.5, 50.88),
@@ -224,19 +225,32 @@ class PlotServer:
                             if isinstance(layer, WMTS):
                                 continue
                             elif isinstance(layer, Image):
-                                for _, var in layer.data.data_vars.items():
+                                if isinstance(layer.data, np.ndarray):
                                     if raster_grid is None and self.rasterise:
                                         # raster_grid cannot be assigned directly to var.data,
                                         # this results in the raster grid disappearing during render
-                                        raster_grid = np.zeros(var.data.shape)
-                                    layer_raster_grid = np.copy(var.data)
+                                        raster_grid = np.zeros(layer.data.shape, dtype=np.float64)
+                                    layer_raster_grid = np.copy(layer.data)
                                     # Set nans to zero
                                     nans = np.isnan(layer_raster_grid)
                                     layer_raster_grid[nans] = 0
                                     mpl.matshow(np.flipud(layer_raster_grid), cmap='jet')
                                     mpl.colorbar()
                                     raster_grid += layer_raster_grid
-                                raster_indices.append(dict(layer.data.coords.indexes))
+                                else:
+                                    for _, var in layer.data.data_vars.items():
+                                        if raster_grid is None and self.rasterise:
+                                            # raster_grid cannot be assigned directly to var.data,
+                                            # this results in the raster grid disappearing during render
+                                            raster_grid = np.zeros(var.data.shape, dtype=np.float64)
+                                        layer_raster_grid = np.copy(var.data)
+                                        # Set nans to zero
+                                        nans = np.isnan(layer_raster_grid)
+                                        layer_raster_grid[nans] = 0
+                                        mpl.matshow(np.flipud(layer_raster_grid), cmap='jet')
+                                        mpl.colorbar()
+                                        raster_grid += layer_raster_grid
+                                    raster_indices.append(dict(layer.data.coords.indexes))
                                 raw_datas.append(layer.dataset.data)
                             else:
                                 raw_datas.append(layer.data)
@@ -364,7 +378,7 @@ class PlotServer:
         self.annotation_layers.append(layer)
 
     def add_osm_layer(self, kv: str, blocking: bool):
-        layer = OSMTagLayer(kv, kv, blocking=blocking)
+        layer = OSMTagLayer(kv, kv, blocking=blocking, rasterise=self.rasterise)
         layer.preload_data()
         self.data_layers.append(layer)
 
