@@ -1,3 +1,4 @@
+from time import time
 from typing import NoReturn, List, Tuple, Dict
 
 import geopandas as gpd
@@ -22,7 +23,7 @@ class PathfindingLayer(AnnotationLayer):
     def annotate(self, data: List[gpd.GeoDataFrame], raster_data: Tuple[Dict[str, np.array], np.array],
                  **kwargs) -> Geometry:
         from seedpod_ground_risk.pathfinding import environment, a_star
-        from seedpod_ground_risk.pathfinding import heuristic
+        from seedpod_ground_risk.pathfinding.heuristic import EuclideanRiskHeuristic
         import geoviews as gv
 
         snapped_start_lat_idx = np.argmin(np.abs(raster_data[0]['Latitude'] - self.start_coords[1]))
@@ -39,11 +40,14 @@ class PathfindingLayer(AnnotationLayer):
         mpl.colorbar()
         mpl.show()
 
-        env = environment.GridEnvironment(raster_data[1], diagonals=False, pruning=False)
-        algo = a_star.GridAStar(
-            heuristic=heuristic.EuclideanRiskHeuristic(env, risk_multiplier=5e-6, distance_multiplier=1))
+        env = environment.GridEnvironment(raster_data[1], diagonals=True, pruning=False)
+        # algo = a_star.RiskGridAStar(
+        #     heuristic=heuristic.EuclideanRiskHeuristic(env, risk_to_dist_ratio=1))
+        algo = a_star.RiskJumpPointSearchAStar(EuclideanRiskHeuristic(env, risk_to_dist_ratio=20), jump_gap=0,
+                                               jump_limit=20)
+        t0 = time()
         path = algo.find_path(env, start_node, end_node)
-        print(len(path))
+        print('Path generated in ', time() - t0)
 
         snapped_path = []
         for node in path:

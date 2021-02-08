@@ -71,6 +71,7 @@ class PlotServer:
         from seedpod_ground_risk.layers.geojson_layer import GeoJSONLayer
         from seedpod_ground_risk.layers.residential_layer import ResidentialLayer
         from seedpod_ground_risk.layers.roads_layer import RoadsLayer
+        from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
         self._generated_data_layers = {}
         self.data_layer_order = []
         self.data_layers = [ResidentialLayer('Residential Population', rasterise=rasterise),
@@ -78,9 +79,9 @@ class PlotServer:
                             OSMTagLayer('Nature Reserves', osm_tag='leisure=nature_reserve', colour='green'),
                             OSMTagLayer('Military Airfields', osm_tag='military=airfield', colour='red')]
 
-        self.annotation_layers = [GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300), ]
-        # PathfindingLayer('Pathfinding Layer', start_coords=(-1.5, 50.88),
-        #                end_coords=(-1.35, 50.98))]
+        self.annotation_layers = [  # GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300),
+            PathfindingLayer('Pathfinding Layer', start_coords=(-1.5, 50.88),
+                             end_coords=(-1.34, 50.95))]
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
@@ -240,7 +241,7 @@ class PlotServer:
                             else:
                                 raw_datas.append(layer.data)
 
-                            mpl.show()
+                        mpl.show()
                         merged_indices = {}
                         # Merge indices
                         # Get unique keys
