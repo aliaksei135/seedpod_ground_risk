@@ -176,7 +176,7 @@ class JumpPointSearchAStar(GridAStar):
         if y < 0 or y > self._max_y or x < 0 or x > self._max_x:
             return False
 
-        return self.environment.grid[y, x] != -1
+        return self.environment.grid[y, x] > -1
 
 
 class RiskJumpPointSearchAStar(JumpPointSearchAStar):
@@ -224,6 +224,8 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
         while open:
 
             node = heappop(open)[1]
+            if len(open) > 400:
+                open = open[:200]
             if node == end:
                 if __debug__:
                     import matplotlib.pyplot as mpl
