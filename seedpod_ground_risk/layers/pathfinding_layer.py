@@ -40,14 +40,17 @@ class PathfindingLayer(AnnotationLayer):
         mpl.colorbar()
         mpl.show()
 
-        env = environment.GridEnvironment(raster_data[1], diagonals=True, pruning=False)
-        # algo = a_star.RiskGridAStar(
-        #     heuristic=heuristic.EuclideanRiskHeuristic(env, risk_to_dist_ratio=1))
-        algo = a_star.RiskJumpPointSearchAStar(EuclideanRiskHeuristic(env, risk_to_dist_ratio=20), jump_gap=0,
-                                               jump_limit=20)
+        env = environment.GridEnvironment(raster_data[1], diagonals=False, pruning=False)
+        algo = a_star.RiskGridAStar(
+            heuristic=EuclideanRiskHeuristic(env, risk_to_dist_ratio=0.01))
+        # algo = a_star.RiskJumpPointSearchAStar(EuclideanRiskHeuristic(env, risk_to_dist_ratio=4), jump_gap=1000,
+        #                                        jump_limit=20)
         t0 = time()
         path = algo.find_path(env, start_node, end_node)
-        print('Path generated in ', time() - t0)
+        if path is None:
+            return None
+        else:
+            print('Path generated in ', time() - t0)
 
         snapped_path = []
         for node in path:

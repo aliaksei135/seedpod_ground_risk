@@ -229,8 +229,9 @@ class PlotServer:
 
                         annotations = []
                         for layer in self.annotation_layers:
-                            annotation = layer.annotate(raw_datas, (merged_indices, raster_grid))
-                            annotations.append(annotation)
+                            annotation = layer.annotate(raw_datas, (raster_indices, raster_grid))
+                            if annotation:
+                                annotations.append(annotation)
 
                         annotation_overlay = Overlay(annotations)
                         plot = Overlay([self._base_tiles, plot, annotation_overlay]).collate()
