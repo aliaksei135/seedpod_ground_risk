@@ -1,5 +1,7 @@
 from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn, Optional, List, Sequence
 
+import geopandas as gpd
+import numpy as np
 import shapely.geometry as sg
 from holoviews import Overlay, Element
 from holoviews.element import Geometry
@@ -194,9 +196,6 @@ class PlotServer:
         :returns: overlay plot of stored layers
         """
         from itertools import chain
-        from geoviews import WMTS
-        from holoviews.element import Image
-        import numpy as np
 
         try:
             if not self._preload_complete:
@@ -213,59 +212,20 @@ class PlotServer:
                     t0 = time()
                     self.generate_layers(bounds_poly)
                     self._progress_callback("Rendering new map...")
+                    plot = Overlay([res[0] for res in self._generated_data_layers.values()])
                     print("Generated all layers in ", time() - t0)
-                    plot = Overlay(list(self._generated_data_layers.values()))
                     if self.annotation_layers:
                         import matplotlib.pyplot as mpl
-                        raw_datas = []
-                        raster_indices = []
-                        raster_grid = None
-
-                        for layer in plot:
-                            if isinstance(layer, WMTS):
-                                continue
-                            elif isinstance(layer, Image):
-                                if isinstance(layer.data, np.ndarray):
-                                    if raster_grid is None and self.rasterise:
-                                        # raster_grid cannot be assigned directly to var.data,
-                                        # this results in the raster grid disappearing during render
-                                        raster_grid = np.zeros(layer.data.shape, dtype=np.float64)
-                                    layer_raster_grid = np.copy(layer.data)
-                                    # Set nans to zero
-                                    nans = np.isnan(layer_raster_grid)
-                                    layer_raster_grid[nans] = 0
-                                    mpl.matshow(np.flipud(layer_raster_grid), cmap='jet')
-                                    mpl.colorbar()
-                                    raster_grid += layer_raster_grid
-                                else:
-                                    for _, var in layer.data.data_vars.items():
-                                        if raster_grid is None and self.rasterise:
-                                            # raster_grid cannot be assigned directly to var.data,
-                                            # this results in the raster grid disappearing during render
-                                            raster_grid = np.zeros(var.data.shape, dtype=np.float64)
-                                        layer_raster_grid = np.copy(var.data)
-                                        # Set nans to zero
-                                        nans = np.isnan(layer_raster_grid)
-                                        layer_raster_grid[nans] = 0
-                                        mpl.matshow(np.flipud(layer_raster_grid), cmap='jet')
-                                        mpl.colorbar()
-                                        raster_grid += layer_raster_grid
-                                    raster_indices.append(dict(layer.data.coords.indexes))
-                                raw_datas.append(layer.dataset.data)
-                            else:
-                                raw_datas.append(layer.data)
-
-                        mpl.show()
-                        merged_indices = {}
-                        # Merge indices
-                        # Get unique keys
-                        keys = set([key for d in raster_indices for key in d.keys()])
-                        for k in keys:
-                            values = []
-                            for d in raster_indices:
-                                if k in d:
-                                    values.append(d[k])
-                            merged_indices[k] = np.max(values, axis=0)
+                        plot = Overlay([res[0] for res in self._generated_data_layers.values()])
+                        raw_datas = [res[2] for res in self._generated_data_layers.values()]
+                        raster_indices = dict(Longitude=np.linspace(x_range[0], x_range[1], num=400),
+                                              Latitude=np.linspace(y_range[0], y_range[1], num=400))
+                        raster_grid = np.zeros((400, 400), dtype=np.float64)
+                        for res in self._generated_data_layers.values():
+                            layer_raster_grid = res[1]
+                            nans = np.isnan(layer_raster_grid)
+                            layer_raster_grid[nans] = 0
+                            raster_grid += res[1]
 
                         annotations = []
                         for layer in self.annotation_layers:
@@ -322,11 +282,11 @@ class PlotServer:
                              self.data_layers]
         # Store generated layers as they are completed
         for future in as_completed(layer_futures):
-            layer_key, geom = future.result()
+            key, result = future.result()
             # Store layer
             # Lock not needed as this loop is synchronous
-            if geom:
-                layers[layer_key] = geom
+            if result:
+                layers[key] = result
 
         # Remove layers with explicit ordering
         # so they are can be reinserted in the correct order instead of updated in place
@@ -342,7 +302,7 @@ class PlotServer:
 
     @staticmethod
     def generate_layer(layer: DataLayer, bounds_poly: sg.Polygon, hour: int) -> Union[
-        Tuple[str, Geometry], Tuple[str, None]]:
+        Tuple[str, Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]], Tuple[str, None]]:
         import shapely.ops as so
 
         from_cache = False

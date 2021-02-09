@@ -1,5 +1,8 @@
 import abc
+from typing import Tuple
 
+import geopandas as gpd
+import numpy as np
 import shapely.geometry as sg
 from holoviews.element.geom import Geometry
 from shapely.geometry import Polygon
@@ -22,7 +25,8 @@ class DataLayer(Layer, abc.ABC):
         self.cached_area = sg.Polygon()
 
     @abc.abstractmethod
-    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Geometry:
+    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Tuple[
+        Geometry, np.ndarray, gpd.GeoDataFrame]:
         """
         Generate the map of this layer. This is called asynchronously, so cannot access plot_server members.
         :param shapely.geometry.Polygon bounds_polygon: the bounding polygon for which to generate the map

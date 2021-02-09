@@ -1,9 +1,10 @@
 import random
-from typing import NoReturn
+from typing import NoReturn, Tuple
 
 import geopandas as gpd
+import numpy as np
 import shapely.geometry as sg
-from holoviews.element import Geometry, Image
+from holoviews.element import Geometry
 
 from seedpod_ground_risk.layers.data_layer import DataLayer
 
@@ -25,10 +26,10 @@ class OSMTagLayer(DataLayer):
     def preload_data(self) -> NoReturn:
         pass
 
-    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Geometry:
+    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Tuple[
+        Geometry, np.ndarray, gpd.GeoDataFrame]:
         import geoviews as gv
         from holoviews.operation.datashader import rasterize
-        import numpy as np
 
         bounds = bounds_polygon.bounds
 
@@ -36,17 +37,13 @@ class OSMTagLayer(DataLayer):
         if self._landuse_polygons.empty:
             return None
         polys = gv.Polygons(self._landuse_polygons).opts(style={'alpha': 0.8, 'color': self._colour})
-        if self.rasterise:
-            raster = rasterize(polys,
-                               x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]),
-                               cmap=self._colour, dynamic=False)
-            if self.blocking:
-                grid = list(raster.data.data_vars.items())[0][1].data.astype(np.int)
-                grid[grid != 0] = np.iinfo(np.int).min
-                raster = Image(grid, bounds=(bounds[1], bounds[0], bounds[3], bounds[2]))
-            return raster
-        else:
-            return polys
+        raster = rasterize(polys,
+                           x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
+        raster_grid = np.copy(list(raster.data.data_vars.items())[0][1].data.astype(np.float))
+        if self.blocking:
+            raster_grid[raster_grid != 0] = -1
+
+        return polys, raster_grid, gpd.GeoDataFrame(self._landuse_polygons)
 
     def clear_cache(self):
         self._landuse_polygons = gpd.GeoDataFrame()

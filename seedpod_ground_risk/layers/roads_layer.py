@@ -1,6 +1,7 @@
-from typing import NoReturn, List
+from typing import NoReturn, List, Tuple
 
 import geopandas as gpd
+import numpy as np
 from holoviews.element import Geometry
 from shapely import geometry as sg
 from shapely import speedups
@@ -61,16 +62,12 @@ class RoadsLayer(DataLayer):
         self._ingest_road_geometries()
         self._ingest_relative_traffic_variations()
 
-    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, hour: int = 0, **kwargs) -> Geometry:
+    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, hour: int = 0, **kwargs) -> Tuple[
+        Geometry, np.ndarray, gpd.GeoDataFrame]:
         from holoviews.operation.datashader import rasterize
         import geoviews as gv
         import datashader as ds
         import colorcet
-        import numpy as np
-        from time import time
-
-        t0 = time()
-        print("Generating Roads Layer Data")
 
         relative_variation = self.relative_variations_flat[hour]
 
@@ -78,23 +75,15 @@ class RoadsLayer(DataLayer):
         tfc_df = gpd.GeoDataFrame(
             {'geometry': [sg.Point(lon, lat) for lon, lat in zip(points[:, 0], points[:, 1])],
              'population': points[:, 2] * relative_variation})
-        print("Roads: Bounded data cumtime ", time() - t0)
         points = gv.Points(tfc_df,
                            kdims=['Longitude', 'Latitude'], vdims=['population']).opts(colorbar=True,
                                                                                        cmap=colorcet.CET_L18,
                                                                                        color='population')
-        if self.rasterise:
-            bounds = bounds_polygon.bounds
-            raster = rasterize(points, aggregator=ds.mean('population'),
-                               x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]),
-                               dynamic=False).opts(colorbar=True, cmap=colorcet.CET_L18)
-            t1 = time()
-            print('Roads with raster: ', t1 - t0)
-            return raster
-        else:
-            t1 = time()
-            print('Roads no raster: ', t1 - t0)
-            return points
+        bounds = bounds_polygon.bounds
+        raster = rasterize(points, aggregator=ds.mean('population'),
+                           x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
+        raster_grid = np.copy(list(raster.data.data_vars.items())[0][1].data.astype(np.float))
+        return points, raster_grid, gpd.GeoDataFrame(tfc_df)
 
     def clear_cache(self) -> NoReturn:
         self._traffic_counts = gpd.GeoDataFrame()
