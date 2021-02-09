@@ -1,9 +1,9 @@
 import unittest
 
-from seedpod_ground_risk.pathfinding.a_star import GridAStar, RiskGridAStar, JumpPointSearchAStar, \
-    RiskJumpPointSearchAStar
+from seedpod_ground_risk.pathfinding.a_star import GridAStar, RiskGridAStar, JumpPointSearchAStar
 from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
 from seedpod_ground_risk.pathfinding.heuristic import EuclideanRiskHeuristic
+from seedpod_ground_risk.pathfinding.rjps_a_star import RiskJumpPointSearchAStar
 from tests.pathfinding.test_data import SMALL_TEST_GRID, LARGE_TEST_GRID, SMALL_DEADEND_TEST_GRID
 
 
@@ -114,6 +114,15 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         ],
                          "Incorrect path")
 
+    def test_large_env_with_diagonals(self):
+        """
+        Test on realistic costmap. Used mainly for profiling code
+        """
+        algo = RiskJumpPointSearchAStar(EuclideanRiskHeuristic(self.large_diag_environment,
+                                                               risk_to_dist_ratio=1))
+        path = algo.find_path(self.large_diag_environment, Node(10, 10, 0), Node(392, 392, 0))
+        self.assertIsNotNone(path, 'Failed to find possible path')
+
 
 class JumpPointSearchAStarTestCase(BaseAStarTestCase):
 
@@ -172,6 +181,15 @@ class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
         ],
                          "Incorrect path")
 
+    def test_large_env_with_diagonals(self):
+        """
+        Test on realistic costmap. Used mainly for profiling code
+        """
+        algo = RiskJumpPointSearchAStar(EuclideanRiskHeuristic(self.large_diag_environment,
+                                                               risk_to_dist_ratio=1))
+        path = algo.find_path(self.large_diag_environment, Node(10, 10, 0), Node(392, 392, 0))
+        self.assertIsNotNone(path, 'Failed to find possible path')
+
     def test_goal_unreachable(self):
         """
         Test behaviour when path is impossible due to obstacles
@@ -187,6 +205,7 @@ class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
         Test behaviour when algorithm environment does not match that passed to the heuristic
         """
         self.assertRaises(ValueError, self.algo.find_path, self.large_diag_environment, self.start, self.end)
+
 
 if __name__ == '__main__':
     unittest.main()
