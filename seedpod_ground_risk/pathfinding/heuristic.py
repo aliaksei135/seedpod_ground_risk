@@ -51,4 +51,22 @@ class EuclideanRiskHeuristic(RiskHeuristic):
 
         return calc(self.environment.grid, node.y, node.x, goal.y, goal.x, self.k, self.resolution)
 
-        return ((self.k / dist) * integral_val) + dist
+
+class ManhattanRiskHeuristic(RiskHeuristic):
+    def h(self, node: Node, goal: Node):
+        if node == goal:
+            return 0
+
+        # @jit(nopython=True)
+        def calc(grid, ny, nx, gy, gx, k, res):
+            dist = abs((nx - gx)) + abs((ny - gy))
+            line_x = np.linspace(nx, gx, dist).astype(np.int)
+            line_y = np.linspace(ny, gy, dist).astype(np.int)
+            line = np.unique(np.vstack((line_y, line_x)).T, axis=0)
+            path_sum = grid[line[:, 0], line[:, 1]].sum()
+
+            # return path_sum
+            return ((k / dist) * path_sum) + dist
+            # return k * path_sum + dist
+
+        return calc(self.environment.grid, node.y, node.x, goal.y, goal.x, self.k, self.resolution)
