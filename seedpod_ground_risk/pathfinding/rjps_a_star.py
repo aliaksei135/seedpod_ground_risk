@@ -130,7 +130,7 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
                     mpl.matshow(np.flipud(debug_heuristic_cost))
                     mpl.colorbar()
                     mpl.show()
-                return self._reconstruct_path(end, closed)
+                return self._reconstruct_path(end, closed, environment.grid)
 
             parent = closed[node]
             py, px = parent.y, parent.x

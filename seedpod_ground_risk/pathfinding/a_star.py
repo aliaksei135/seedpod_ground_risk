@@ -27,7 +27,7 @@ class GridAStar(Algorithm):
                 import matplotlib.pyplot as mpl
                 mpl.matshow(costs)
                 mpl.show()
-                return self._reconstruct_path(end, closed)
+                return self._reconstruct_path(end, closed, environment.grid)
 
             current_cost = costs[node.y, node.x]
             for neighbour in environment.get_neighbours(node):
@@ -39,7 +39,7 @@ class GridAStar(Algorithm):
                     closed[neighbour] = node
         return None
 
-    def _reconstruct_path(self, end: Node, closed_list: Dict[Node, Node]) -> List[Node]:
+    def _reconstruct_path(self, end: Node, closed_list: Dict[Node, Node], grid: np.ndarray) -> List[Node]:
         reverse_path = []
         reverse_path_append = reverse_path.append
         reverse_path_append(end)
@@ -47,7 +47,37 @@ class GridAStar(Algorithm):
         while node is not None:
             reverse_path_append(node)
             node = closed_list[node]
-        return list(reversed(reverse_path))
+        path = list(reversed(reverse_path))
+
+        def jump_path(node: Node, path, grid, goal: Node):
+            nx, ny = node.x, node.y
+            path_idx = path.index(node) + 1
+            test_node = path[path_idx]
+            while test_node != goal:
+                test_node = path[path_idx + 1]
+                tx, ty = test_node.x, test_node.y
+
+                dist = abs((nx - tx)) + abs((ny - ty))
+                line_x = np.linspace(nx, tx, dist).astype(np.int)
+                line_y = np.linspace(ny, ty, dist).astype(np.int)
+                line = np.unique(np.vstack((line_y, line_x)).T, axis=0)
+                path_sum = grid[line[:, 0], line[:, 1]].sum()
+
+                if path_sum != 0:
+                    return path[path_idx]
+                else:
+                    path_idx = path_idx + 1
+            return test_node
+
+        simplfied_path = []
+        next_node = path[0]
+        simplfied_path.append(next_node)
+        while next_node != end:
+            jump_node = jump_path(next_node, path, grid, end)
+            simplfied_path.append(jump_node)
+            next_node = jump_node
+
+        return simplfied_path
 
 
 class RiskGridAStar(GridAStar):
@@ -75,7 +105,7 @@ class RiskGridAStar(GridAStar):
                     mpl.matshow(np.flipud(costs))
                     mpl.matshow(np.flipud(debug_heuristic_cost))
                     mpl.show()
-                return self._reconstruct_path(end, closed)
+                return self._reconstruct_path(end, closed, environment.grid)
 
             # current_cost = costs[node.y, node.x]
             for neighbour in environment.get_neighbours(node):
@@ -118,7 +148,7 @@ class JumpPointSearchAStar(GridAStar):
                     mpl.matshow(costs)
                     mpl.matshow(debug_heuristic_cost)
                     mpl.show()
-                return self._reconstruct_path(end, closed)
+                return self._reconstruct_path(end, closed, environment.grid)
 
             cy, cx = node.y, node.x
             current_cost = costs[cy, cx]
