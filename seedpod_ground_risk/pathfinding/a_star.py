@@ -89,8 +89,8 @@ class RiskGridAStar(GridAStar):
 
     def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[List[Node], None]:
         # Use heapq;the thread safety provided by ProrityQueue is not needed, as we only exec on a single thread
-        open = []
-        heappush(open, (0, start))
+        open = [(0, start)]
+        # heappush(open, (0, start))
         closed = {start: None}
         costs = np.full(environment.grid.shape, np.inf)
         costs[start.y, start.x] = 0
@@ -107,10 +107,10 @@ class RiskGridAStar(GridAStar):
                     mpl.show()
                 return self._reconstruct_path(end, closed, environment.grid)
 
-            # current_cost = costs[node.y, node.x]
+            current_cost = costs[node.y, node.x]
             for neighbour in environment.get_neighbours(node):
                 x, y = neighbour.x, neighbour.y
-                cost = self.heuristic(start, neighbour)
+                cost = current_cost + self.heuristic(node, neighbour)
                 if costs[y, x] > cost:
                     costs[neighbour.y, neighbour.x] = cost
                     h = self.heuristic(neighbour, end)
