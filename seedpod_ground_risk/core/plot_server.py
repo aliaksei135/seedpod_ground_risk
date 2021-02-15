@@ -41,7 +41,6 @@ class PlotServer:
     # noinspection PyTypeChecker
     def __init__(self, tiles: str = 'Wikipedia', tools: Optional[Iterable[str]] = None,
                  active_tools: Optional[Iterable[str]] = None,
-                 rasterise: bool = True,
                  cmap: str = 'CET_L18',
                  plot_size: Tuple[int, int] = (760, 735),
                  progress_callback: Optional[Callable[[str], None]] = None,
@@ -60,7 +59,6 @@ class PlotServer:
         """
         self.tools = ['hover', 'crosshair'] if tools is None else tools
         self.active_tools = ['wheel_zoom'] if active_tools is None else active_tools
-        self.rasterise = rasterise
 
         import colorcet
         self.cmap = getattr(colorcet, cmap)
@@ -339,7 +337,7 @@ class PlotServer:
         self.annotation_layers.append(layer)
 
     def add_osm_layer(self, kv: str, blocking: bool):
-        layer = OSMTagLayer(kv, kv, blocking=blocking, rasterise=self.rasterise)
+        layer = OSMTagLayer(kv, kv, blocking=blocking)
         layer.preload_data()
         self.data_layers.append(layer)
 

@@ -2,7 +2,7 @@ from PySide2.QtCore import QObject, Signal, QRunnable, Slot
 
 
 class PlotWorkerSignals(QObject):
-    init = Signal(str, bool)
+    init = Signal(str)
     ready = Signal(str)
     stop = Signal()
 
@@ -41,11 +41,10 @@ class PlotWorker(QRunnable):
             time.sleep(0.1)
 
     @Slot(str, bool)
-    def init(self, tiles='Wikipedia', rasterise=True):
+    def init(self, tiles='Wikipedia'):
         from seedpod_ground_risk.core.plot_server import PlotServer
 
         self.plot_server = PlotServer(tiles=tiles,
-                                      rasterise=rasterise,
                                       progress_callback=self.status_update,
                                       update_callback=self.layers_update)
         self.plot_server.start()

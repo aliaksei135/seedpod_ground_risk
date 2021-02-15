@@ -79,7 +79,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.plot_worker.signals.ready.connect(self.plot_ready)
         threadpool.start(self.plot_worker)
         print("Initialising Plot Server")
-        self.plot_worker.signals.init.emit('Wikipedia', rasterise)
+        self.plot_worker.signals.init.emit('Wikipedia')
 
         self.listWidget.setEnabled(True)
         self.listWidget.setDragDropMode(QAbstractItemView.InternalMove)
@@ -240,16 +240,6 @@ if __name__ == '__main__':
     splash.show()
     time.sleep(0.1)  # This seems to fix the splash mask displaying but not the actual image
     app.processEvents()
-
-    msg_box = QMessageBox()
-    msg_box.setDefaultButton(QMessageBox.Yes)
-    button_clicked = msg_box.question(splash, "Use Rasterisation?",
-                                      "Rasterising will reduce the resolution of the plot but generate significantly "
-                                      "faster.",
-                                      QMessageBox.Yes | QMessageBox.No,
-                                      QMessageBox.Yes)
-    app.processEvents()
-    rasterise = (button_clicked == msg_box.Yes)
 
     window = MainWindow()
     window.show()
