@@ -161,13 +161,13 @@ class PlotServer:
 
         def update_range(n, val):
             if n == 'x0':
-                self._x_range[0] = val
+                self._x_range[0] = round(val, 2)
             elif n == 'x1':
-                self._x_range[1] = val
+                self._x_range[1] = round(val, 2)
             elif n == 'y0':
-                self._y_range[0] = val
+                self._y_range[0] = round(val, 2)
             elif n == 'y1':
-                self._y_range[1] = val
+                self._y_range[1] = round(val, 2)
 
         fig.x_range.on_change('start', lambda attr, old, new: update_range('x0', new))
         fig.x_range.on_change('end', lambda attr, old, new: update_range("x1", new))
