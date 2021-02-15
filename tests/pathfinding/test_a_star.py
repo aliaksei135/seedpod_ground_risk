@@ -1,9 +1,8 @@
 import unittest
 
-from seedpod_ground_risk.pathfinding.a_star import GridAStar, RiskGridAStar, JumpPointSearchAStar
-from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
-from seedpod_ground_risk.pathfinding.heuristic import EuclideanRiskHeuristic
-from seedpod_ground_risk.pathfinding.rjps_a_star import RiskJumpPointSearchAStar
+from seedpod_ground_risk.pathfinding.a_star import *
+from seedpod_ground_risk.pathfinding.heuristic import *
+from seedpod_ground_risk.pathfinding.rjps_a_star import *
 from tests.pathfinding.test_data import SMALL_TEST_GRID, LARGE_TEST_GRID, SMALL_DEADEND_TEST_GRID
 
 
@@ -123,6 +122,65 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         path = algo.find_path(self.large_diag_environment, Node(10, 10, 0), Node(392, 392, 0))
         self.assertIsNotNone(path, 'Failed to find possible path')
 
+    def test_repeatability(self):
+        import matplotlib.pyplot as mpl
+        import numpy as np
+
+        start, end = Node(10, 10, 0), Node(350, 250, 0)
+        repeats = 2
+        equal_paths = []
+        rdrs = np.logspace(-11, 11, 10)
+        risk_sums = []
+
+        def make_path(start, end, rdr):
+            algo = RiskGridAStar(EuclideanRiskHeuristic(self.large_diag_environment,
+                                                        risk_to_dist_ratio=rdr))
+            return algo.find_path(self.large_diag_environment, start, end)
+
+        def run_params(rdr):
+            paths = [make_path(start, end, rdr) for _ in range(repeats)]
+            equal_paths.append(all([p == paths[0] for p in paths]))
+            if not paths[0]:
+                return [rdr, np.inf]
+            risk_sum = sum([n.n for n in paths[0]])
+            return [rdr, risk_sum]
+
+        # pool = ProcessPool(nodes=8)
+        # params = np.array(rdrs)
+        # risk_sums = pool.map(run_params, params)
+
+        for rdr in rdrs:
+            paths = [make_path(start, end, rdr) for _ in range(repeats)]
+            equal_paths.append(all([p == paths[0] for p in paths]))
+            if not paths[0]:
+                # print('Path failed')
+                risk_sums.append([rdr, np.inf])
+                continue
+            risk_sum = sum([n.n for n in paths[0]])
+            risk_sums.append([rdr, risk_sum])
+
+            fig = mpl.figure()
+            ax = fig.add_subplot(111)
+            for path in paths:
+                ax.plot([n.x for n in path], [n.y for n in path], color='red')
+            im = ax.imshow(self.large_no_diag_environment.grid)
+            fig.colorbar(im, ax=ax, label='Population')
+            ax.set_title(f'RiskA* with RDR={rdr:.4g} \n Risk sum={risk_sum:.4g}')
+            fig.show()
+
+        risk_sums = np.array(risk_sums)
+
+        rdr_fig = mpl.figure()
+        ax = rdr_fig.add_subplot(111)
+        ax.scatter(risk_sums[:, 0], risk_sums[:, 1])
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlabel('Risk-Distance Ratio')
+        ax.set_ylabel('Path Risk sum')
+        ax.set_title('Risk Grid A*')
+        rdr_fig.show()
+        self.assertTrue(all(equal_paths), 'Paths are not generated repeatably')
+
 
 class JumpPointSearchAStarTestCase(BaseAStarTestCase):
 
@@ -185,10 +243,100 @@ class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
         """
         Test on realistic costmap. Used mainly for profiling code
         """
+        import matplotlib.pyplot as mpl
+
         algo = RiskJumpPointSearchAStar(EuclideanRiskHeuristic(self.large_diag_environment,
                                                                risk_to_dist_ratio=1))
         path = algo.find_path(self.large_diag_environment, Node(10, 10, 0), Node(392, 392, 0))
+        risk_sum = sum([n.y for n in path])
+
+        fig = mpl.figure()
+        ax = fig.add_subplot(111)
+        ax.plot([n.x for n in path], [n.y for n in path], color='red')
+        im = ax.imshow(self.large_diag_environment.grid)
+        fig.colorbar(im, ax=ax)
+        ax.set_title(f'Risk JPS A* RDR=1, JG=0, JL=200 \n Risk sum={risk_sum:.4g}')
+        fig.show()
+
         self.assertIsNotNone(path, 'Failed to find possible path')
+
+    def test_repeatability(self):
+        import matplotlib.pyplot as mpl
+        import numpy as np
+        from pathos.multiprocessing import ProcessPool
+        from itertools import product
+
+        start, end = Node(10, 10, 0), Node(350, 250, 0)
+        repeats = 2
+        equal_paths = []
+        rdrs = np.logspace(-10, 10, 15)
+        jgs = np.linspace(0, 5000, 8)
+        jls = np.linspace(0, 70, 8)
+
+        # self.large_diag_environment.get_as_graph()
+
+        def make_path(start, end, rdr, jg, jl):
+            algo = RiskJumpPointSearchAStar(EuclideanRiskHeuristic(self.large_diag_environment,
+                                                                   risk_to_dist_ratio=rdr),
+                                            jump_gap=jg, jump_limit=jl)
+            return algo.find_path(self.large_diag_environment, start, end)
+
+        def run_params(rdr, jg, jl):
+            paths = [make_path(start, end, rdr, jg, jl) for _ in range(repeats)]
+            equal_paths.append(all([p == paths[0] for p in paths]))
+            if not paths[0]:
+                return [rdr, np.inf, jl, jg]
+            risk_sum = sum([n.n for n in paths[0]])
+            return [rdr, risk_sum, jl, jg]
+
+        pool = ProcessPool(nodes=8)
+        params = np.array(list(product(rdrs, jgs, jls)))
+        risk_sums = pool.map(run_params, params[:, 0], params[:, 1], params[:, 2])
+
+        # risk_sums = []
+        # for rdr, jg, jl in product(rdrs, jgs, jls):
+        #     paths = [make_path(start, end, rdr, jg, jl) for _ in range(repeats)]
+        #     equal_paths.append(all([p == paths[0] for p in paths]))
+        #     if not paths[0]:
+        #         risk_sums.append([rdr, np.inf, jl, jg])
+        #         continue
+        #     risk_sum = sum([n.n for n in paths[0]])
+        #     risk_sums.append([rdr, risk_sum, jl, jg])
+        #
+        #     fig = mpl.figure()
+        #     ax = fig.add_subplot(111)
+        #     for path in paths:
+        #         ax.plot([n.x for n in path], [n.y for n in path], color='red')
+        #     im = ax.imshow(self.large_diag_environment.grid)
+        #     fig.colorbar(im, ax=ax, label='Population')
+        #     ax.set_title(f'Risk JPS A* with RDR={rdr:.4g}, JL={jl} \n Risk sum={risk_sum:.4g}')
+        #     fig.show()
+
+        risk_sums = np.array(risk_sums)
+
+        jl_fig = mpl.figure()
+        ax = jl_fig.add_subplot(111)
+        sc = ax.scatter(risk_sums[:, 0], risk_sums[:, 1], c=risk_sums[:, 2])
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlabel('Risk-Distance Ratio')
+        ax.set_ylabel('Path Risk sum')
+        ax.set_title('R JPS+ A* Jump Limits')
+        jl_fig.colorbar(sc, ax=ax, label='Jump Limit')
+        jl_fig.show()
+
+        jg_fig = mpl.figure()
+        ax = jg_fig.add_subplot(111)
+        sc = ax.scatter(risk_sums[:, 0], risk_sums[:, 1], c=risk_sums[:, 3])
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlabel('Risk-Distance Ratio')
+        ax.set_ylabel('Path Risk sum')
+        ax.set_title('R JPS+ A* Jump Gaps')
+        jg_fig.colorbar(sc, ax=ax, label='Jump Gap')
+        jg_fig.show()
+
+        self.assertTrue(all(equal_paths), 'Paths are not generated repeatably')
 
     def test_goal_unreachable(self):
         """
