@@ -5,6 +5,10 @@ import numpy as np
 
 
 class Node:
+    x: int
+    y: int
+    n: float
+
     def __init__(self, x, y, n=0):
         self.x = x
         self.y = y
