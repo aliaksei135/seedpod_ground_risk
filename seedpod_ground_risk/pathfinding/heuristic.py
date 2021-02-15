@@ -11,6 +11,16 @@ class Heuristic(abc.ABC):
         pass
 
 
+class RiskHeuristic(Heuristic, abc.ABC):
+    from seedpod_ground_risk.pathfinding.environment import Environment
+
+    def __init__(self, environment: Environment, risk_to_dist_ratio=1, resolution=1):
+        self.environment = environment
+        self.resolution = resolution
+        self.max = environment.grid.max()
+        self.k = risk_to_dist_ratio
+
+
 class EuclideanHeuristic(Heuristic):
     def h(self, node: Node, goal: Node):
         return ((node.x - goal.x) ** 2 + (node.y - goal.y) ** 2) ** 0.5
@@ -21,15 +31,7 @@ class ManhattanHeuristic(Heuristic):
         return abs((node.x - goal.x)) + abs((node.y - goal.y))
 
 
-class EuclideanRiskHeuristic(Heuristic):
-    from seedpod_ground_risk.pathfinding.environment import Environment
-
-    def __init__(self, environment: Environment, risk_to_dist_ratio=1, resolution=1):
-        self.environment = environment
-        self.resolution = resolution
-        self.max = environment.grid.max()
-        self.k = risk_to_dist_ratio
-
+class EuclideanRiskHeuristic(RiskHeuristic):
     def h(self, node: Node, goal: Node):
         if node == goal:
             return 0
