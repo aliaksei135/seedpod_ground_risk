@@ -6,7 +6,7 @@ from numba import jit
 
 from seedpod_ground_risk.pathfinding.a_star import JumpPointSearchAStar
 from seedpod_ground_risk.pathfinding.environment import Node, GridEnvironment
-from seedpod_ground_risk.pathfinding.heuristic import ManhattanHeuristic, Heuristic, EuclideanRiskHeuristic
+from seedpod_ground_risk.pathfinding.heuristic import Heuristic, RiskHeuristic
 
 global max_y, max_x
 
@@ -75,8 +75,8 @@ def jump(grid: np.ndarray, cy: int, cx: int, dy: int, dx: int, gy: int, gx: int,
 
 class RiskJumpPointSearchAStar(JumpPointSearchAStar):
 
-    def __init__(self, heuristic: Heuristic = ManhattanHeuristic(), jump_gap=0, jump_limit=200):
-        if not isinstance(heuristic, EuclideanRiskHeuristic):
+    def __init__(self, heuristic: Heuristic, jump_gap=0, jump_limit=200):
+        if not isinstance(heuristic, RiskHeuristic):
             raise ValueError('Risk based A* can only use Risk based heuristics')
         if not heuristic.environment.diagonals:
             raise ValueError('JPS relies on a grid environment with diagonals')
@@ -120,8 +120,6 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
         while open:
 
             node = heappop(open)[1]
-            if len(open) > 1500:
-                open = open[:1000]
             if node == end:
                 if __debug__:
                     import matplotlib.pyplot as mpl
