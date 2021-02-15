@@ -35,12 +35,20 @@ class EuclideanRiskHeuristic(RiskHeuristic):
     def h(self, node: Node, goal: Node):
         if node == goal:
             return 0
-        dist = ((node.x - goal.x) ** 2 + (node.y - goal.y) ** 2) ** 0.5
-        n = int(dist / self.resolution) + 1
-        line_2d = np.linspace(start=(node.x, node.y), stop=(goal.x, goal.y), num=n,
-                              endpoint=True)
-        grid_coords = np.array(np.round(line_2d), dtype=np.intp)
-        grid_vals = self.environment.grid[grid_coords[:, 0], grid_coords[:, 1]]
-        integral_val = np.trapz(grid_vals, dx=dist / (n - 1))
+
+        # @jit(nopython=True)
+        def calc(grid, ny, nx, gy, gx, k, res):
+            dist = ((nx - gx) ** 2 + (ny - gy) ** 2) ** 0.5
+            n = int(dist) + 1
+            line_x = np.linspace(nx, gx, n).astype(np.int)
+            line_y = np.linspace(ny, gy, n).astype(np.int)
+            line = np.unique(np.vstack((line_y, line_x)).T, axis=0)
+            integral_val = grid[line[:, 0], line[:, 1]].sum()
+
+            # return integral_val
+            return ((k / dist) * integral_val) + dist
+            # return k * integral_val + dist
+
+        return calc(self.environment.grid, node.y, node.x, goal.y, goal.x, self.k, self.resolution)
 
         return ((self.k / dist) * integral_val) + dist
