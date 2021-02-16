@@ -102,15 +102,19 @@ class RiskGridAStar(GridAStar):
             if node == end:
                 if __debug__:
                     import matplotlib.pyplot as mpl
-                    mpl.matshow(np.flipud(costs))
-                    mpl.matshow(np.flipud(debug_heuristic_cost))
+                    mpl.matshow(costs)
+                    mpl.title('R A* g cost (start to node)')
+                    mpl.colorbar()
+                    mpl.matshow(debug_heuristic_cost)
+                    mpl.title('R A* h cost (node to goal)')
+                    mpl.colorbar()
                     mpl.show()
                 return self._reconstruct_path(end, closed, environment.grid)
 
             current_cost = costs[node.y, node.x]
             for neighbour in environment.get_neighbours(node):
                 x, y = neighbour.x, neighbour.y
-                cost = current_cost + self.heuristic(node, neighbour)
+                cost = current_cost + environment.grid[y, x]
                 if costs[y, x] > cost:
                     costs[neighbour.y, neighbour.x] = cost
                     h = self.heuristic(neighbour, end)
@@ -118,6 +122,16 @@ class RiskGridAStar(GridAStar):
                     closed[neighbour] = node
                     if __debug__:
                         debug_heuristic_cost[y, x] = h
+
+        import matplotlib.pyplot as mpl
+        mpl.matshow(costs)
+        mpl.title('R A* g cost (start to node)')
+        mpl.colorbar()
+        mpl.matshow(debug_heuristic_cost)
+        mpl.title('R A* h cost (node to goal)')
+        mpl.colorbar()
+        mpl.show()
+
         return None
 
 

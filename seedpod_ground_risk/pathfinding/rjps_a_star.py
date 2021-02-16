@@ -123,9 +123,11 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
             if node == end:
                 if __debug__:
                     import matplotlib.pyplot as mpl
-                    mpl.matshow(np.flipud(costs))
+                    mpl.matshow(costs)
+                    mpl.title('R JPS+ A* g cost (start to node)')
                     mpl.colorbar()
-                    mpl.matshow(np.flipud(debug_heuristic_cost))
+                    mpl.matshow(debug_heuristic_cost)
+                    mpl.title('R JPS+ A* h cost (node to goal')
                     mpl.colorbar()
                     mpl.show()
                 return self._reconstruct_path(end, closed, environment.grid)
@@ -158,9 +160,11 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
 
         if __debug__:
             import matplotlib.pyplot as mpl
-            mpl.matshow(np.flipud(costs))
+            mpl.matshow(costs)
+            mpl.title('R JPS+ A* g cost (start to node)')
             mpl.colorbar()
-            mpl.matshow(np.flipud(debug_heuristic_cost))
+            mpl.matshow(debug_heuristic_cost)
+            mpl.title('R JPS+ A* h cost (node to goal')
             mpl.colorbar()
             mpl.show()
         return None
