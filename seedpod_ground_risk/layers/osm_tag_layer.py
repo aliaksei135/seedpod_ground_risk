@@ -53,7 +53,6 @@ class OSMTagLayer(DataLayer):
         Perform blocking query on OpenStreetMaps Overpass API for objects with the passed landuse.
         Retain only polygons and store in GeoPandas GeoDataFrame
         :param shapely.Polygon bound_poly: bounding box around requested area in EPSG:4326 coordinates
-        :param str landuse: OSM landuse key from https://wiki.openstreetmap.org/wiki/Landuse
         """
         from time import time
         import requests
@@ -81,21 +80,32 @@ class OSMTagLayer(DataLayer):
         data = resp.json()
         print("OSM query took ", time() - t0)
 
-        ways = [o for o in data['elements'] if o['type'] == 'way']
+        ways = {o['id']: o['nodes'] for o in data['elements'] if o['type'] == 'way'}
         nodes = {o['id']: (o['lon'], o['lat']) for o in data['elements'] if o['type'] == 'node'}
+        relations = [o for o in data['elements'] if o['type'] == 'relation']
+
+        related_way_ids = []
+        for rel in relations:
+            rw = [w['ref'] for w in rel['members']]
+            related_way_ids += rw
+            rel_nodes = []
+            for way_id in rw:
+                if way_id in ways:
+                    rel_nodes += ways[way_id]
+                    ways.pop(way_id)
+            ways[rel['id']] = rel_nodes
 
         df_list = []
         # Iterate polygons ways
-        for element in ways:
+        for element in ways.values():
             # Find the vertices (AKA nodes) that make up each polygon
-            locs = [nodes[id] for id in element['nodes']]
+            locs = [nodes[id] for id in element]
             # Not a polygon if less than 3 vertices, so ignore
             if len(locs) < 3:
                 continue
             # Add Shapely polygon to list
             poly = sg.Polygon(locs)
             df_list.append([poly])
-        # df_list = [sg.Polygon([nodes[id] for id in element['nodes']]) for element in ways]
         assert len(df_list) > 0
         # OSM uses Web Mercator so set CRS without projecting as CRS is known
         poly_df = gpd.GeoDataFrame(df_list, columns=['geometry']).set_crs('EPSG:4326')
