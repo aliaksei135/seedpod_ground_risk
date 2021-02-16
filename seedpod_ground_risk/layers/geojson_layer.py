@@ -46,18 +46,18 @@ class GeoJSONLayer(AnnotationLayer):
                     proj_gdf = overlay.to_crs('epsg:3395')
                     proj_gdf['population'] = proj_gdf.geometry.area * proj_gdf.density
                     print("Geometry Swept Population: ", proj_gdf['population'].sum())
-                    annotation_layers.append(gv.Polygons(overlay).opts(style={'alpha': 0.8, 'color': 'blue'}))
+                    annotation_layers.append(gv.Polygons(overlay).opts(style={'alpha': 0.8, 'color': 'cyan'}))
                 elif geom_type == 'Point':
                     if 'population' in overlay:
                         mean_pop = overlay.population.mean()
                         print("Points mean ", mean_pop)
-                    annotation_layers.append((gv.Points(overlay).opts(style={'alpha': 0.8, 'color': 'blue'})))
+                    annotation_layers.append((gv.Points(overlay).opts(style={'alpha': 0.8, 'color': 'cyan'})))
                 elif geom_type == 'Line':
                     pass
 
             return Overlay([
-                gv.Contours(self.dataframe).opts(line_width=4, line_color='#000000'),
-                gv.Polygons(self.buffer_poly).opts(style={'alpha': 0.4}),
+                gv.Contours(self.dataframe).opts(line_width=4, line_color='magenta'),
+                gv.Polygons(self.buffer_poly).opts(style={'alpha': 0.3, 'color': 'cyan'}),
                 *annotation_layers
             ])
         else:
