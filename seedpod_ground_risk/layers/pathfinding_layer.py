@@ -13,7 +13,7 @@ class PathfindingLayer(AnnotationLayer):
 
     def __init__(self, key, rasterise: bool = True, start_coords: Tuple[float, float] = (0, 0),
                  end_coords: Tuple[float, float] = (0, 0)):
-        super().__init__('Pathfinding', False)
+        super().__init__(key, False)
         self.start_coords = start_coords
         self.end_coords = end_coords
 
@@ -36,8 +36,11 @@ class PathfindingLayer(AnnotationLayer):
         end_node = environment.Node(snapped_end_lon_idx, snapped_end_lat_idx,
                                     raster_data[1][snapped_end_lat_idx, snapped_end_lon_idx])
 
-        mpl.matshow(np.flipud(raster_data[1]), cmap='jet')
+        mpl.matshow(raster_data[1], cmap='jet')
         mpl.colorbar()
+        mpl.title(
+            f'Costmap \n Start (x,y):({snapped_start_lon_idx}, {snapped_start_lat_idx})'
+            f'\n End (x,y):({snapped_end_lon_idx}, {snapped_end_lat_idx})')
         mpl.show()
 
         env = environment.GridEnvironment(raster_data[1], diagonals=False, pruning=False)
@@ -48,6 +51,7 @@ class PathfindingLayer(AnnotationLayer):
         t0 = time()
         path = algo.find_path(env, start_node, end_node)
         if path is None:
+            print("Path not found")
             return None
         else:
             print('Path generated in ', time() - t0)
