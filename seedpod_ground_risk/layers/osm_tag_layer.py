@@ -76,6 +76,8 @@ class OSMTagLayer(DataLayer):
               """.format(tag=self._osm_tag,
                          s_bound=bounds[0], w_bound=bounds[1], n_bound=bounds[2], e_bound=bounds[3])
         resp = requests.get(overpass_url, params={'data': query})
+        if resp.status_code != 200:
+            print(resp)
         data = resp.json()
         print("OSM query took ", time() - t0)
 
