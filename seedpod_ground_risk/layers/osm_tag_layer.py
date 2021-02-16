@@ -60,10 +60,10 @@ class OSMTagLayer(DataLayer):
 
         t0 = time()
         bounds = bound_poly.bounds
-        overpass_url = "http://overpass-api.de/api/interpreter"
+        overpass_url = "https://overpass.kumi.systems/api/interpreter"
         query = """
                   [out:json]
-                  [timeout:120]
+                  [timeout:30]
                   [bbox:{s_bound}, {w_bound}, {n_bound}, {e_bound}];
                   (
                       node[{tag}];
