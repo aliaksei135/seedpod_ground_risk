@@ -4,9 +4,11 @@ from typing import NoReturn, List, Tuple, Dict
 import geopandas as gpd
 import matplotlib.pyplot as mpl
 import numpy as np
+import shapely.geometry as sg
 from holoviews.element import Geometry
 
-from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
+from seedpod_ground_risk.layers.geojson_layer import GeoJSONLayer
+from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
 
 
 class PathfindingLayer(GeoJSONLayer):
@@ -36,6 +38,13 @@ class PathfindingLayer(GeoJSONLayer):
         snapped_end_lon_idx = np.argmin(np.abs(raster_data[0]['Longitude'] - self.end_coords[0]))
         end_node = environment.Node(snapped_end_lon_idx, snapped_end_lat_idx,
                                     raster_data[1][snapped_end_lat_idx, snapped_end_lon_idx])
+
+        if raster_data[1][snapped_start_lon_idx, snapped_start_lat_idx] < 0:
+            print('Start node in blocked area, path impossible')
+            return None
+        elif raster_data[1][snapped_end_lon_idx, snapped_end_lat_idx] < 0:
+            print('End node in blocked area, path impossible')
+            return None
 
         mpl.matshow(raster_data[1], cmap='jet')
         mpl.colorbar()
