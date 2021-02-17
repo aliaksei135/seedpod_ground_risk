@@ -49,25 +49,35 @@ class GridAStar(Algorithm):
             node = closed_list[node]
         path = list(reversed(reverse_path))
 
+        def get_path_sum(nx, ny, tx, ty, grid):
+            dist = abs((nx - tx)) + abs((ny - ty))
+            line_x = np.linspace(nx, tx, dist).astype(np.int)
+            line_y = np.linspace(ny, ty, dist).astype(np.int)
+            line = np.unique(np.vstack((line_y, line_x)).T, axis=0)
+            return grid[line[1:, 0], line[1:, 1]].sum()
+
         def jump_path(node: Node, path, grid, goal: Node):
             nx, ny = node.x, node.y
+            gx, gy = goal.x, goal.y
+            if get_path_sum(nx, ny, gx, gy, grid) == 0:
+                return goal
+
             path_idx = path.index(node) + 1
-            test_node = path[path_idx]
+            test_node = init_node = path[path_idx]
+            running_path_sum = get_path_sum(nx, ny, test_node.x, test_node.y, grid)
             while test_node != goal:
+                px, py = test_node.x, test_node.y
                 test_node = path[path_idx + 1]
                 tx, ty = test_node.x, test_node.y
+                running_path_sum += get_path_sum(px, py, tx, ty, grid)
 
-                dist = abs((nx - tx)) + abs((ny - ty))
-                line_x = np.linspace(nx, tx, dist).astype(np.int)
-                line_y = np.linspace(ny, ty, dist).astype(np.int)
-                line = np.unique(np.vstack((line_y, line_x)).T, axis=0)
-                path_sum = grid[line[:, 0], line[:, 1]].sum()
+                path_sum = get_path_sum(nx, ny, tx, ty, grid)
 
-                if path_sum != 0:
-                    return path[path_idx]
+                if path_sum < running_path_sum or get_path_sum(nx, ny, gx, gy, grid) == 0:
+                    return test_node
                 else:
                     path_idx = path_idx + 1
-            return test_node
+            return init_node
 
         simplfied_path = []
         next_node = path[0]
