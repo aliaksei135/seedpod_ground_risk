@@ -9,13 +9,14 @@ from holoviews.element import Geometry
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 
 
-class PathfindingLayer(AnnotationLayer):
+class PathfindingLayer(GeoJSONLayer):
 
-    def __init__(self, key, rasterise: bool = True, start_coords: Tuple[float, float] = (0, 0),
-                 end_coords: Tuple[float, float] = (0, 0)):
-        super().__init__(key, False)
+    def __init__(self, key, start_coords: Tuple[float, float] = (0, 0),
+                 end_coords: Tuple[float, float] = (0, 0), buffer: float = 0):
+        super().__init__(key, '')
         self.start_coords = start_coords
         self.end_coords = end_coords
+        self.buffer_dist = buffer
 
     def preload_data(self) -> NoReturn:
         pass
@@ -62,7 +63,14 @@ class PathfindingLayer(AnnotationLayer):
             lon = raster_data[0]['Longitude'][node.x]
             snapped_path.append((lon, lat))
 
-        return gv.EdgePaths(snapped_path)
+        snapped_path = sg.LineString(snapped_path)
+        self.dataframe = gpd.GeoDataFrame({'geometry': [snapped_path]}).set_crs('EPSG:4326')
+        epsg27700_geom = self.dataframe.to_crs('EPSG:27700').geometry
+        self.buffer_poly = gpd.GeoDataFrame(
+            {'geometry': epsg27700_geom.buffer(self.buffer_dist).to_crs('EPSG:4326')}
+        )
+
+        return super(PathfindingLayer, self).annotate(data, raster_data, **kwargs)
 
     def clear_cache(self) -> NoReturn:
         pass
