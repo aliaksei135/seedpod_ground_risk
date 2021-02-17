@@ -36,6 +36,9 @@ class OSMTagLayer(DataLayer):
         self.query_osm_polygons(bounds_polygon)
         if self._landuse_polygons.empty:
             return None
+        if self.buffer_dist > 0:
+            self._landuse_polygons.geometry = self._landuse_polygons.to_crs('EPSG:27700') \
+                .buffer(self.buffer_dist).to_crs('EPSG:4326')
         polys = gv.Polygons(self._landuse_polygons).opts(style={'alpha': 0.8, 'color': self._colour})
         raster = rasterize(polys,
                            x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
