@@ -124,7 +124,7 @@ class RiskGridAStar(GridAStar):
             current_cost = costs[node.y, node.x]
             for neighbour in environment.get_neighbours(node):
                 x, y = neighbour.x, neighbour.y
-                cost = current_cost + environment.grid[y, x]
+                cost = current_cost + self.heuristic(node, neighbour)
                 if costs[y, x] > cost:
                     costs[neighbour.y, neighbour.x] = cost
                     h = self.heuristic(neighbour, end)
