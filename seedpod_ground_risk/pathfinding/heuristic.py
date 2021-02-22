@@ -47,10 +47,11 @@ class EuclideanRiskHeuristic(RiskHeuristic):
             #     integral_val += grid[y, x]
             # integral_val = np.array([grid[y, x] for y, x in line]).sum()
 
-            if integral_val > 0:
-                return k * np.log10(integral_val) + dist
-            else:
-                return dist
+            if integral_val > 1:
+                r = k * np.log10(integral_val)
+                if r > 0:
+                    return r + dist
+            return dist
 
         return calc(self.environment.grid, node.y, node.x, goal.y, goal.x, self.k)
 
@@ -70,9 +71,10 @@ class ManhattanRiskHeuristic(RiskHeuristic):
             # for y, x in line:
             #     integral_val += grid[y, x]
 
-            if integral_val > 0:
-                return k * np.log10(integral_val) + dist
-            else:
-                return dist
+            if integral_val > 1:
+                r = k * np.log10(integral_val)
+                if r > 0:
+                    return r + dist
+            return dist
 
         return calc(self.environment.grid, node.y, node.x, goal.y, goal.x, self.k)
