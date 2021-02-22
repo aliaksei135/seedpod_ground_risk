@@ -43,7 +43,7 @@ class GeoJSONLayer(AnnotationLayer):
                 if geom_type == 'Polygon':
                     if 'density' not in gdf:
                         continue
-                    proj_gdf = overlay.to_crs('epsg:3395')
+                    proj_gdf = overlay.to_crs('epsg:27700')
                     proj_gdf['population'] = proj_gdf.geometry.area * proj_gdf.density
                     print("Geometry Swept Population: ", proj_gdf['population'].sum())
                     annotation_layers.append(gv.Polygons(overlay).opts(style={'alpha': 0.8, 'color': 'cyan'}))
