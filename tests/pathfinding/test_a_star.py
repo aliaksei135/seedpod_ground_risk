@@ -1,5 +1,7 @@
 import unittest
 
+from pathos.multiprocessing import ProcessPool
+
 from seedpod_ground_risk.pathfinding.a_star import *
 from seedpod_ground_risk.pathfinding.heuristic import *
 from seedpod_ground_risk.pathfinding.rjps_a_star import *
@@ -81,7 +83,7 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.algo = RiskGridAStar(heuristic=EuclideanRiskHeuristic(self.small_no_diag_environment))
+        self.algo = RiskGridAStar(heuristic=ManhattanRiskHeuristic(self.small_no_diag_environment))
 
     def test_direct_no_diagonals(self):
         """
@@ -105,8 +107,7 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         self.assertEqual(path[-1], self.end, 'Goal node not included in path')
         self.assertEqual(path, [
             Node(0, 0, 0),
-            Node(0, 1, 2),
-            Node(1, 2, 34),
+            Node(1, 1, 5),
             Node(2, 2, 45),
             Node(3, 3, 30),
             Node(4, 4, 0)
@@ -117,9 +118,11 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         """
         Test on realistic costmap. Used mainly for profiling code
         """
-        algo = RiskJumpPointSearchAStar(EuclideanRiskHeuristic(self.large_diag_environment,
-                                                               risk_to_dist_ratio=1))
-        path = algo.find_path(self.large_diag_environment, Node(10, 10, 0), Node(392, 392, 0))
+        algo = RiskGridAStar(ManhattanRiskHeuristic(self.large_diag_environment,
+                                                    risk_to_dist_ratio=1))
+        path = algo.find_path(self.large_diag_environment,
+                              self.large_diag_environment.get_node(10, 10),
+                              self.large_diag_environment.get_node(392, 392))
         self.assertIsNotNone(path, 'Failed to find possible path')
 
     def test_repeatability(self):
@@ -129,11 +132,11 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         start, end = Node(10, 10, 0), Node(350, 250, 0)
         repeats = 2
         equal_paths = []
-        rdrs = np.logspace(-11, 11, 10)
+        rdrs = np.linspace(0, 10, 10)
         risk_sums = []
 
         def make_path(start, end, rdr):
-            algo = RiskGridAStar(EuclideanRiskHeuristic(self.large_diag_environment,
+            algo = RiskGridAStar(ManhattanRiskHeuristic(self.large_diag_environment,
                                                         risk_to_dist_ratio=rdr))
             return algo.find_path(self.large_diag_environment, start, end)
 
@@ -145,28 +148,28 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
             risk_sum = sum([n.n for n in paths[0]])
             return [rdr, risk_sum]
 
-        # pool = ProcessPool(nodes=8)
-        # params = np.array(rdrs)
-        # risk_sums = pool.map(run_params, params)
+        pool = ProcessPool(nodes=8)
+        params = np.array(rdrs)
+        risk_sums = pool.map(run_params, params)
 
-        for rdr in rdrs:
-            paths = [make_path(start, end, rdr) for _ in range(repeats)]
-            equal_paths.append(all([p == paths[0] for p in paths]))
-            if not paths[0]:
-                # print('Path failed')
-                risk_sums.append([rdr, np.inf])
-                continue
-            risk_sum = sum([n.n for n in paths[0]])
-            risk_sums.append([rdr, risk_sum])
-
-            fig = mpl.figure()
-            ax = fig.add_subplot(111)
-            for path in paths:
-                ax.plot([n.x for n in path], [n.y for n in path], color='red')
-            im = ax.imshow(self.large_no_diag_environment.grid)
-            fig.colorbar(im, ax=ax, label='Population')
-            ax.set_title(f'RiskA* with RDR={rdr:.4g} \n Risk sum={risk_sum:.4g}')
-            fig.show()
+        # for rdr in rdrs:
+        #     paths = [make_path(start, end, rdr) for _ in range(repeats)]
+        #     equal_paths.append(all([p == paths[0] for p in paths]))
+        #     if not paths[0]:
+        #         # print('Path failed')
+        #         risk_sums.append([rdr, np.inf])
+        #         continue
+        #     risk_sum = sum([n.n for n in paths[0]])
+        #     risk_sums.append([rdr, risk_sum])
+        #
+        #     fig = mpl.figure()
+        #     ax = fig.add_subplot(111)
+        #     for path in paths:
+        #         ax.plot([n.x for n in path], [n.y for n in path], color='red')
+        #     im = ax.imshow(self.large_no_diag_environment.grid)
+        #     fig.colorbar(im, ax=ax, label='Population')
+        #     ax.set_title(f'RiskA* with RDR={rdr:.4g} \n Risk sum={risk_sum:.4g}')
+        #     fig.show()
 
         risk_sums = np.array(risk_sums)
 
@@ -233,8 +236,7 @@ class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
         self.assertEqual(path, [
             Node(0, 0, 0),
             Node(1, 1, 5),
-            Node(2, 2, 45),
-            Node(3, 3, 30),
+            Node(3, 2, 45),
             Node(4, 4, 0)
         ],
                          "Incorrect path")
@@ -245,7 +247,7 @@ class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
         """
         import matplotlib.pyplot as mpl
 
-        algo = RiskJumpPointSearchAStar(EuclideanRiskHeuristic(self.large_diag_environment,
+        algo = RiskJumpPointSearchAStar(ManhattanRiskHeuristic(self.large_diag_environment,
                                                                risk_to_dist_ratio=1))
         path = algo.find_path(self.large_diag_environment, Node(10, 10, 0), Node(392, 392, 0))
         risk_sum = sum([n.y for n in path])
@@ -276,7 +278,7 @@ class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
         # self.large_diag_environment.get_as_graph()
 
         def make_path(start, end, rdr, jg, jl):
-            algo = RiskJumpPointSearchAStar(EuclideanRiskHeuristic(self.large_diag_environment,
+            algo = RiskJumpPointSearchAStar(ManhattanRiskHeuristic(self.large_diag_environment,
                                                                    risk_to_dist_ratio=rdr),
                                             jump_gap=jg, jump_limit=jl)
             return algo.find_path(self.large_diag_environment, start, end)

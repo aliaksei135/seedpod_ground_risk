@@ -9,6 +9,7 @@ from holoviews.element import Geometry
 
 from seedpod_ground_risk.layers.geojson_layer import GeoJSONLayer
 from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
+from seedpod_ground_risk.pathfinding.heuristic import ManhattanRiskHeuristic
 
 
 class PathfindingLayer(GeoJSONLayer):
@@ -25,9 +26,7 @@ class PathfindingLayer(GeoJSONLayer):
 
     def annotate(self, data: List[gpd.GeoDataFrame], raster_data: Tuple[Dict[str, np.array], np.array],
                  **kwargs) -> Geometry:
-        from seedpod_ground_risk.pathfinding import environment, a_star
-        from seedpod_ground_risk.pathfinding.heuristic import EuclideanRiskHeuristic
-        import geoviews as gv
+        from seedpod_ground_risk.pathfinding import environment
 
         snapped_start_lat_idx = np.argmin(np.abs(raster_data[0]['Latitude'] - self.start_coords[1]))
         snapped_start_lon_idx = np.argmin(np.abs(raster_data[0]['Longitude'] - self.start_coords[0]))
@@ -53,11 +52,11 @@ class PathfindingLayer(GeoJSONLayer):
             f'\n End (x,y):({snapped_end_lon_idx}, {snapped_end_lat_idx})')
         mpl.show()
 
-        env = environment.GridEnvironment(raster_data[1], diagonals=False, pruning=False)
-        algo = a_star.RiskGridAStar(
-            heuristic=EuclideanRiskHeuristic(env, risk_to_dist_ratio=0.01))
-        # algo = a_star.RiskJumpPointSearchAStar(EuclideanRiskHeuristic(env, risk_to_dist_ratio=4), jump_gap=1000,
-        #                                        jump_limit=20)
+        env = environment.GridEnvironment(raster_data[1], diagonals=True, pruning=False)
+        algo = RiskGridAStar(
+            heuristic=ManhattanRiskHeuristic(env, risk_to_dist_ratio=1e-7))
+        # algo = RiskJumpPointSearchAStar(ManhattanRiskHeuristic(env, risk_to_dist_ratio=1e-8), jump_gap=0,
+        #                                 jump_limit=5)
         t0 = time()
         path = algo.find_path(env, start_node, end_node)
         if path is None:
