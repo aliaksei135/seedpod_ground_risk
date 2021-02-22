@@ -3,10 +3,10 @@ from typing import List, Dict, Union
 
 import numpy as np
 
+from seedpod_ground_risk.pathfinding import bresenham
 from seedpod_ground_risk.pathfinding.algorithm import Algorithm
 from seedpod_ground_risk.pathfinding.environment import Node, GridEnvironment
-from seedpod_ground_risk.pathfinding.heuristic import Heuristic, EuclideanRiskHeuristic, \
-    ManhattanHeuristic
+from seedpod_ground_risk.pathfinding.heuristic import Heuristic, ManhattanHeuristic, RiskHeuristic
 
 
 class GridAStar(Algorithm):
@@ -93,7 +93,7 @@ class GridAStar(Algorithm):
 class RiskGridAStar(GridAStar):
 
     def __init__(self, heuristic: Heuristic = ManhattanHeuristic()):
-        if not isinstance(heuristic, EuclideanRiskHeuristic):
+        if not isinstance(heuristic, RiskHeuristic):
             raise TypeError('Risk based A* can only use Risk based heuristics')
         super().__init__(heuristic)
 
