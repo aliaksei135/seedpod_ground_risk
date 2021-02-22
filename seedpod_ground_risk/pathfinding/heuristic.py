@@ -2,6 +2,7 @@ import abc
 
 import numpy as np
 
+from seedpod_ground_risk.pathfinding import bresenham
 from seedpod_ground_risk.pathfinding.environment import Node
 
 
@@ -37,19 +38,21 @@ class EuclideanRiskHeuristic(RiskHeuristic):
             return 0
 
         # @jit(nopython=True)
-        def calc(grid, ny, nx, gy, gx, k, res):
+        def calc(grid, ny, nx, gy, gx, k):
             dist = ((nx - gx) ** 2 + (ny - gy) ** 2) ** 0.5
-            n = int(dist) + 1
-            line_x = np.linspace(nx, gx, n).astype(np.int)
-            line_y = np.linspace(ny, gy, n).astype(np.int)
-            line = np.unique(np.vstack((line_y, line_x)).T, axis=0)
+            line = bresenham.make_line(nx, ny, gx, gy)
             integral_val = grid[line[:, 0], line[:, 1]].sum()
+            # integral_val = 0
+            # for y, x in line:
+            #     integral_val += grid[y, x]
+            # integral_val = np.array([grid[y, x] for y, x in line]).sum()
 
-            # return integral_val
-            return ((k / dist) * integral_val) + dist
-            # return k * integral_val + dist
+            if integral_val > 0:
+                return k * np.log10(integral_val) + dist
+            else:
+                return dist
 
-        return calc(self.environment.grid, node.y, node.x, goal.y, goal.x, self.k, self.resolution)
+        return calc(self.environment.grid, node.y, node.x, goal.y, goal.x, self.k)
 
 
 class ManhattanRiskHeuristic(RiskHeuristic):
@@ -58,15 +61,18 @@ class ManhattanRiskHeuristic(RiskHeuristic):
             return 0
 
         # @jit(nopython=True)
-        def calc(grid, ny, nx, gy, gx, k, res):
+        def calc(grid, ny, nx, gy, gx, k):
             dist = abs((nx - gx)) + abs((ny - gy))
-            line_x = np.linspace(nx, gx, dist).astype(np.int)
-            line_y = np.linspace(ny, gy, dist).astype(np.int)
-            line = np.unique(np.vstack((line_y, line_x)).T, axis=0)
-            path_sum = grid[line[:, 0], line[:, 1]].sum()
+            line = bresenham.make_line(nx, ny, gx, gy)
+            integral_val = grid[line[:, 0], line[:, 1]].sum()
+            # integral_val = np.array([grid[y, x] for y, x in line]).sum()
+            # integral_val = 0
+            # for y, x in line:
+            #     integral_val += grid[y, x]
 
-            # return path_sum
-            return ((k / dist) * path_sum) + dist
-            # return k * path_sum + dist
+            if integral_val > 0:
+                return k * np.log10(integral_val) + dist
+            else:
+                return dist
 
-        return calc(self.environment.grid, node.y, node.x, goal.y, goal.x, self.k, self.resolution)
+        return calc(self.environment.grid, node.y, node.x, goal.y, goal.x, self.k)
