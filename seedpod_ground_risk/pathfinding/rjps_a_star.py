@@ -106,30 +106,30 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
         closed = {start: None}
         costs = np.full(environment.grid.shape, np.inf)
         costs[start.y, start.x] = 0
-        if __debug__:
-            debug_heuristic_cost = np.full(environment.grid.shape, np.inf)
+        # if __debug__:
+        #     debug_heuristic_cost = np.full(environment.grid.shape, np.inf)
 
         for neighbour in environment.get_neighbours(start):
             h = self.heuristic(neighbour, end)
             heappush(open, (h, neighbour))
             closed[neighbour] = start
             costs[neighbour.y, neighbour.x] = self.heuristic(start, neighbour)
-            if __debug__:
-                debug_heuristic_cost[neighbour.y, neighbour.x] = h
+            # if __debug__:
+            #     debug_heuristic_cost[neighbour.y, neighbour.x] = h
 
         while open:
 
             node = heappop(open)[1]
             if node == end:
-                if __debug__:
-                    import matplotlib.pyplot as mpl
-                    mpl.matshow(costs)
-                    mpl.title('R JPS+ A* g cost (start to node)')
-                    mpl.colorbar()
-                    mpl.matshow(debug_heuristic_cost)
-                    mpl.title('R JPS+ A* h cost (node to goal')
-                    mpl.colorbar()
-                    mpl.show()
+                # if __debug__:
+                #     import matplotlib.pyplot as mpl
+                #     mpl.matshow(costs)
+                #     mpl.title('R JPS+ A* g cost (start to node)')
+                #     mpl.colorbar()
+                #     mpl.matshow(debug_heuristic_cost)
+                #     mpl.title('R JPS+ A* h cost (node to goal')
+                #     mpl.colorbar()
+                #     mpl.show()
                 return self._reconstruct_path(end, closed, environment.grid)
 
             parent = closed[node]
@@ -155,16 +155,16 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
                     h = self.heuristic(successor, end)
                     heappush(open, (cost + h, successor))
                     closed[successor] = node
-                    if __debug__:
-                        debug_heuristic_cost[y, x] = h
+                    # if __debug__:
+                    #     debug_heuristic_cost[y, x] = h
 
-        if __debug__:
-            import matplotlib.pyplot as mpl
-            mpl.matshow(costs)
-            mpl.title('R JPS+ A* g cost (start to node)')
-            mpl.colorbar()
-            mpl.matshow(debug_heuristic_cost)
-            mpl.title('R JPS+ A* h cost (node to goal')
-            mpl.colorbar()
-            mpl.show()
+        # if __debug__:
+        #     import matplotlib.pyplot as mpl
+        #     mpl.matshow(costs)
+        #     mpl.title('R JPS+ A* g cost (start to node)')
+        #     mpl.colorbar()
+        #     mpl.matshow(debug_heuristic_cost)
+        #     mpl.title('R JPS+ A* h cost (node to goal')
+        #     mpl.colorbar()
+        #     mpl.show()
         return None
