@@ -4,10 +4,12 @@ from typing import Dict, Sequence
 import numpy as np
 
 
+# @jitclass([
+#     ('x', int32),
+#     ('y', int32),
+#     ('n', float32)
+# ])
 class Node:
-    x: int
-    y: int
-    n: float
 
     def __init__(self, x, y, n=0):
         self.x = x
@@ -48,6 +50,10 @@ class Environment(abc.ABC):
         return self.graph[node]
 
     @abc.abstractmethod
+    def get_node(self, x, y) -> Node:
+        pass
+
+    @abc.abstractmethod
     def f_cost(self, node: Node, goal: Node) -> float:
         pass
 
@@ -65,17 +71,29 @@ class GridEnvironment(Environment):
 
     grid: np.array
 
-    def __init__(self, grid: np.array, *args, diagonals=False, pruning=True, **kwargs):
+    def __init__(self, grid: np.array, *args, diagonals=False, pruning=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.grid = grid
+        self._nodes = np.full(grid.shape, None)
         self.shape = self.grid.shape
         self.diagonals = diagonals
         self.pruning = pruning
+        if pruning:
+            raise NotImplementedError("Graph pruning not implemented yet.")
         self._empty_nodes = np.full(grid.shape, False)
 
     def f_cost(self, node: Node, goal: Node) -> float:
         # Simple Euclidean distance as movement cost
         return ((node.x - goal.x) ** 2 + (node.y - goal.y) ** 2) ** 0.5
+
+    def get_node(self, x, y) -> Node:
+        node = self._nodes[y, x]
+        if node:
+            return node
+        else:
+            node = Node(x, y, self.grid[y, x])
+            self._nodes[y, x] = node
+            return node
 
     def _generate_graph(self) -> Dict[Node, Sequence[Node]]:
 
@@ -89,7 +107,7 @@ class GridEnvironment(Environment):
             #     continue
 
             neighbours = self._find_neighbours(idx, set())
-            node = Node(idx[1], idx[0], self.grid[idx[0], idx[1]])
+            node = self.get_node(idx[1], idx[0])
             graph[node] = neighbours
 
         return graph
@@ -105,7 +123,7 @@ class GridEnvironment(Environment):
                 self._empty_nodes[y, x] = True
                 neighbours.update(self._find_neighbours((y, x), neighbours))
             elif val >= 0:
-                neighbours.add(Node(x, y, val))
+                neighbours.add(self.get_node(x, y))
 
         if idx[1] - 1 >= 0:
             has_left = True
