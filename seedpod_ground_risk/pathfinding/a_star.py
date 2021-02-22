@@ -49,13 +49,16 @@ class GridAStar(Algorithm):
             node = closed_list[node]
         path = list(reversed(reverse_path))
 
+        # @jit(nopython=True, nogil=True)
         def get_path_sum(nx, ny, tx, ty, grid):
-            dist = abs((nx - tx)) + abs((ny - ty))
-            line_x = np.linspace(nx, tx, dist).astype(np.int)
-            line_y = np.linspace(ny, ty, dist).astype(np.int)
-            line = np.unique(np.vstack((line_y, line_x)).T, axis=0)
-            return grid[line[1:, 0], line[1:, 1]].sum()
+            line = bresenham.make_line(nx, ny, tx, ty)
+            return grid[line[:, 0], line[:, 1]].sum()
+            # integral_val = 0
+            # for y, x in line:
+            #     integral_val += grid[y, x]
+            # return integral_val
 
+        # @jit(nopython=True)
         def jump_path(node: Node, path, grid, goal: Node):
             nx, ny = node.x, node.y
             gx, gy = goal.x, goal.y
@@ -73,7 +76,7 @@ class GridAStar(Algorithm):
 
                 path_sum = get_path_sum(nx, ny, tx, ty, grid)
 
-                if path_sum < running_path_sum or get_path_sum(nx, ny, gx, gy, grid) == 0:
+                if path_sum < running_path_sum:
                     return test_node
                 else:
                     path_idx = path_idx + 1
