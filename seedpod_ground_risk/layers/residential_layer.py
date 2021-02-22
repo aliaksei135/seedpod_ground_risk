@@ -53,10 +53,10 @@ class ResidentialLayer(OSMTagLayer):
                   cmap=colorcet.CET_L18,
                   colorbar=True, colorbar_opts={'title': 'Population'}, show_legend=False)
 
-        if 'buffer' in kwargs:
+        if self.buffer_dist > 0:
             buffered_df = deepcopy(census_df)
             buffered_df.geometry = buffered_df.to_crs('EPSG:27700') \
-                .buffer(kwargs['buffer']).to_crs('EPSG:4326')
+                .buffer(self.buffer_dist).to_crs('EPSG:4326')
             buffered_polys = gv.Polygons(buffered_df, kdims=['Longitude', 'Latitude'], vdims=['name', 'population'])
             raster = rasterize(buffered_polys, aggregator=ds.sum('population'),
                                x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
