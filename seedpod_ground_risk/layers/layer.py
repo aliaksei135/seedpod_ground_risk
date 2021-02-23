@@ -7,12 +7,9 @@ class Layer(abc.ABC):
     Abstract base class for a single layer
     """
     key: str
-    is_dynamic: bool
 
-    def __init__(self, key, rasterise: bool = True):
+    def __init__(self, key):
         self.key = key
-        self.is_dynamic = False
-        self.rasterise = rasterise
 
     @abc.abstractmethod
     def preload_data(self) -> NoReturn:

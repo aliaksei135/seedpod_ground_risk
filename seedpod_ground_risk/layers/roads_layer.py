@@ -43,7 +43,7 @@ class RoadsLayer(DataLayer):
     def __init__(self, key, **kwargs):
         from pyproj import Transformer
 
-        super(RoadsLayer, self).__init__(key, **kwargs)
+        super(RoadsLayer, self).__init__(key)
 
         self.proj = Transformer.from_crs(27700, 4326, always_xy=True)
         self.reverse_proj = Transformer.from_crs(4326, 27700, always_xy=True)

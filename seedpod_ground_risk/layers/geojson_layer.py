@@ -10,7 +10,7 @@ from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 class GeoJSONLayer(AnnotationLayer):
 
     def __init__(self, key: str, geojson_filepath: str, buffer: float = None, **kwargs):
-        super(GeoJSONLayer, self).__init__(key, **kwargs)
+        super(GeoJSONLayer, self).__init__(key)
         self.filepath = geojson_filepath
         self.buffer_dist = buffer
 

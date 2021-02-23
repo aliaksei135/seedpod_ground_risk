@@ -12,9 +12,9 @@ from seedpod_ground_risk.layers.data_layer import DataLayer
 class OSMTagLayer(DataLayer):
     _landuse_polygons: gpd.GeoDataFrame
 
-    def __init__(self, key, osm_tag, rasterise: bool = False, colour: str = None,
+    def __init__(self, key, osm_tag, colour: str = None,
                  blocking=False, buffer_dist=0):
-        super().__init__(key, rasterise)
+        super().__init__(key)
         self._osm_tag = osm_tag
         self.blocking = blocking
         self.buffer_dist = buffer_dist

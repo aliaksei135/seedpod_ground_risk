@@ -18,10 +18,8 @@ class DataLayer(Layer, abc.ABC):
     is_dynamic: bool
     cached_area: Polygon
 
-    def __init__(self, key, rasterise: bool = True):
-        self.key = key
-        self.is_dynamic = False
-        self.rasterise = rasterise
+    def __init__(self, key):
+        super().__init__(key)
         self.cached_area = sg.Polygon()
 
     @abc.abstractmethod
