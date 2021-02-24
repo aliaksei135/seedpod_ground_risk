@@ -16,7 +16,7 @@ class ResidentialLayer(OSMTagLayer):
     _census_wards: gpd.GeoDataFrame
 
     def __init__(self, key, **kwargs):
-        super(ResidentialLayer, self).__init__(key, 'landuse=residential')
+        super(ResidentialLayer, self).__init__(key, 'landuse=residential', **kwargs)
         delattr(self, '_colour')
         self._census_wards = gpd.GeoDataFrame()
 

@@ -9,10 +9,10 @@ from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 
 class GeoJSONLayer(AnnotationLayer):
 
-    def __init__(self, key: str, geojson_filepath: str, buffer: float = None, **kwargs):
+    def __init__(self, key: str, filepath: str = '', buffer_dist: float = None, **kwargs):
         super(GeoJSONLayer, self).__init__(key)
-        self.filepath = geojson_filepath
-        self.buffer_dist = buffer
+        self.filepath = filepath
+        self.buffer_dist = buffer_dist
 
         import geopandas as gpd
         self.dataframe = gpd.GeoDataFrame()

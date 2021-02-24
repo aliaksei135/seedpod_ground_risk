@@ -14,11 +14,11 @@ from seedpod_ground_risk.pathfinding.heuristic import ManhattanRiskHeuristic
 
 class PathfindingLayer(GeoJSONLayer):
 
-    def __init__(self, key, start_coords: Tuple[float, float] = (0, 0),
-                 end_coords: Tuple[float, float] = (0, 0), buffer: float = 0):
+    def __init__(self, key, start_lat: float = 0, start_lon: float = 0, end_lat: float = 0, end_lon: float = 0,
+                 buffer: float = 0):
         super().__init__(key, '')
-        self.start_coords = start_coords
-        self.end_coords = end_coords
+        self.start_coords = (start_lat, start_lon)
+        self.end_coords = (end_lat, end_lon)
         self.buffer_dist = buffer
 
     def preload_data(self) -> NoReturn:
@@ -45,17 +45,10 @@ class PathfindingLayer(GeoJSONLayer):
             print('End node in blocked area, path impossible')
             return None
 
-        mpl.matshow(raster_data[1], cmap='jet')
-        mpl.colorbar()
-        mpl.title(
-            f'Costmap \n Start (x,y):({snapped_start_lon_idx}, {snapped_start_lat_idx})'
-            f'\n End (x,y):({snapped_end_lon_idx}, {snapped_end_lat_idx})')
-        mpl.show()
-
         env = environment.GridEnvironment(raster_data[1], diagonals=True, pruning=False)
         algo = RiskGridAStar(
-            heuristic=ManhattanRiskHeuristic(env, risk_to_dist_ratio=1e-7))
-        # algo = RiskJumpPointSearchAStar(ManhattanRiskHeuristic(env, risk_to_dist_ratio=1e-8), jump_gap=0,
+            heuristic=ManhattanRiskHeuristic(env, risk_to_dist_ratio=0.5))
+        # algo = RiskJumpPointSearchAStar(ManhattanRiskHeuristic(env, risk_to_dist_ratio=2), jump_gap=0,
         #                                 jump_limit=5)
         t0 = time()
         path = algo.find_path(env, start_node, end_node)
