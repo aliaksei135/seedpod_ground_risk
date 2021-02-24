@@ -1,9 +1,11 @@
+import os
 import typing
 
 import PySide2
-from PySide2.QtCore import QRegExp
+from PySide2.QtCore import QRegExp, Qt
 from PySide2.QtGui import QRegExpValidator
-from PySide2.QtWidgets import QWizard, QWizardPage, QLabel, QLineEdit, QComboBox, QCheckBox, QGridLayout
+from PySide2.QtWidgets import QWizard, QWizardPage, QLabel, QLineEdit, QComboBox, QCheckBox, QGridLayout, QColorDialog, \
+    QPushButton, QFileDialog
 
 from seedpod_ground_risk.ui_resources.layer_options import LAYER_OPTIONS
 
@@ -48,19 +50,45 @@ class SpecificLayerInfoPage(QWizardPage):
             regex = opt[0]
             label = QLabel(name)
             if regex == 'path':
-                field = QLineEdit()
-                # field.setDisabled(True)
-                # filepath = QFileDialog.getOpenFileName(self, "Import GeoJSON geometry...", os.getcwd(),
-                #                                        "GeoJSON Files (*.json)")
-                # if filepath[0]:
-                #     field.setText(filepath[0])
+                path_field = QLineEdit()
+                path_field.setReadOnly(True)
+
+                def set_path(event):
+                    filepath = QFileDialog.getOpenFileName(self, "Import GeoJSON geometry...", os.getcwd(),
+                                                           "GeoJSON Files (*.json)")
+                    if filepath[0]:
+                        path_field.setText(filepath[0])
+
+                button = QPushButton()
+                button.setText('Browse')
+                button.clicked.connect(set_path)
+
+                label.setBuddy(path_field)
+                self.registerField(name, path_field)
+                layout.addWidget(label)
+                layout.addWidget(path_field)
+                layout.addWidget(button)
+                continue
             elif regex == 'colour':
-                field = QLineEdit()
-                # field.setDisabled(True)
-                # dialog = QColorDialog()
-                # colour = dialog.getColor(Qt.white, self,)
-                # if colour.isValid():
-                #     field.setText(colour.getRgb())
+                colour_field = QLineEdit()
+                colour_field.setReadOnly(True)
+
+                def set_colour(event):
+                    dialog = QColorDialog()
+                    colour = dialog.getColor(Qt.white, self, )
+                    if colour.isValid():
+                        colour_field.setText(colour.name())
+
+                button = QPushButton()
+                button.setText('Pick')
+                button.clicked.connect(set_colour)
+
+                label.setBuddy(colour_field)
+                self.registerField(name, colour_field)
+                layout.addWidget(label)
+                layout.addWidget(colour_field)
+                layout.addWidget(button)
+                continue
             elif regex is bool:
                 field = QCheckBox()
             else:
