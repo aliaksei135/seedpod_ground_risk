@@ -151,6 +151,7 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         pool = ProcessPool(nodes=8)
         params = np.array(rdrs)
         risk_sums = pool.map(run_params, params)
+        pool.close()
 
         # for rdr in rdrs:
         #     paths = [make_path(start, end, rdr) for _ in range(repeats)]
@@ -294,6 +295,7 @@ class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
         pool = ProcessPool(nodes=8)
         params = np.array(list(product(rdrs, jgs, jls)))
         risk_sums = pool.map(run_params, params[:, 0], params[:, 1], params[:, 2])
+        pool.close()
 
         # risk_sums = []
         # for rdr, jg, jl in product(rdrs, jgs, jls):
