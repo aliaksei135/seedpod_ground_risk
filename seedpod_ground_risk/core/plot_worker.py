@@ -1,5 +1,7 @@
 from PySide2.QtCore import QObject, Signal, QRunnable, Slot
 
+from seedpod_ground_risk.layers.layer import Layer
+
 
 class PlotWorkerSignals(QObject):
     init = Signal(str)
@@ -11,8 +13,7 @@ class PlotWorkerSignals(QObject):
     update_status = Signal(str)
     update_layers = Signal(list)
     reorder_layers = Signal(list)
-    add_geojson_layer = Signal(str, float)
-    add_osm_layer = Signal(str, bool)
+    add_layer = Signal(Layer)
 
 
 class PlotWorker(QRunnable):
@@ -26,8 +27,7 @@ class PlotWorker(QRunnable):
         self.signals.generate.connect(self.generate)
         self.signals.set_time.connect(self.set_time)
         self.signals.reorder_layers.connect(self.layers_reorder)
-        self.signals.add_geojson_layer.connect(self.add_geojson_layer)
-        self.signals.add_osm_layer.connect(self.add_osm_layer)
+        self.signals.add_layer.connect(self.add_layer)
 
         self.plot_server = None
         self.stop = False
@@ -59,16 +59,9 @@ class PlotWorker(QRunnable):
         self.plot_server.generate_map()
         self.status_update("Update queued, move map to trigger")
 
-    @Slot(str, float)
-    def add_geojson_layer(self, path, buffer):
-        if buffer and buffer > 10:
-            self.plot_server.add_geojson_layer(path, buffer=buffer)
-        else:
-            self.plot_server.add_geojson_layer(path)
-
-    @Slot(str, bool)
-    def add_osm_layer(self, kv, blocking):
-        self.plot_server.add_osm_layer(kv, blocking)
+    @Slot(Layer)
+    def add_layer(self, layer):
+        self.plot_server.add_layer(layer)
 
     @Slot(int)
     def set_time(self, hour):

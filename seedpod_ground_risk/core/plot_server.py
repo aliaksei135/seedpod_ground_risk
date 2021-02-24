@@ -8,7 +8,7 @@ from holoviews.element import Geometry
 
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.layers.data_layer import DataLayer
-from seedpod_ground_risk.layers.osm_tag_layer import OSMTagLayer
+from seedpod_ground_risk.layers.layer import Layer
 
 
 def make_bounds_polygon(*args: Iterable[float]) -> sg.Polygon:
@@ -70,19 +70,20 @@ class PlotServer:
 
         from seedpod_ground_risk.layers.residential_layer import ResidentialLayer
         from seedpod_ground_risk.layers.roads_layer import RoadsLayer
-        from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
         self._generated_data_layers = {}
         self.data_layer_order = []
-        self.data_layers = [ResidentialLayer('Residential Population', rasterise=rasterise),
-                            RoadsLayer('Road Traffic Population per Hour', rasterise=rasterise),
-                            OSMTagLayer('Nature Reserves', osm_tag='leisure=nature_reserve', colour='green',
-                                        rasterise=rasterise, blocking=True),
-                            OSMTagLayer('Military Airfields', osm_tag='military=airfield', colour='red',
-                                        rasterise=rasterise, blocking=True)]
+        self.data_layers = [ResidentialLayer('Residential Population', buffer_dist=300),
+                            RoadsLayer('Road Traffic Population per Hour'), ]
+        # OSMTagLayer('Nature Reserves', osm_tag='leisure=nature_reserve', colour='green',
+        #             buffer_dist=100, blocking=True),
+        # OSMTagLayer('Military Areas', osm_tag='landuse=military', colour='red', buffer_dist=800,
+        #             blocking=True)]
 
-        self.annotation_layers = [  # GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300),
-            PathfindingLayer('Pathfinding Layer', start_coords=(-1.5, 50.88),
-                             end_coords=(-1.34, 50.95))]
+        self.annotation_layers = []  # GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300),
+        # PathfindingLayer('QA-Thorney', start_coords=(-1.07, 50.85),
+        #                  end_coords=(-0.95, 50.84), buffer=300),
+        # PathfindingLayer('Thorney-QM', start_coords=(-0.94, 50.81),
+        #                  end_coords=(-1.30, 50.713), buffer=300)]
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
@@ -329,17 +330,12 @@ class PlotServer:
     def set_time(self, hour: int) -> None:
         self._time_idx = hour
 
-    def add_geojson_layer(self, filepath: str, buffer: float = None) -> None:
-        from seedpod_ground_risk.layers.geojson_layer import GeoJSONLayer
-
-        layer = GeoJSONLayer(filepath.split('.')[0], filepath, buffer=buffer)
+    def add_layer(self, layer: Layer):
         layer.preload_data()
-        self.annotation_layers.append(layer)
-
-    def add_osm_layer(self, kv: str, blocking: bool):
-        layer = OSMTagLayer(kv, kv, blocking=blocking)
-        layer.preload_data()
-        self.data_layers.append(layer)
+        if isinstance(layer, DataLayer):
+            self.data_layers.append(layer)
+        elif isinstance(layer, AnnotationLayer):
+            self.annotation_layers.append(layer)
 
     def set_layer_order(self, layer_order):
         self.data_layer_order = layer_order
