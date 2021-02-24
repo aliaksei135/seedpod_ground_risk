@@ -132,7 +132,7 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         start, end = Node(10, 10, 0), Node(350, 250, 0)
         repeats = 2
         equal_paths = []
-        rdrs = np.linspace(0, 10, 10)
+        rdrs = np.linspace(-1, 1, 20)
         risk_sums = []
 
         def make_path(start, end, rdr):
@@ -157,7 +157,6 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         #     paths = [make_path(start, end, rdr) for _ in range(repeats)]
         #     equal_paths.append(all([p == paths[0] for p in paths]))
         #     if not paths[0]:
-        #         # print('Path failed')
         #         risk_sums.append([rdr, np.inf])
         #         continue
         #     risk_sum = sum([n.n for n in paths[0]])
@@ -177,8 +176,8 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         rdr_fig = mpl.figure()
         ax = rdr_fig.add_subplot(111)
         ax.scatter(risk_sums[:, 0], risk_sums[:, 1])
-        ax.set_xscale('log')
-        ax.set_yscale('log')
+        # ax.set_xscale('log')
+        ax.set_yscale('symlog')
         ax.set_xlabel('Risk-Distance Ratio')
         ax.set_ylabel('Path Risk sum')
         ax.set_title('Risk Grid A*')
@@ -272,11 +271,11 @@ class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
         start, end = Node(10, 10, 0), Node(350, 250, 0)
         repeats = 2
         equal_paths = []
-        rdrs = np.logspace(-10, 10, 15)
-        jgs = np.linspace(0, 5000, 8)
-        jls = np.linspace(0, 70, 8)
+        rdrs = np.linspace(-100, 100, 10)
+        jgs = [0]  # np.linspace(0, 5000, 2)
+        jls = np.linspace(0, 50, 2)
 
-        # self.large_diag_environment.get_as_graph()
+        self.large_diag_environment.get_as_graph()
 
         def make_path(start, end, rdr, jg, jl):
             algo = RiskJumpPointSearchAStar(ManhattanRiskHeuristic(self.large_diag_environment,
@@ -321,8 +320,7 @@ class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
         jl_fig = mpl.figure()
         ax = jl_fig.add_subplot(111)
         sc = ax.scatter(risk_sums[:, 0], risk_sums[:, 1], c=risk_sums[:, 2])
-        ax.set_xscale('log')
-        ax.set_yscale('log')
+        ax.set_yscale('symlog')
         ax.set_xlabel('Risk-Distance Ratio')
         ax.set_ylabel('Path Risk sum')
         ax.set_title('R JPS+ A* Jump Limits')
@@ -332,8 +330,7 @@ class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
         jg_fig = mpl.figure()
         ax = jg_fig.add_subplot(111)
         sc = ax.scatter(risk_sums[:, 0], risk_sums[:, 1], c=risk_sums[:, 3])
-        ax.set_xscale('log')
-        ax.set_yscale('log')
+        ax.set_yscale('symlog')
         ax.set_xlabel('Risk-Distance Ratio')
         ax.set_ylabel('Path Risk sum')
         ax.set_title('R JPS+ A* Jump Gaps')
