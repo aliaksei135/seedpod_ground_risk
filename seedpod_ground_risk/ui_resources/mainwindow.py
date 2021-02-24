@@ -63,21 +63,16 @@ class Ui_MainWindow(object):
         self.listWidget.setEnabled(False)
         sizePolicy.setHeightForWidth(self.listWidget.sizePolicy().hasHeightForWidth())
         self.listWidget.setSizePolicy(sizePolicy)
-        self.listWidget.setMinimumSize(QSize(410, 500))
+        self.listWidget.setMinimumSize(QSize(405, 500))
 
         self.verticalLayout.addWidget(self.listWidget)
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.addOSMLayerButton = QPushButton(self.verticalLayoutWidget)
-        self.addOSMLayerButton.setObjectName(u"addOSMLayerButton")
+        self.addLayerButton = QPushButton(self.verticalLayoutWidget)
+        self.addLayerButton.setObjectName(u"addLayerButton")
 
-        self.horizontalLayout.addWidget(self.addOSMLayerButton)
-
-        self.removeLayerButton = QPushButton(self.verticalLayoutWidget)
-        self.removeLayerButton.setObjectName(u"removeLayerButton")
-
-        self.horizontalLayout.addWidget(self.removeLayerButton)
+        self.horizontalLayout.addWidget(self.addLayerButton)
 
         self.verticalLayout.addLayout(self.horizontalLayout)
 
@@ -123,8 +118,7 @@ class Ui_MainWindow(object):
         # if QT_CONFIG(tooltip)
         self.actionGenerate.setToolTip(QCoreApplication.translate("MainWindow", u"Generate Map for current view", None))
         # endif // QT_CONFIG(tooltip)
-        self.addOSMLayerButton.setText(QCoreApplication.translate("MainWindow", u"Add OSM Layer", None))
-        self.removeLayerButton.setText(QCoreApplication.translate("MainWindow", u"Remove Layer", None))
+        self.addLayerButton.setText(QCoreApplication.translate("MainWindow", u"Add Layer", None))
         self.toolBar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
     # retranslateUi
 

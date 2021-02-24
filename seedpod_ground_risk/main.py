@@ -4,6 +4,8 @@ import sys
 import time
 
 from seedpod_ground_risk.core.plot_worker import PlotWorker
+from seedpod_ground_risk.ui_resources.add_layer_wizard import LayerWizard
+from seedpod_ground_risk.ui_resources.layer_options import LAYER_OBJECTS
 from seedpod_ground_risk.ui_resources.layerlistdelegate import Ui_delegate
 
 print("Builtin modules imported")
@@ -86,7 +88,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.listWidget.setAcceptDrops(True)
         self.listWidget.itemDropped.connect(self.layer_reorder)
         self.listWidget.itemDoubleClicked.connect(self.layer_edit)
-        self.listWidget.rightClickAddOSMLayer.connect(self.layer_add_osm)
 
         self.timeSlider = QSlider(Qt.Horizontal)
         self.timeSlider.setObjectName(u"timeSlider")
@@ -102,11 +103,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBar.addWidget(self.timeSliderLabel)
         self.timeSlider.valueChanged.connect(self.time_changed)
 
-        self.addOSMLayerButton.clicked.connect(self.layer_add_osm)
-        # self.removeLayerButton.connect()
+        self.addLayerButton.clicked.connect(self.layer_add)
 
         self.actionRasterise.triggered.connect(self.menu_config_rasterise)
-        self.actionImport.triggered.connect(self.menu_file_import)
+        # self.actionImport.triggered.connect(self.menu_file_import)
         self.actionExport.triggered.connect(self.menu_file_export)
         self.actionAbout_Static_Sources.triggered.connect(self.menu_about_static_sources)
         self.actionAbout_App.triggered.connect(self.menu_about_app)
@@ -118,18 +118,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             msg_box = QMessageBox()
             msg_box.warning(self, "Warning", "Not rasterising increases generation and render times significantly!")
 
-    def menu_file_import(self):
-        from PySide2.QtWidgets import QFileDialog
-        from PySide2.QtWidgets import QInputDialog
-
-        filepath = QFileDialog.getOpenFileName(self, "Import GeoJSON geometry...", os.getcwd(),
-                                               "GeoJSON Files (*.json)")
-        if filepath[0]:
-            buffer, ok = QInputDialog.getDouble(self, "Set Path Buffer", "Buffer in metres:", 0, 0, 1500, 1)
-            if ok:
-                self.plot_worker.signals.add_geojson_layer.emit(filepath[0], buffer)
-            else:
-                self.plot_worker.signals.add_geojson_layer.emit(filepath[0], 0)
+    # def menu_file_import(self):
+    #     from PySide2.QtWidgets import QFileDialog
+    #     from PySide2.QtWidgets import QInputDialog
+    #
+    #     filepath = QFileDialog.getOpenFileName(self, "Import GeoJSON geometry...", os.getcwd(),
+    #                                            "GeoJSON Files (*.json)")
+    #     if filepath[0]:
+    #
 
     def menu_file_export(self):
         from PySide2.QtCore import QFile
@@ -180,20 +176,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 delegate.set_data_tag(layer._osm_tag)
             self.listWidget.setItemWidget(item, delegate)
 
-    def layer_add_osm(self):
-        from PySide2.QtWidgets import QInputDialog
-        import re
-        # TODO validate these tags
-
-        kv_str, ok = QInputDialog.getText(self, "Set OSM key=value string", "Pair in key=value format")
-        if ok:
-            r = re.compile('(\w+=\w+)|(\w+)')
-            if r.match(kv_str) is not None:
-                result = QMessageBox.question(self, "Blocking Layer",
-                                              "Does this layer consist of obstacles that must be avoided?")
-                self.plot_worker.signals.add_osm_layer.emit(kv_str, result == QMessageBox.Yes)
-            else:
-                self.layer_add_osm()
+    def layer_add(self):
+        wizard = LayerWizard(self, Qt.Window)
+        wizard.exec_()  # Open wizard and block until result
+        if wizard.result() == QDialog.Accepted:
+            layerObj = list(LAYER_OBJECTS.values())[wizard.layerType]
+            layer = layerObj(wizard.layerKey, **wizard.opts)
+            self.plot_worker.add_layer(layer)
 
     def layer_edit(self, item):
         print('Editing ', item)
