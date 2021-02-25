@@ -53,6 +53,7 @@ class GridAStar(Algorithm):
         # mpl.matshow(grid, cmap='jet')
         # mpl.colorbar()
         # mpl.plot([n.x for n in path], [n.y for n in path], color='red')
+        # mpl.title(f'Full Path, length={len(path)}')
         # mpl.show()
 
         # return path
@@ -101,6 +102,7 @@ class GridAStar(Algorithm):
         # mpl.matshow(grid, cmap='jet')
         # mpl.colorbar()
         # mpl.plot([n.x for n in simplfied_path], [n.y for n in simplfied_path], color='red')
+        # mpl.title(f'Simplified Path, length={len(simplfied_path)}')
         # mpl.show()
 
         return simplfied_path
@@ -126,15 +128,15 @@ class RiskGridAStar(GridAStar):
         while open:
             node = heappop(open)[1]
             if node == end:
-                if __debug__:
-                    import matplotlib.pyplot as mpl
-                    mpl.matshow(costs)
-                    mpl.title('R A* g cost (start to node)')
-                    mpl.colorbar()
-                    # mpl.matshow(debug_heuristic_cost)
-                    # mpl.title('R A* h cost (node to goal)')
-                    # mpl.colorbar()
-                    mpl.show()
+                # if __debug__:
+                #     import matplotlib.pyplot as mpl
+                #     mpl.matshow(costs)
+                #     mpl.title('R A* g cost (start to node)')
+                #     mpl.colorbar()
+                #     # mpl.matshow(debug_heuristic_cost)
+                #     # mpl.title('R A* h cost (node to goal)')
+                #     # mpl.colorbar()
+                #     mpl.show()
                 return self._reconstruct_path(end, closed, environment.grid)
 
             current_cost = costs[node.y, node.x]
