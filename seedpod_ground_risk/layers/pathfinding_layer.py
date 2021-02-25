@@ -28,13 +28,13 @@ class PathfindingLayer(GeoJSONLayer):
                  **kwargs) -> Geometry:
         from seedpod_ground_risk.pathfinding import environment
 
-        snapped_start_lat_idx = np.argmin(np.abs(raster_data[0]['Latitude'] - self.start_coords[1]))
-        snapped_start_lon_idx = np.argmin(np.abs(raster_data[0]['Longitude'] - self.start_coords[0]))
+        snapped_start_lat_idx = np.argmin(np.abs(raster_data[0]['Latitude'] - self.start_coords[0]))
+        snapped_start_lon_idx = np.argmin(np.abs(raster_data[0]['Longitude'] - self.start_coords[1]))
         start_node = environment.Node(snapped_start_lon_idx, snapped_start_lat_idx,
                                       raster_data[1][snapped_start_lat_idx, snapped_start_lon_idx])
 
-        snapped_end_lat_idx = np.argmin(np.abs(raster_data[0]['Latitude'] - self.end_coords[1]))
-        snapped_end_lon_idx = np.argmin(np.abs(raster_data[0]['Longitude'] - self.end_coords[0]))
+        snapped_end_lat_idx = np.argmin(np.abs(raster_data[0]['Latitude'] - self.end_coords[0]))
+        snapped_end_lon_idx = np.argmin(np.abs(raster_data[0]['Longitude'] - self.end_coords[1]))
         end_node = environment.Node(snapped_end_lon_idx, snapped_end_lat_idx,
                                     raster_data[1][snapped_end_lat_idx, snapped_end_lon_idx])
 
