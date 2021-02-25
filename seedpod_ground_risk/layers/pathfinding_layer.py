@@ -2,24 +2,28 @@ from time import time
 from typing import NoReturn, List, Tuple, Dict
 
 import geopandas as gpd
-import matplotlib.pyplot as mpl
 import numpy as np
 import shapely.geometry as sg
 from holoviews.element import Geometry
 
 from seedpod_ground_risk.layers.geojson_layer import GeoJSONLayer
 from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
-from seedpod_ground_risk.pathfinding.heuristic import ManhattanRiskHeuristic
+from seedpod_ground_risk.pathfinding.algorithm import Algorithm
+from seedpod_ground_risk.pathfinding.heuristic import ManhattanRiskHeuristic, Heuristic
 
 
 class PathfindingLayer(GeoJSONLayer):
 
     def __init__(self, key, start_lat: float = 0, start_lon: float = 0, end_lat: float = 0, end_lon: float = 0,
-                 buffer: float = 0):
+                 buffer: float = 0, algo: Algorithm = RiskGridAStar, heuristic: Heuristic = ManhattanRiskHeuristic,
+                 rdr: float = 0.5):
         super().__init__(key, '')
         self.start_coords = (start_lat, start_lon)
         self.end_coords = (end_lat, end_lon)
         self.buffer_dist = buffer
+        self.algo = algo
+        self.heuristic = heuristic
+        self.rdr = rdr
 
     def preload_data(self) -> NoReturn:
         pass
@@ -46,10 +50,7 @@ class PathfindingLayer(GeoJSONLayer):
             return None
 
         env = environment.GridEnvironment(raster_data[1], diagonals=True, pruning=False)
-        algo = RiskGridAStar(
-            heuristic=ManhattanRiskHeuristic(env, risk_to_dist_ratio=0.5))
-        # algo = RiskJumpPointSearchAStar(ManhattanRiskHeuristic(env, risk_to_dist_ratio=2), jump_gap=0,
-        #                                 jump_limit=5)
+        algo = self.algo(heuristic=self.heuristic(env, risk_to_dist_ratio=self.rdr))
         t0 = time()
         path = algo.find_path(env, start_node, end_node)
         if path is None:
@@ -57,6 +58,14 @@ class PathfindingLayer(GeoJSONLayer):
             return None
         else:
             print('Path generated in ', time() - t0)
+
+        # mpl.matshow(raster_data[1], cmap='jet')
+        # mpl.colorbar()
+        # mpl.plot([n.x for n in path], [n.y for n in path], color='red')
+        # mpl.title(
+        #     f'Costmap \n Start (x,y):({snapped_start_lon_idx}, {snapped_start_lat_idx})'
+        #     f'\n End (x,y):({snapped_end_lon_idx}, {snapped_end_lat_idx})')
+        # mpl.show()
 
         snapped_path = []
         for node in path:
