@@ -7,7 +7,7 @@ from PySide2.QtGui import QRegExpValidator
 from PySide2.QtWidgets import QWizard, QWizardPage, QLabel, QLineEdit, QComboBox, QCheckBox, QGridLayout, QColorDialog, \
     QPushButton, QFileDialog
 
-from seedpod_ground_risk.ui_resources.layer_options import LAYER_OPTIONS
+from seedpod_ground_risk.ui_resources.layer_options import *
 
 
 class BasicLayerInfoPage(QWizardPage):
@@ -64,7 +64,7 @@ class SpecificLayerInfoPage(QWizardPage):
                 button.clicked.connect(set_path)
 
                 label.setBuddy(path_field)
-                self.registerField(name, path_field)
+                self.registerField(name + '*', path_field)
                 layout.addWidget(label)
                 layout.addWidget(path_field)
                 layout.addWidget(button)
@@ -84,18 +84,26 @@ class SpecificLayerInfoPage(QWizardPage):
                 button.clicked.connect(set_colour)
 
                 label.setBuddy(colour_field)
-                self.registerField(name, colour_field)
+                self.registerField(name + '*', colour_field)
                 layout.addWidget(label)
                 layout.addWidget(colour_field)
                 layout.addWidget(button)
                 continue
+            elif regex == 'algos':
+                label = QLabel(name)
+                field = QComboBox(self)
+                field.addItems(ALGORITHM_OBJECTS.keys())
+                # algoLabel.setBuddy(algoSpinner)
+                # layout.addWidget(algoLabel)
+                # layout.addWidget(algoSpinner)
+                # self.registerField('algo*', algoSpinner)
             elif regex is bool:
                 field = QCheckBox()
             else:
                 field = QLineEdit()
                 field.setValidator(QRegExpValidator(QRegExp(regex)))
             label.setBuddy(field)
-            self.registerField(name, field)
+            self.registerField(name + '*', field)
             layout.addWidget(label)
             layout.addWidget(field)
         self.setLayout(layout)
@@ -119,5 +127,10 @@ class LayerWizard(QWizard):
 
         self.layerKey = self.field('name')
         self.layerType = self.field('type')
-        self.opts = {opt[1]: opt[2](self.field(name)) for name, opt in
-                     list(LAYER_OPTIONS.values())[self.layerType].items()}
+        self.opts = {}
+        for name, opt in list(LAYER_OPTIONS.values())[self.layerType].items():
+            if opt[1] == 'algo':
+                d = {opt[1]: list(ALGORITHM_OBJECTS.values())[self.field(name)]}
+            else:
+                d = {opt[1]: opt[2](self.field(name))}
+            self.opts.update(d)
