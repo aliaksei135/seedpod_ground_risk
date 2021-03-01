@@ -63,16 +63,18 @@ class Ui_MainWindow(object):
         self.listWidget.setEnabled(False)
         sizePolicy.setHeightForWidth(self.listWidget.sizePolicy().hasHeightForWidth())
         self.listWidget.setSizePolicy(sizePolicy)
-        self.listWidget.setMinimumSize(QSize(405, 500))
+        self.listWidget.setMinimumSize(QSize(405, 490))
 
         self.verticalLayout.addWidget(self.listWidget)
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setContentsMargins(-1, 5, -1, 5)
         self.addLayerButton = QPushButton(self.verticalLayoutWidget)
         self.addLayerButton.setObjectName(u"addLayerButton")
 
         self.horizontalLayout.addWidget(self.addLayerButton)
+
 
         self.verticalLayout.addLayout(self.horizontalLayout)
 
@@ -96,7 +98,6 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.actionAbout_App)
         self.toolBar.addAction(self.actionAbout_Static_Sources)
         self.toolBar.addSeparator()
-        self.toolBar.addAction(self.actionImport)
         self.toolBar.addAction(self.actionExport)
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.actionGenerate)
@@ -110,14 +111,14 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"SEEDPOD Ground Risk", None))
         self.actionImport.setText(QCoreApplication.translate("MainWindow", u"Import", None))
-        self.actionExport.setText(QCoreApplication.translate("MainWindow", u"Export", None))
+        self.actionExport.setText(QCoreApplication.translate("MainWindow", u"Export .png", None))
         self.actionAbout_Static_Sources.setText(QCoreApplication.translate("MainWindow", u"About Static Data", None))
         self.actionAbout_App.setText(QCoreApplication.translate("MainWindow", u"About App", None))
         self.actionRasterise.setText(QCoreApplication.translate("MainWindow", u"Rasterise", None))
         self.actionGenerate.setText(QCoreApplication.translate("MainWindow", u"Generate", None))
         # if QT_CONFIG(tooltip)
         self.actionGenerate.setToolTip(QCoreApplication.translate("MainWindow", u"Generate Map for current view", None))
-        # endif // QT_CONFIG(tooltip)
+        #endif // QT_CONFIG(tooltip)
         self.addLayerButton.setText(QCoreApplication.translate("MainWindow", u"Add Layer", None))
         self.toolBar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
     # retranslateUi

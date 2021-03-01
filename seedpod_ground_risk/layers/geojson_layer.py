@@ -64,7 +64,7 @@ class GeoJSONLayer(AnnotationLayer):
                 gv.Contours(self.dataframe).opts(line_width=4, line_color='magenta'),
                 gv.Polygons(self.buffer_poly).opts(style={'alpha': 0.3, 'color': 'cyan'}),
                 # Add the path stats as a text annotation to the final path point
-                gv.Text(self.endpoint[0], self.endpoint[1], label_str),
+                gv.Text(self.endpoint[0], self.endpoint[1], label_str, fontsize=20).opts(style={'color': 'blue'}),
                 *annotation_layers
             ])
         else:

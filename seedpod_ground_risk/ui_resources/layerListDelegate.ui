@@ -90,7 +90,7 @@
                                     </size>
                                 </property>
                                 <property name="text">
-                                    <string>data tag</string>
+                                    <string/>
                                 </property>
                             </widget>
                         </item>

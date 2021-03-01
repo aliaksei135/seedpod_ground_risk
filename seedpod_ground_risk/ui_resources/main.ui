@@ -84,13 +84,19 @@
         <property name="minimumSize">
          <size>
           <width>405</width>
-          <height>500</height>
+          <height>490</height>
          </size>
         </property>
        </widget>
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
+        <property name="topMargin">
+         <number>5</number>
+        </property>
+        <property name="bottomMargin">
+         <number>5</number>
+        </property>
         <item>
          <widget class="QPushButton" name="addLayerButton">
           <property name="text">
@@ -138,7 +144,6 @@
    <addaction name="actionAbout_App"/>
    <addaction name="actionAbout_Static_Sources"/>
    <addaction name="separator"/>
-   <addaction name="actionImport"/>
    <addaction name="actionExport"/>
    <addaction name="separator"/>
    <addaction name="actionGenerate"/>
@@ -151,7 +156,7 @@
   </action>
   <action name="actionExport">
    <property name="text">
-    <string>Export</string>
+    <string>Export .png</string>
    </property>
   </action>
   <action name="actionAbout_Static_Sources">

@@ -58,6 +58,7 @@ class Ui_delegate(object):
 
         self.verticalLayout.addWidget(self.dataTagLabel)
 
+
         self.horizontalLayout.addLayout(self.verticalLayout)
 
         self.horizontalSpacer = QSpacerItem(178, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -80,12 +81,12 @@ class Ui_delegate(object):
         self.retranslateUi(delegate)
 
         QMetaObject.connectSlotsByName(delegate)
-
     # setupUi
 
     def retranslateUi(self, delegate):
         delegate.setWindowTitle(QCoreApplication.translate("delegate", u"Form", None))
         self.nameLabel.setText(QCoreApplication.translate("delegate", u"Key", None))
-        self.dataTagLabel.setText(QCoreApplication.translate("delegate", u"data tag", None))
+        self.dataTagLabel.setText("")
         self.pushButton.setText("")
     # retranslateUi
+
