@@ -18,10 +18,12 @@ TRAFFIC_COUNT_COLUMNS = ['count_point_id', 'year', 'latitude', 'longitude', 'roa
                          'two_wheeled_motor_vehicles', 'cars_and_taxis', 'buses_and_coaches',
                          'lgvs', 'all_hgvs', 'all_motor_vehicles']
 
+# https://www.gov.uk/government/statistical-data-sets/nts09-vehicle-mileage-and-occupancy#carvan-occupancy
+# other types plausibly estimated.
 TYPE_OCCUPANCY = {
     'pedal_cycles': 1,
     'two_wheeled_motor_vehicles': 1.4,
-    'cars_and_taxis': 3,
+    'cars_and_taxis': 1.6,
     'buses_and_coaches': 40,
     'lgvs': 1.5,
     'all_hgvs': 1.6
