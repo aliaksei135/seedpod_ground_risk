@@ -73,17 +73,9 @@ class PlotServer:
         self._generated_data_layers = {}
         self.data_layer_order = []
         self.data_layers = [ResidentialLayer('Residential Population', buffer_dist=300),
-                            RoadsLayer('Road Traffic Population per Hour'), ]
-        # OSMTagLayer('Nature Reserves', osm_tag='leisure=nature_reserve', colour='green',
-        #             buffer_dist=100, blocking=True),
-        # OSMTagLayer('Military Areas', osm_tag='landuse=military', colour='red', buffer_dist=800,
-        #             blocking=True)]
+                            RoadsLayer('Road Traffic Population per Hour')]
 
-        self.annotation_layers = []  # GeoJSONLayer('Boldrewood-HI Test Path', 'static_data/test_path.json', buffer=300),
-        # PathfindingLayer('QA-Thorney', start_coords=(-1.07, 50.85),
-        #                  end_coords=(-0.95, 50.84), buffer=300),
-        # PathfindingLayer('Thorney-QM', start_coords=(-0.94, 50.81),
-        #                  end_coords=(-1.30, 50.713), buffer=300)]
+        self.annotation_layers = []
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
