@@ -63,6 +63,10 @@ class PlotWorker(QRunnable):
     def add_layer(self, layer):
         self.plot_server.add_layer(layer)
 
+    @Slot(Layer)
+    def remove_layer(self, layer):
+        self.plot_server.remove_layer(layer)
+
     @Slot(int)
     def set_time(self, hour):
         self.plot_server.set_time(hour)

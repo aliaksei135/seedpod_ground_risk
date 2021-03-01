@@ -3,6 +3,8 @@ import os
 import sys
 import time
 
+import PySide2
+
 from seedpod_ground_risk.core.plot_worker import PlotWorker
 from seedpod_ground_risk.ui_resources.add_layer_wizard import LayerWizard
 from seedpod_ground_risk.ui_resources.layer_options import LAYER_OBJECTS
@@ -16,7 +18,7 @@ from PySide2.QtGui import QPixmap, QCloseEvent, QPalette, QColor
 
 print("QtGUI imported")
 from PySide2.QtWidgets import QDialog, QMainWindow, QApplication, QListWidgetItem, QSplashScreen, QMessageBox, QSlider, \
-    QLabel, QAbstractItemView, QWidget, QColorDialog
+    QLabel, QAbstractItemView, QWidget, QColorDialog, QMenu
 
 print("Qt modules imported")
 from seedpod_ground_risk.ui_resources.mainwindow import Ui_MainWindow
@@ -34,11 +36,12 @@ class TextAboutDialog(QDialog):
 
 
 class LayerItemDelegate(QWidget):
-    def __init__(self, layer):
+    def __init__(self, layer, plot_worker):
         super(LayerItemDelegate, self).__init__()
         self.ui = Ui_delegate()
         self.ui.setupUi(self)
         self._layer = layer
+        self._plot_worker = plot_worker
         self.colour_set = False
         self.ui.pushButton.setAutoFillBackground(True)
         self.ui.pushButton.clicked.connect(self.change_colour)
@@ -67,6 +70,16 @@ class LayerItemDelegate(QWidget):
                 self.set_colour(colour)
                 self._layer._colour = colour.name()
 
+    def delete_layer(self):
+        self._plot_worker.remove_layer(self._layer)
+
+    def mousePressEvent(self, event: PySide2.QtGui.QMouseEvent) -> None:
+        super().mousePressEvent(event)
+        if event.button() == Qt.RightButton:
+            menu = QMenu()
+            menu.addAction("Delete", self.delete_layer)
+            menu.exec_(event.globalPos())
+
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
@@ -87,7 +100,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.listWidget.setDragDropMode(QAbstractItemView.InternalMove)
         self.listWidget.setAcceptDrops(True)
         self.listWidget.itemDropped.connect(self.layer_reorder)
-        self.listWidget.itemDoubleClicked.connect(self.layer_edit)
 
         self.timeSlider = QSlider(Qt.Horizontal)
         self.timeSlider.setObjectName(u"timeSlider")
@@ -167,7 +179,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for layer in layers:
             item = QListWidgetItem(self.listWidget)
             self.listWidget.addItem(item)
-            delegate = LayerItemDelegate(layer)
+            delegate = LayerItemDelegate(layer, self.plot_worker)
             item.setSizeHint(delegate.size())
             delegate.set_name(layer.key)
             if hasattr(layer, '_colour'):

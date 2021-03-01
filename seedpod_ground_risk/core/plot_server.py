@@ -329,5 +329,11 @@ class PlotServer:
         elif isinstance(layer, AnnotationLayer):
             self.annotation_layers.append(layer)
 
+    def remove_layer(self, layer):
+        if layer in self.data_layers:
+            self.data_layers.remove(layer)
+        elif layer in self.annotation_layers:
+            self.annotation_layers.remove(layer)
+
     def set_layer_order(self, layer_order):
         self.data_layer_order = layer_order
