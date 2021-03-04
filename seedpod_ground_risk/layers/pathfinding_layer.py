@@ -75,7 +75,6 @@ class PathfindingLayer(GeoJSONLayer):
 
         snapped_path = sg.LineString(snapped_path)
         self.dataframe = gpd.GeoDataFrame({'geometry': [snapped_path]}).set_crs('EPSG:4326')
-        self.dataframe.to_file('path.geojson', driver='GeoJSON')
         epsg27700_geom = self.dataframe.to_crs('EPSG:27700').geometry
         self.buffer_poly = gpd.GeoDataFrame(
             {'geometry': epsg27700_geom.buffer(self.buffer_dist).to_crs('EPSG:4326')}
@@ -86,3 +85,6 @@ class PathfindingLayer(GeoJSONLayer):
 
     def clear_cache(self) -> NoReturn:
         pass
+
+    def export_geojson(self, filepath):
+        self.dataframe.to_file(f'{filepath}/path.geojson', driver='GeoJSON')
