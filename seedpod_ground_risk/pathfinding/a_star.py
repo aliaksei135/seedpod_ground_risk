@@ -56,7 +56,7 @@ class GridAStar(Algorithm):
         # mpl.title(f'Full Path, length={len(path)}')
         # mpl.show()
 
-        # return path
+        return path
 
         # @jit(nopython=True, nogil=True)
         def get_path_sum(nx, ny, tx, ty, grid):

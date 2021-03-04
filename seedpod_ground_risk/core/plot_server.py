@@ -8,7 +8,9 @@ from holoviews.element import Geometry
 
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.layers.data_layer import DataLayer
+from seedpod_ground_risk.layers.osm_tag_layer import OSMTagLayer
 from seedpod_ground_risk.layers.layer import Layer
+from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
 
 
 def make_bounds_polygon(*args: Iterable[float]) -> sg.Polygon:
@@ -72,10 +74,11 @@ class PlotServer:
         from seedpod_ground_risk.layers.roads_layer import RoadsLayer
         self._generated_data_layers = {}
         self.data_layer_order = []
-        self.data_layers = [ResidentialLayer('Residential Population', buffer_dist=300),
-                            RoadsLayer('Road Traffic Population per Hour')]
+        self.data_layers = [ResidentialLayer('Residential Population', buffer_dist=30),
+                            RoadsLayer('Road Traffic Population per Hour'),
+                            OSMTagLayer("Parks", "leisure=park", colour="green", blocking=True, buffer_dist=20)]
 
-        self.annotation_layers = []
+        self.annotation_layers = [PathfindingLayer("PathRF10B30", start_lat=51.485, start_lon=-0.225, end_lat=51.505, end_lon=-0.07, buffer=30, rdr=10)]
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
