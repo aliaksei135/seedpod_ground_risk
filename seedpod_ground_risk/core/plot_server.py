@@ -75,10 +75,9 @@ class PlotServer:
         self._generated_data_layers = {}
         self.data_layer_order = []
         self.data_layers = [ResidentialLayer('Residential Population', buffer_dist=30),
-                            RoadsLayer('Road Traffic Population per Hour'),
-                            OSMTagLayer("Parks", "leisure=park", colour="green", blocking=True, buffer_dist=20)]
+                            RoadsLayer('Road Traffic Population per Hour')]
 
-        self.annotation_layers = [PathfindingLayer("PathRF10B30", start_lat=51.485, start_lon=-0.225, end_lat=51.505, end_lon=-0.07, buffer=30, rdr=10)]
+        self.annotation_layers = []
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
