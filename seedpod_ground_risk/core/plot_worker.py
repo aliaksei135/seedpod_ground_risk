@@ -75,7 +75,7 @@ class PlotWorker(QRunnable):
     def layers_reorder(self, layer_order):
         self.plot_server.set_layer_order(layer_order)
 
-    @Slot(list)
+    @Slot(Layer, str)
     def export_path_json(self, layer, filepath):
         self.plot_server.export_path_geojson(layer, filepath)
 

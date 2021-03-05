@@ -73,11 +73,15 @@ class LayerItemDelegate(QWidget):
     def delete_layer(self):
         self._plot_worker.remove_layer(self._layer)
 
+    def export_path_json(self):
+        self._plot_worker.export_path_json(self._layer, "paths")
+
     def mousePressEvent(self, event: PySide2.QtGui.QMouseEvent) -> None:
         super().mousePressEvent(event)
         if event.button() == Qt.RightButton:
             menu = QMenu()
             menu.addAction("Delete", self.delete_layer)
+            menu.addAction("Export .GeoJSON", self.export_path_json)
             menu.exec_(event.globalPos())
 
 
