@@ -74,7 +74,11 @@ class LayerItemDelegate(QWidget):
         self._plot_worker.remove_layer(self._layer)
 
     def export_path_json(self):
-        self._plot_worker.export_path_json(self._layer, "paths")
+        from PySide2.QtWidgets import QFileDialog
+
+        file_dir = QFileDialog.getExistingDirectory(self, "Save plot image...", os.getcwd(), QFileDialog.ShowDirsOnly)
+        if file_dir:
+            self._plot_worker.export_path_json(self._layer, file_dir)
 
     def mousePressEvent(self, event: PySide2.QtGui.QMouseEvent) -> None:
         super().mousePressEvent(event)

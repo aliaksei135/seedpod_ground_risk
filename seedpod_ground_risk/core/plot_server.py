@@ -342,4 +342,4 @@ class PlotServer:
 
     def export_path_geojson(self, layer, filepath):
         if layer in self.annotation_layers:
-            layer.dataframe.to_file('path.geojson', driver='GeoJSON')
+            layer.dataframe.to_file(f'{filepath}\\path.geojson', driver='GeoJSON')
