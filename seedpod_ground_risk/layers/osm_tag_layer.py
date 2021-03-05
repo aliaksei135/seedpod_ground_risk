@@ -1,4 +1,3 @@
-import random
 from typing import NoReturn, Tuple
 
 import geopandas as gpd
@@ -6,28 +5,19 @@ import numpy as np
 import shapely.geometry as sg
 from holoviews.element import Geometry
 
-from seedpod_ground_risk.layers.data_layer import DataLayer
+from seedpod_ground_risk.layers.blockable_data_layer import BlockableDataLayer
 
 
-class OSMTagLayer(DataLayer):
+class OSMTagLayer(BlockableDataLayer):
     _landuse_polygons: gpd.GeoDataFrame
 
-    def __init__(self, key, osm_tag, colour: str = None,
-                 blocking=False, buffer_dist=0):
-        super().__init__(key)
+    def __init__(self, key, osm_tag, **kwargs):
+        super(OSMTagLayer, self).__init__(key, **kwargs)
         self._osm_tag = osm_tag
-        self.blocking = blocking
-        self.buffer_dist = buffer_dist
-        # Set a random colour
-        self._colour = colour if colour is not None else "#" + ''.join(
-            [random.choice('0123456789ABCDEF') for _ in range(6)])
         self._landuse_polygons = gpd.GeoDataFrame()
 
-    def preload_data(self) -> NoReturn:
-        pass
-
     def generate(self, bounds_polygon: sg.Polygon, raster_shape: Tuple[int, int], from_cache: bool = False, **kwargs) -> \
-    Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]:
+            Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]:
         import geoviews as gv
         from holoviews.operation.datashader import rasterize
 
@@ -53,7 +43,7 @@ class OSMTagLayer(DataLayer):
 
     def query_osm_polygons(self, bound_poly: sg.Polygon) -> NoReturn:
         """
-        Perform blocking query on OpenStreetMaps Overpass API for objects with the passed landuse.
+        Perform blocking query on OpenStreetMaps Overpass API for objects with the passed tag.
         Retain only polygons and store in GeoPandas GeoDataFrame
         :param shapely.Polygon bound_poly: bounding box around requested area in EPSG:4326 coordinates
         """
