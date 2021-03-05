@@ -85,6 +85,3 @@ class PathfindingLayer(GeoJSONLayer):
 
     def clear_cache(self) -> NoReturn:
         pass
-
-    def export_geojson(self, filepath):
-        self.dataframe.to_file(f'{filepath}/path.geojson', driver='GeoJSON')
