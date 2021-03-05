@@ -32,7 +32,7 @@ class OSMTagLayer(DataLayer):
         from holoviews.operation.datashader import rasterize
 
         bounds = bounds_polygon.bounds
-
+        self.clear_cache()
         self.query_osm_polygons(bounds_polygon)
         if self._landuse_polygons.empty:
             return None
