@@ -213,9 +213,9 @@ class PlotServer:
                         import matplotlib.pyplot as mpl
                         plot = Overlay([res[0] for res in self._generated_data_layers.values()])
                         raw_datas = [res[2] for res in self._generated_data_layers.values()]
-                        raster_indices = dict(Longitude=np.linspace(x_range[0], x_range[1], num=400),
-                                              Latitude=np.linspace(y_range[0], y_range[1], num=400))
-                        raster_grid = np.zeros((400, 400), dtype=np.float64)
+                        raster_indices = dict(Longitude=np.linspace(x_range[0], x_range[1], num=raster_shape[0]),
+                                              Latitude=np.linspace(y_range[0], y_range[1], num=raster_shape[1]))
+                        raster_grid = np.zeros((raster_shape[1], raster_shape[0]), dtype=np.float64)
                         for res in self._generated_data_layers.values():
                             layer_raster_grid = res[1]
                             nans = np.isnan(layer_raster_grid)
@@ -260,7 +260,7 @@ class PlotServer:
         return plot.opts(width=self.plot_size[0], height=self.plot_size[1],
                          tools=self.tools, active_tools=self.active_tools)
 
-    def generate_layers(self, bounds_poly: sg.Polygon) -> NoReturn:
+    def generate_layers(self, bounds_poly: sg.Polygon, raster_shape: Tuple[int, int]) -> NoReturn:
         """
         Generate static layers of map
 
