@@ -34,8 +34,8 @@ class ResidentialLayer(OSMTagLayer):
 
         bounds = bounds_polygon.bounds
 
-        if not from_cache:
-            self.query_osm_polygons(bounds_polygon)
+        self.clear_cache()
+        self.query_osm_polygons(bounds_polygon)
         bounded_census_wards = self._census_wards.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
 
         # Find landuse polygons intersecting/within census wards and merge left
