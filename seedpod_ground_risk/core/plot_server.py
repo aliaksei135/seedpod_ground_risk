@@ -75,7 +75,9 @@ class PlotServer:
         self.data_layers = [ResidentialLayer('Residential Population', buffer_dist=30),
                             RoadsLayer('Road Traffic Population per Hour')]
 
-        self.annotation_layers = []
+        from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
+        self.annotation_layers = [PathfindingLayer("PathRF10B30", start_lat=51.485, start_lon=-0.225, end_lat=51.505,
+                                                   end_lon=-0.07, buffer=30, rdr=10)]
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
@@ -337,3 +339,8 @@ class PlotServer:
 
     def set_layer_order(self, layer_order):
         self.data_layer_order = layer_order
+
+    def export_path_geojson(self, layer, filepath):
+        if layer in self.annotation_layers:
+            self.layer.dataframe.to_file(f'{filepath}/path.geojson', driver='GeoJSON')
+
