@@ -58,10 +58,11 @@ class ResidentialLayer(OSMTagLayer):
             buffered_df.geometry = buffered_df.to_crs('EPSG:27700') \
                 .buffer(self.buffer_dist).to_crs('EPSG:4326')
             buffered_polys = gv.Polygons(buffered_df, kdims=['Longitude', 'Latitude'], vdims=['name', 'population'])
-            raster = rasterize(buffered_polys, aggregator=ds.sum('population'),
-                               x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
+            raster = rasterize(buffered_polys, aggregator=ds.sum('population'), width=raster_shape[0],
+                               height=raster_shape[1], x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]),
+                               dynamic=False)
         else:
-            raster = rasterize(gv_polys, aggregator=ds.sum('population'),
+            raster = rasterize(gv_polys, aggregator=ds.sum('population'), width=raster_shape[0], height=raster_shape[1],
                                x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
 
         raster_grid = np.copy(list(raster.data.data_vars.items())[0][1].data.astype(np.float))

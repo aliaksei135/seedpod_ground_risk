@@ -83,7 +83,7 @@ class RoadsLayer(DataLayer):
                                                                                        cmap=colorcet.CET_L18,
                                                                                        color='population')
         bounds = bounds_polygon.bounds
-        raster = rasterize(points, aggregator=ds.mean('population'),
+        raster = rasterize(points, aggregator=ds.mean('population'), width=raster_shape[0], height=raster_shape[1],
                            x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
         raster_grid = np.copy(list(raster.data.data_vars.items())[0][1].data.astype(np.float))
         return points, raster_grid, gpd.GeoDataFrame(tfc_df)
@@ -145,7 +145,7 @@ class RoadsLayer(DataLayer):
         if not self._roads_geometries.crs:
             self._roads_geometries = self._roads_geometries.set_crs('EPSG:27700')
 
-    def _interpolate_traffic_counts(self, bounds_poly: sg.Polygon, resolution: int = 25) -> List[
+    def _interpolate_traffic_counts(self, bounds_poly: sg.Polygon, resolution: int = 20) -> List[
         List[float]]:
         """
         Interpolate traffic count values between count points along all roads.
