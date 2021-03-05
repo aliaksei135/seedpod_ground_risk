@@ -6,6 +6,7 @@ import time
 import PySide2
 
 from seedpod_ground_risk.core.plot_worker import PlotWorker
+from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.ui_resources.add_layer_wizard import LayerWizard
 from seedpod_ground_risk.ui_resources.layer_options import LAYER_OBJECTS
 from seedpod_ground_risk.ui_resources.layerlistdelegate import Ui_delegate
@@ -85,7 +86,8 @@ class LayerItemDelegate(QWidget):
         if event.button() == Qt.RightButton:
             menu = QMenu()
             menu.addAction("Delete", self.delete_layer)
-            menu.addAction("Export .GeoJSON", self.export_path_json)
+            if isinstance(self._layer, AnnotationLayer):
+                menu.addAction("Export .GeoJSON", self.export_path_json)
             menu.exec_(event.globalPos())
 
 
