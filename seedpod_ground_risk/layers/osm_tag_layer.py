@@ -26,8 +26,8 @@ class OSMTagLayer(DataLayer):
     def preload_data(self) -> NoReturn:
         pass
 
-    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Tuple[
-        Geometry, np.ndarray, gpd.GeoDataFrame]:
+    def generate(self, bounds_polygon: sg.Polygon, raster_shape: Tuple[int, int], from_cache: bool = False, **kwargs) -> \
+    Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]:
         import geoviews as gv
         from holoviews.operation.datashader import rasterize
 

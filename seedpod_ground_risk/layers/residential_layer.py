@@ -24,8 +24,8 @@ class ResidentialLayer(OSMTagLayer):
         print("Preloading Residential Layer")
         self.ingest_census_data()
 
-    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Tuple[
-        Geometry, np.ndarray, gpd.GeoDataFrame]:
+    def generate(self, bounds_polygon: sg.Polygon, raster_shape: Tuple[int, int], from_cache: bool = False, **kwargs) -> \
+            Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]:
         import colorcet
         import datashader as ds
         from holoviews.operation.datashader import rasterize

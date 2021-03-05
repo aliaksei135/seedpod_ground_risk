@@ -83,6 +83,9 @@ class PlotServer:
 
         self._x_range, self._y_range = [-1.45, -1.35], [50.85, 50.95]
 
+        self.raster_resolution_m = 20
+
+        self._epsg4326_to_epsg3857_proj = None
         self._epsg3857_to_epsg4326_proj = None
         self._preload_started = False
         self._preload_complete = False
@@ -196,12 +199,13 @@ class PlotServer:
             else:
                 # Construct box around requested bounds
                 bounds_poly = make_bounds_polygon(x_range, y_range)
+                raster_shape = self._get_raster_dimensions(bounds_poly, self.raster_resolution_m)
                 # Ensure bounds are small enough to render without OOM or heat death of universe
                 if bounds_poly.area < 0.2:
                     from time import time
 
                     t0 = time()
-                    self.generate_layers(bounds_poly)
+                    self.generate_layers(bounds_poly, raster_shape)
                     self._progress_callback("Rendering new map...")
                     plot = Overlay([res[0] for res in self._generated_data_layers.values()])
                     print("Generated all layers in ", time() - t0)
@@ -270,8 +274,8 @@ class PlotServer:
         layers = {}
         self._progress_callback('Generating layer data')
         with ThreadPoolExecutor() as pool:
-            layer_futures = [pool.submit(self.generate_layer, layer, bounds_poly, self._time_idx) for layer in
-                             self.data_layers]
+            layer_futures = [pool.submit(self.generate_layer, layer, bounds_poly, raster_shape, self._time_idx) for
+                             layer in self.data_layers]
         # Store generated layers as they are completed
         for future in as_completed(layer_futures):
             key, result = future.result()
@@ -293,8 +297,9 @@ class PlotServer:
                 {k: layers[k] for k in layers.keys() if k not in self._generated_data_layers})
 
     @staticmethod
-    def generate_layer(layer: DataLayer, bounds_poly: sg.Polygon, hour: int) -> Union[
+    def generate_layer(layer: DataLayer, bounds_poly: sg.Polygon, raster_shape: Tuple[int, int], hour: int) -> Union[
         Tuple[str, Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]], Tuple[str, None]]:
+
         import shapely.ops as so
 
         from_cache = False
@@ -308,7 +313,7 @@ class PlotServer:
             layer_bounds_poly = bounds_poly.difference(layer.cached_area)
         layer.cached_area = so.unary_union([layer.cached_area, bounds_poly])
         try:
-            result = layer.key, layer.generate(layer_bounds_poly, from_cache=from_cache, hour=hour)
+            result = layer.key, layer.generate(layer_bounds_poly, raster_shape, from_cache=from_cache, hour=hour)
             return result
         except Exception as e:
             print(e)
@@ -348,7 +353,7 @@ class PlotServer:
 
         import pyproj
 
-        if self._epsg4326_to_epsg3857_proj:
+        if self._epsg4326_to_epsg3857_proj is None:
             self._epsg4326_to_epsg3857_proj = pyproj.Transformer.from_crs(pyproj.CRS.from_epsg('4326'),
                                                                           pyproj.CRS.from_epsg('3857'),
                                                                           always_xy=True)
@@ -356,6 +361,6 @@ class PlotServer:
 
         min_x, min_y = self._epsg4326_to_epsg3857_proj.transform(bounds[1], bounds[0])
         max_x, max_y = self._epsg4326_to_epsg3857_proj.transform(bounds[3], bounds[2])
-        raster_width = abs(max_x-min_x) % raster_resolution_m
-        raster_height = abs(max_y - min_y) % raster_resolution_m
+        raster_width = int(abs(max_x - min_x) // raster_resolution_m)
+        raster_height = int(abs(max_y - min_y) // raster_resolution_m)
         return raster_width, raster_height

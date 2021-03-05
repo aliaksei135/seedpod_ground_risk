@@ -64,8 +64,9 @@ class RoadsLayer(DataLayer):
         self._ingest_road_geometries()
         self._ingest_relative_traffic_variations()
 
-    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, hour: int = 0, **kwargs) -> Tuple[
-        Geometry, np.ndarray, gpd.GeoDataFrame]:
+    def generate(self, bounds_polygon: sg.Polygon, raster_shape: Tuple[int, int], from_cache: bool = False,
+                 hour: int = 0, **kwargs) -> \
+            Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]:
         from holoviews.operation.datashader import rasterize
         import geoviews as gv
         import datashader as ds
