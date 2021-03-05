@@ -42,6 +42,7 @@ class PlotServer:
     def __init__(self, tiles: str = 'Wikipedia', tools: Optional[Iterable[str]] = None,
                  active_tools: Optional[Iterable[str]] = None,
                  cmap: str = 'CET_L18',
+                 raster_resolution: float = 30,
                  plot_size: Tuple[int, int] = (760, 735),
                  progress_callback: Optional[Callable[[str], None]] = None,
                  update_callback: Optional[Callable[[str], None]] = None):
@@ -51,8 +52,8 @@ class PlotServer:
         :param str tiles: a geoviews.tile_sources attribute string from http://geoviews.org/gallery/bokeh/tile_sources.html#bokeh-gallery-tile-sources
         :param List[str] tools: the bokeh tools to make available for the plot from https://docs.bokeh.org/en/latest/docs/user_guide/tools.html
         :param List[str] active_tools: the subset of `tools` that should be enabled by default
-        :param bool rasterise: Whether to opportunistically raster layers
         :param cmap: a colorcet attribute string for the colourmap to use from https://colorcet.holoviz.org/user_guide/Continuous.html
+        :param raster_resolution: resolution of a single square of the raster pixel grid in metres
         :param Tuple[int, int] plot_size: the plot size in (width, height) order
         :param progress_callback: an optional callable that takes a string updating progress
         :param update_callback: an optional callable that is called before an plot is rendered
@@ -83,7 +84,7 @@ class PlotServer:
 
         self._x_range, self._y_range = [-1.45, -1.35], [50.85, 50.95]
 
-        self.raster_resolution_m = 20
+        self.raster_resolution_m = raster_resolution
 
         self._epsg4326_to_epsg3857_proj = None
         self._epsg3857_to_epsg4326_proj = None
