@@ -1,3 +1,4 @@
+from seedpod_ground_risk.layers.arbitrary_obstacle_layer import ArbitraryObstacleLayer
 from seedpod_ground_risk.layers.geojson_layer import GeoJSONLayer
 from seedpod_ground_risk.layers.osm_tag_layer import OSMTagLayer
 from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
@@ -12,7 +13,8 @@ LAYER_OBJECTS = {
     'Generic OSM': OSMTagLayer,
     'Residential - England': ResidentialLayer,
     'Road Traffic Flow - England': RoadsLayer,
-    'GeoJSON Geometries': GeoJSONLayer,
+    'Existing Path Analysis': GeoJSONLayer,
+    'External Obstacles': ArbitraryObstacleLayer,
     'Pathfinding': PathfindingLayer
 }
 
@@ -38,9 +40,15 @@ LAYER_OPTIONS = {
     },
     'Road Traffic Flow - England': {
     },
-    'GeoJSON Geometries': {
+    'Existing Path Analysis': {
         'File': ('path', 'filepath', str),
         'Buffer Distance [m]': (r'\d{0,3}', 'buffer_dist', int),
+    },
+    'External Obstacles': {
+        'File': ('path', 'filepath', str),
+        'Colour': ('colour', 'colour', str),
+        'Buffer Distance [m]': (r'\d{0,3}', 'buffer_dist', int),
+        'Blocking': (bool, 'blocking', bool),
     },
     'Pathfinding': {
         'Buffer Distance [m]': (r'\d{0,3}', 'buffer', int),
