@@ -337,3 +337,25 @@ class PlotServer:
 
     def set_layer_order(self, layer_order):
         self.data_layer_order = layer_order
+
+    def _get_raster_dimensions(self, bounds_poly: sg.Polygon, raster_resolution_m: float) -> Tuple[int, int]:
+        """
+        Return a the (x,y) shape of a raster grid given its EPSG4326 envelope and desired raster resolution
+        :param bounds_poly: EPSG4326 Shapely Polygon specifying bounds
+        :param raster_resolution_m: raster resolution in metres
+        :return: 2-tuple of (width, height)
+        """
+
+        import pyproj
+
+        if self._epsg4326_to_epsg3857_proj:
+            self._epsg4326_to_epsg3857_proj = pyproj.Transformer.from_crs(pyproj.CRS.from_epsg('4326'),
+                                                                          pyproj.CRS.from_epsg('3857'),
+                                                                          always_xy=True)
+        bounds = bounds_poly.bounds
+
+        min_x, min_y = self._epsg4326_to_epsg3857_proj.transform(bounds[1], bounds[0])
+        max_x, max_y = self._epsg4326_to_epsg3857_proj.transform(bounds[3], bounds[2])
+        raster_width = abs(max_x-min_x) % raster_resolution_m
+        raster_height = abs(max_y - min_y) % raster_resolution_m
+        return raster_width, raster_height
