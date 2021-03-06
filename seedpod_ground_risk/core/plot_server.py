@@ -344,6 +344,11 @@ class PlotServer:
     def set_layer_order(self, layer_order):
         self.data_layer_order = layer_order
 
+    def export_path_geojson(self, layer, filepath):
+        import os
+        if layer in self.annotation_layers:
+            layer.dataframe.to_file(os.path.join(os.sep, f'{filepath}', 'path.geojson'), driver='GeoJSON')
+
     def _get_raster_dimensions(self, bounds_poly: sg.Polygon, raster_resolution_m: float) -> Tuple[int, int]:
         """
         Return a the (x,y) shape of a raster grid given its EPSG4326 envelope and desired raster resolution
