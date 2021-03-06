@@ -22,7 +22,7 @@ DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName=SEEDPOD
 AllowNoIcons=yes
 ;LicenseFile=D:\PycharmProjects\seedpod_ground_risk\LICENSE
-InfoBeforeFile=D:\PycharmProjects\seedpod_ground_risk\README.md
+InfoBeforeFile=README.md
 ; Remove the following line to run in administrative install mode (install for all users.)
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=commandline
@@ -38,7 +38,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "D:\PycharmProjects\seedpod_ground_risk\dist\{#MyAppName}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "dist\{#MyAppName}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

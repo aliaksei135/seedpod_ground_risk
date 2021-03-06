@@ -74,10 +74,13 @@ class RoadsLayer(DataLayer):
 
         relative_variation = self.relative_variations_flat[hour]
 
-        points = np.array(self._interpolate_traffic_counts(bounds_polygon))
+        road_points = self._interpolate_traffic_counts(bounds_polygon)
+        points = np.array(road_points)[:, :3].astype(np.float)
+        names = np.array(road_points)[:, 3]
         tfc_df = gpd.GeoDataFrame(
             {'geometry': [sg.Point(lon, lat) for lon, lat in zip(points[:, 0], points[:, 1])],
-             'population': points[:, 2] * relative_variation})
+             'population': points[:, 2] * relative_variation,
+             'road_name': names})
         points = gv.Points(tfc_df,
                            kdims=['Longitude', 'Latitude'], vdims=['population']).opts(colorbar=True,
                                                                                        cmap=colorcet.CET_L18,
@@ -206,7 +209,7 @@ class RoadsLayer(DataLayer):
             # Recover the true road geometry along with the interpolated values
             for idx, mark in enumerate(coord_spacing):
                 c = road_ls.interpolate(mark)
-                all_interp_points_append([*self.proj.transform(c.y, c.x), interp_flat_proj[idx]])
+                all_interp_points_append([*self.proj.transform(c.y, c.x), interp_flat_proj[idx], road_name])
 
         print(".")
         return all_interp_points
