@@ -64,8 +64,9 @@ class RoadsLayer(DataLayer):
         self._ingest_road_geometries()
         self._ingest_relative_traffic_variations()
 
-    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, hour: int = 0, **kwargs) -> Tuple[
-        Geometry, np.ndarray, gpd.GeoDataFrame]:
+    def generate(self, bounds_polygon: sg.Polygon, raster_shape: Tuple[int, int], from_cache: bool = False,
+                 hour: int = 0, **kwargs) -> \
+            Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]:
         from holoviews.operation.datashader import rasterize
         import geoviews as gv
         import datashader as ds
@@ -73,16 +74,19 @@ class RoadsLayer(DataLayer):
 
         relative_variation = self.relative_variations_flat[hour]
 
-        points = np.array(self._interpolate_traffic_counts(bounds_polygon))
+        road_points = self._interpolate_traffic_counts(bounds_polygon)
+        points = np.array(road_points)[:, :3].astype(np.float)
+        names = np.array(road_points)[:, 3]
         tfc_df = gpd.GeoDataFrame(
             {'geometry': [sg.Point(lon, lat) for lon, lat in zip(points[:, 0], points[:, 1])],
-             'population': points[:, 2] * relative_variation})
+             'population': points[:, 2] * relative_variation,
+             'road_name': names})
         points = gv.Points(tfc_df,
                            kdims=['Longitude', 'Latitude'], vdims=['population']).opts(colorbar=True,
                                                                                        cmap=colorcet.CET_L18,
                                                                                        color='population')
         bounds = bounds_polygon.bounds
-        raster = rasterize(points, aggregator=ds.mean('population'),
+        raster = rasterize(points, aggregator=ds.mean('population'), width=raster_shape[0], height=raster_shape[1],
                            x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
         raster_grid = np.copy(list(raster.data.data_vars.items())[0][1].data.astype(np.float))
         return points, raster_grid, gpd.GeoDataFrame(tfc_df)
@@ -144,7 +148,7 @@ class RoadsLayer(DataLayer):
         if not self._roads_geometries.crs:
             self._roads_geometries = self._roads_geometries.set_crs('EPSG:27700')
 
-    def _interpolate_traffic_counts(self, bounds_poly: sg.Polygon, resolution: int = 25) -> List[
+    def _interpolate_traffic_counts(self, bounds_poly: sg.Polygon, resolution: int = 20) -> List[
         List[float]]:
         """
         Interpolate traffic count values between count points along all roads.
@@ -205,7 +209,7 @@ class RoadsLayer(DataLayer):
             # Recover the true road geometry along with the interpolated values
             for idx, mark in enumerate(coord_spacing):
                 c = road_ls.interpolate(mark)
-                all_interp_points_append([*self.proj.transform(c.y, c.x), interp_flat_proj[idx]])
+                all_interp_points_append([*self.proj.transform(c.y, c.x), interp_flat_proj[idx], road_name])
 
         print(".")
         return all_interp_points
