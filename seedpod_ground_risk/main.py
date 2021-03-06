@@ -77,7 +77,8 @@ class LayerItemDelegate(QWidget):
     def export_path_json(self):
         from PySide2.QtWidgets import QFileDialog
 
-        file_dir = QFileDialog.getExistingDirectory(self, "Save plot image...", os.getcwd(), QFileDialog.ShowDirsOnly)
+        file_dir = QFileDialog.getExistingDirectory(self, "Save plot .json file...", os.getcwd(),
+                                                    QFileDialog.ShowDirsOnly)
         if file_dir:
             self._plot_worker.export_path_json(self._layer, file_dir)
 
