@@ -1,3 +1,4 @@
+import os
 from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn, Optional, List, Sequence
 
 import geopandas as gpd
@@ -346,7 +347,7 @@ class PlotServer:
 
     def export_path_geojson(self, layer, filepath):
         if layer in self.annotation_layers:
-            layer.dataframe.to_file(f'{filepath}\\path.geojson', driver='GeoJSON')
+            layer.dataframe.to_file(os.path.join(os.sep, f'{filepath}', 'path.geojson'), driver='GeoJSON')
 
     def _get_raster_dimensions(self, bounds_poly: sg.Polygon, raster_resolution_m: float) -> Tuple[int, int]:
         """
