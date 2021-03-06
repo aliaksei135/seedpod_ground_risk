@@ -33,7 +33,7 @@ class GeoJSONLayer(AnnotationLayer):
         import geoviews as gv
 
         if self.buffer_poly is not None:
-            label_str = ''
+            labels = []
 
             annotation_layers = []
             for gdf in data:
@@ -48,23 +48,35 @@ class GeoJSONLayer(AnnotationLayer):
                         continue
                     proj_gdf = overlay.to_crs('epsg:27700')
                     proj_gdf['population'] = proj_gdf.geometry.area * proj_gdf.density
-                    label_str += f"Static Population: {proj_gdf['population'].sum():.2f}"
+                    labels.append(gv.Text(self.endpoint[0], self.endpoint[1],
+                                          f"Static Population: {proj_gdf['population'].sum():.2f}", fontsize=20).opts(
+                        style={'color': 'blue'}))
                     annotation_layers.append(gv.Polygons(overlay).opts(style={'alpha': 0.8, 'color': 'cyan'}))
                 elif geom_type == 'Point':
                     if 'population' in overlay:
-                        mean_pop = overlay.population.mean()
-                        label_str += f'Dynamic Population: {mean_pop / 60:.2f}/min'
+                        # Group data by road name, localising the points
+                        road_geoms = list(overlay.groupby('road_name').geometry)
+                        road_coms = {}  # store the centre of mass of points associated with a road
+                        for name, geoms in road_geoms:
+                            mean_lon = sum([p.x for p in geoms]) / len(geoms)
+                            mean_lat = sum([p.y for p in geoms]) / len(geoms)
+                            road_coms[name] = (mean_lon, mean_lat)  # x,y order
+                        # get mean population flow of points for road
+                        road_pops = list(overlay.groupby('road_name').mean().itertuples())
+                        for name, pop in road_pops:  # add labels at the centre of mass of each group of points
+                            labels.append(gv.Text(road_coms[name][0], road_coms[name][1],
+                                                  f'Population flow on road {name}: {pop / 60:.2f}/min',
+                                                  fontsize=20).opts(
+                                style={'color': 'blue'}))
                     annotation_layers.append((gv.Points(overlay).opts(style={'alpha': 0.8, 'color': 'cyan'})))
                 elif geom_type == 'Line':
                     pass
-
-                label_str += '\n'
 
             return Overlay([
                 gv.Contours(self.dataframe).opts(line_width=4, line_color='magenta'),
                 gv.Polygons(self.buffer_poly).opts(style={'alpha': 0.3, 'color': 'cyan'}),
                 # Add the path stats as a text annotation to the final path point
-                gv.Text(self.endpoint[0], self.endpoint[1], label_str, fontsize=20).opts(style={'color': 'blue'}),
+                *labels,
                 *annotation_layers
             ])
         else:
