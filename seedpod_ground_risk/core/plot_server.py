@@ -1,4 +1,3 @@
-import os
 from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn, Optional, List, Sequence
 
 import geopandas as gpd
@@ -346,6 +345,7 @@ class PlotServer:
         self.data_layer_order = layer_order
 
     def export_path_geojson(self, layer, filepath):
+        import os
         if layer in self.annotation_layers:
             layer.dataframe.to_file(os.path.join(os.sep, f'{filepath}', 'path.geojson'), driver='GeoJSON')
 
