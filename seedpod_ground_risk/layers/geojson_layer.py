@@ -51,7 +51,9 @@ class GeoJSONLayer(AnnotationLayer):
                     labels.append(gv.Text(self.endpoint[0], self.endpoint[1],
                                           f"Static Population: {proj_gdf['population'].sum():.2f}", fontsize=20).opts(
                         style={'color': 'blue'}))
-                    annotation_layers.append(gv.Polygons(overlay).opts(style={'alpha': 0.8, 'color': 'cyan'}))
+                    proj_gdf = proj_gdf.to_crs('EPSG:4326')
+                    annotation_layers.append(
+                        gv.Polygons(proj_gdf, vdims=['population']).opts(alpha=0.8, color='cyan', tools=['hover']))
                 elif geom_type == 'Point':
                     if 'population' in overlay:
                         # Group data by road name, localising the points

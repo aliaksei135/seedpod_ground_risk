@@ -58,7 +58,7 @@ class PlotServer:
         :param progress_callback: an optional callable that takes a string updating progress
         :param update_callback: an optional callable that is called before an plot is rendered
         """
-        self.tools = ['hover', 'crosshair'] if tools is None else tools
+        self.tools = ['crosshair'] if tools is None else tools
         self.active_tools = ['wheel_zoom'] if active_tools is None else active_tools
 
         import colorcet
