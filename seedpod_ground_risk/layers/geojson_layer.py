@@ -103,10 +103,13 @@ class GeoJSONLayer(AnnotationLayer):
 
             return Overlay([
                 gv.Contours(self.dataframe).opts(line_width=4, line_color='magenta'),
-                gv.Polygons(self.buffer_poly).opts(style={'alpha': 0.3, 'color': 'cyan'}),
+                # gv.Polygons(self.buffer_poly).opts(style={'alpha': 0.3, 'color': 'cyan'}),
                 # Add the path stats as a text annotation to the final path point
                 *labels,
-                *annotation_layers
+                *annotation_layers,
+                gv.Image(pdf_mat, bounds=bounds).options(alpha=0.4, clipping_colors={'0': 'transparent',
+                                                                                     'NaN': 'transparent',
+                                                                                     '-NaN': 'transparent'})
             ])
         else:
             return gv.Contours(self.dataframe).opts(line_width=4, line_color='#000000')
