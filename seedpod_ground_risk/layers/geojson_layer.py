@@ -86,3 +86,16 @@ class GeoJSONLayer(AnnotationLayer):
 
     def clear_cache(self) -> NoReturn:
         pass
+
+    def _snap_coords_to_grid(self, grid, lon: float, lat: float) -> Tuple[int, int]:
+        """
+        Snap coordinates to grid indices
+        :param grid: raster grid coordinates
+        :param lon: longitude to snap
+        :param lat: latitude to snap
+        :return: (x, y) tuple of grid indices
+        """
+        lat_idx = int(np.argmin(np.abs(grid['Latitude'] - lat)))
+        lon_idx = int(np.argmin(np.abs(grid['Longitude'] - lon)))
+
+        return lon_idx, lat_idx
