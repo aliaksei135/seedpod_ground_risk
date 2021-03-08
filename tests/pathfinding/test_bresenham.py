@@ -80,6 +80,22 @@ class BresenhamCase(unittest.TestCase):
         result = (flat_points <= 4).all() and (flat_points >= 0).all()
         self.assertTrue(result, "Points not bounded within endpoints")
 
+    def test_high_gradient(self):
+        start = [0, 6]  # x, y
+        end = [6, 0]  # x, y
+
+        path = make_line(*start, *end)
+
+        expected = np.array([[0, 6],
+                             [1, 5],
+                             [2, 4],
+                             [3, 3],
+                             [4, 2],
+                             [5, 1],
+                             [6, 0]])
+        result = (path == expected).all() or (path == np.flipud(expected)).all()
+        self.assertTrue(result, 'First Quadrant path incorrect')
+
 
 if __name__ == '__main__':
     unittest.main()
