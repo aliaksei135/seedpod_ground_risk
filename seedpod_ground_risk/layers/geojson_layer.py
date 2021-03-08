@@ -5,6 +5,7 @@ import numpy as np
 from holoviews.element import Overlay
 
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
+from seedpod_ground_risk.pathfinding import bresenham
 
 
 class GeoJSONLayer(AnnotationLayer):
@@ -31,10 +32,36 @@ class GeoJSONLayer(AnnotationLayer):
     def annotate(self, data: List[gpd.GeoDataFrame], raster_data: Tuple[Dict[str, np.array], np.array],
                  **kwargs) -> Overlay:
         import geoviews as gv
+        from scipy.stats import multivariate_normal as mvn
+
+        bounds = (raster_data[0]['Longitude'].min(), raster_data[0]['Latitude'].min(),
+                  raster_data[0]['Longitude'].max(), raster_data[0]['Latitude'].max())
 
         if self.buffer_poly is not None:
-            labels = []
+            # Snap the line string nodes to the raster grid
+            snapped_points = [self._snap_coords_to_grid(raster_data[0], *coords) for coords in
+                              self.dataframe.iloc[0].geometry.coords]
+            # Generate pairs of consecutive (x,y) coords
+            path_pairs = list(map(list, zip(snapped_points, snapped_points[1:])))
+            # Feed these pairs into the Bresenham algo to find the intermediate points
+            path_grid_points = [bresenham.make_line(*pair[0], *pair[1]) for pair in path_pairs]
+            # Bring all these points together and remove duplicate coords
+            # Flip left to right as bresenham spits out in (y,x) order
+            path_grid_points = np.fliplr(np.unique(np.concatenate(path_grid_points, axis=0), axis=0))
 
+            dist_mean = np.array([5, 5])
+            raster_shape = raster_data[1].shape
+            x, y = np.mgrid[0:raster_shape[0], 0:raster_shape[1]]
+            eval_grid = np.dstack((x, y))
+
+            def point_dist(c):
+                pdf_mean = c + dist_mean
+                return mvn(pdf_mean, [[10, 0], [0, 10]]).pdf(eval_grid)
+
+            # TODO Remove all these flip and rotates; the indices must be swapping somewhere else?
+            pdf_mat = np.rot90(np.sum([point_dist(c) for c in path_grid_points], axis=0))
+
+            labels = []
             annotation_layers = []
             for gdf in data:
                 if not gdf.crs:
