@@ -36,10 +36,10 @@ def _make_line_high(x0: int, y0: int, x1: int, y1: int):
     dy = y1 - y0
     mx = max(x0, x1)
     xi = 1
-    if dy < 0:
+    if dx < 0:
         xi = -1
         dx = -dx
-    D = 2 * dy - dx
+    D = 2 * dx - dy
     x = x0
     n = dy + 1
     line = np.zeros((n, 2), dtype=np.int32)
@@ -49,9 +49,9 @@ def _make_line_high(x0: int, y0: int, x1: int, y1: int):
             x += xi
             if x > mx:
                 x = mx
-            D += 2 * (dy - dx)
+            D += 2 * (dx - dy)
         else:
-            D += 2 * dy
+            D += 2 * dx
     line[-1] = [y1, x1]
     return line
 
