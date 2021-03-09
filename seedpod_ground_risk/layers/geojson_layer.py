@@ -49,17 +49,29 @@ class GeoJSONLayer(AnnotationLayer):
             # Flip left to right as bresenham spits out in (y,x) order
             path_grid_points = np.fliplr(np.unique(np.concatenate(path_grid_points, axis=0), axis=0))
 
-            dist_mean = np.array([5, 5])
+            # Testing fixed pdf for now
+            dist_mean = np.array([15, 5])
+
+            # Create grid on which to evaluate each point of path with its pdf
             raster_shape = raster_data[1].shape
             x, y = np.mgrid[0:raster_shape[0], 0:raster_shape[1]]
             eval_grid = np.dstack((x, y))
 
+            from pathos.multiprocessing import Pool
+            from pathos.multiprocessing import cpu_count
+            pool = Pool()
+
+            # TODO Use something like Dask or OpenCV to speed this up in future as it's a simple map-reduce
             def point_dist(c):
                 pdf_mean = c + dist_mean
-                return mvn(pdf_mean, [[10, 0], [0, 10]]).pdf(eval_grid)
+                return mvn(pdf_mean, [[15, 5], [5, 7]]).pdf(eval_grid)
+
+            def map_chunk(coords):
+                return np.sum([point_dist(c) for c in coords], axis=0)
 
             # TODO Remove all these flip and rotates; the indices must be swapping somewhere else?
-            pdf_mat = np.rot90(np.sum([point_dist(c) for c in path_grid_points], axis=0))
+            pdfs = pool.map(map_chunk, np.array_split(path_grid_points, cpu_count() * 2))
+            pdf_mat = np.rot90(np.sum(pdfs, axis=0))
 
             labels = []
             annotation_layers = []
