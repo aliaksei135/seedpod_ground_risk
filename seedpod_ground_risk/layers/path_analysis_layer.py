@@ -60,7 +60,7 @@ class PathAnalysisLayer(AnnotationLayer):
 
             # Create grid on which to evaluate each point of path with its pdf
             raster_shape = raster_data[1].shape
-            x, y = np.mgrid[0:raster_shape[0], 0:raster_shape[1]]
+            x, y = np.mgrid[0:raster_shape[1], 0:raster_shape[0]]
             eval_grid = np.dstack((x, y))
 
             from pathos.multiprocessing import Pool
