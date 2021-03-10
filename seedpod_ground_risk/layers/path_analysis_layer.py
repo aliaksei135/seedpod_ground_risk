@@ -77,6 +77,7 @@ class PathAnalysisLayer(AnnotationLayer):
 
             # TODO Remove all these flip and rotates; the indices must be swapping somewhere else?
             pdfs = pool.map(map_chunk, np.array_split(path_grid_points, cpu_count() * 2))
+            pool.close()
             pdf_mat = np.rot90(np.sum(pdfs, axis=0))
 
             labels = []
