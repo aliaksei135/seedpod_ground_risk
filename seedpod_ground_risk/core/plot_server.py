@@ -9,6 +9,7 @@ from holoviews.element import Geometry
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.layers.data_layer import DataLayer
 from seedpod_ground_risk.layers.layer import Layer
+from seedpod_ground_risk.layers.path_analysis_layer import PathAnalysisLayer
 
 
 def make_bounds_polygon(*args: Iterable[float]) -> sg.Polygon:

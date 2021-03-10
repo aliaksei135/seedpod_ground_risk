@@ -1,10 +1,9 @@
 from seedpod_ground_risk.layers.arbitrary_obstacle_layer import ArbitraryObstacleLayer
-from seedpod_ground_risk.layers.geojson_layer import GeoJSONLayer
 from seedpod_ground_risk.layers.osm_tag_layer import OSMTagLayer
+from seedpod_ground_risk.layers.path_analysis_layer import PathAnalysisLayer
 from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
 from seedpod_ground_risk.layers.residential_layer import ResidentialLayer
 from seedpod_ground_risk.layers.roads_layer import RoadsLayer
-
 from seedpod_ground_risk.pathfinding.a_star import *
 from seedpod_ground_risk.pathfinding.rjps_a_star import *
 
@@ -13,7 +12,7 @@ LAYER_OBJECTS = {
     'Generic OSM': OSMTagLayer,
     'Residential - England': ResidentialLayer,
     'Road Traffic Flow - England': RoadsLayer,
-    'Existing Path Analysis': GeoJSONLayer,
+    'Existing Path Analysis': PathAnalysisLayer,
     'External Obstacles': ArbitraryObstacleLayer,
     'Pathfinding': PathfindingLayer
 }

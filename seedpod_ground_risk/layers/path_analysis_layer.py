@@ -8,10 +8,10 @@ from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.pathfinding import bresenham
 
 
-class GeoJSONLayer(AnnotationLayer):
+class PathAnalysisLayer(AnnotationLayer):
 
     def __init__(self, key: str, filepath: str = '', buffer_dist: float = None, **kwargs):
-        super(GeoJSONLayer, self).__init__(key)
+        super(PathAnalysisLayer, self).__init__(key)
         self.filepath = filepath
         self.buffer_dist = buffer_dist
 

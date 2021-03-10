@@ -6,13 +6,13 @@ import numpy as np
 import shapely.geometry as sg
 from holoviews.element import Geometry
 
-from seedpod_ground_risk.layers.geojson_layer import GeoJSONLayer
+from seedpod_ground_risk.layers.path_analysis_layer import PathAnalysisLayer
 from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
 from seedpod_ground_risk.pathfinding.algorithm import Algorithm
 from seedpod_ground_risk.pathfinding.heuristic import ManhattanRiskHeuristic, Heuristic
 
 
-class PathfindingLayer(GeoJSONLayer):
+class PathfindingLayer(PathAnalysisLayer):
 
     def __init__(self, key, start_lat: float = 0, start_lon: float = 0, end_lat: float = 0, end_lon: float = 0,
                  buffer: float = 0, algo: Algorithm = RiskGridAStar, heuristic: Heuristic = ManhattanRiskHeuristic,
