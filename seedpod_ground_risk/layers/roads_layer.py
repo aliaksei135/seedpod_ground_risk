@@ -79,14 +79,17 @@ class RoadsLayer(DataLayer):
         names = np.array(road_points)[:, 3]
         tfc_df = gpd.GeoDataFrame(
             {'geometry': [sg.Point(lon, lat) for lon, lat in zip(points[:, 0], points[:, 1])],
-             'population': points[:, 2] * relative_variation,
+             'population': points[:, 2] * relative_variation / 3600,
              'road_name': names})
+        # Assume motorways are 3 lanes each way and A roads are 2 each way
+        tfc_df['road_width'] = np.where(tfc_df['road_name'].str.startswith('M'), 22, 14.6)
+        tfc_df['density'] = tfc_df['population'] / (resolution * tfc_df['road_width'])
         points = gv.Points(tfc_df,
-                           kdims=['Longitude', 'Latitude'], vdims=['population']).opts(colorbar=True,
-                                                                                       cmap=colorcet.CET_L18,
-                                                                                       color='population')
+                           kdims=['Longitude', 'Latitude'], vdims=['population', 'density']).opts(colorbar=True,
+                                                                                                  cmap=colorcet.CET_L18,
+                                                                                                  color='population')
         bounds = bounds_polygon.bounds
-        raster = rasterize(points, aggregator=ds.mean('population'), width=raster_shape[0], height=raster_shape[1],
+        raster = rasterize(points, aggregator=ds.mean('density'), width=raster_shape[0], height=raster_shape[1],
                            x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
         raster_grid = np.copy(list(raster.data.data_vars.items())[0][1].data.astype(np.float))
         return points, raster_grid, gpd.GeoDataFrame(tfc_df)
