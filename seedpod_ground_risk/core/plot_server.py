@@ -222,7 +222,7 @@ class PlotServer:
                             nans = np.isnan(layer_raster_grid)
                             layer_raster_grid[nans] = 0
                             raster_grid += res[1]
-
+                        raster_grid = np.flipud(raster_grid)
                         annotations = []
                         for layer in self.annotation_layers:
                             annotation = layer.annotate(raw_datas, (raster_indices, raster_grid),
