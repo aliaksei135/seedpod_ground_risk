@@ -111,9 +111,9 @@ class PathAnalysisLayer(AnnotationLayer):
                             road_coms[name] = (mean_lon, mean_lat)  # x,y order
                         # get mean population flow of points for road
                         road_pops = list(overlay.groupby('road_name').mean().itertuples())
-                        for name, pop in road_pops:  # add labels at the centre of mass of each group of points
+                        for name, pop, *_ in road_pops:  # add labels at the centre of mass of each group of points
                             labels.append(gv.Text(road_coms[name][0], road_coms[name][1],
-                                                  f'Population flow on road {name}: {pop / 60:.2f}/min',
+                                                  f'Population flow on road {name}: {pop * 60:.2f}/min',
                                                   fontsize=20).opts(
                                 style={'color': 'blue'}))
                     annotation_layers.append((gv.Points(overlay).opts(style={'alpha': 0.8, 'color': 'cyan'})))
