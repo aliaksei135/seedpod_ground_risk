@@ -1,5 +1,6 @@
 from typing import NoReturn, List, Tuple, Dict
 
+import casex
 import geopandas as gpd
 import numpy as np
 from holoviews.element import Overlay
@@ -48,6 +49,11 @@ class PathAnalysisLayer(AnnotationLayer):
             # Bring all these points together and remove duplicate coords
             # Flip left to right as bresenham spits out in (y,x) order
             path_grid_points = np.fliplr(np.unique(np.concatenate(path_grid_points, axis=0), axis=0))
+
+            ca_model = casex.CriticalAreaModels()  # Lethal area model using default params for human dimensions
+            aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, 2, 2, 2)  # Default aircraft
+            ballistic_model = casex.BallisticDescent2ndOrderDragApproximation()
+            ballistic_model.set_aircraft(aircraft)
 
             # Testing fixed pdf for now
             dist_mean = np.array([15, 5])
