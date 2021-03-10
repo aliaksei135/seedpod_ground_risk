@@ -29,27 +29,29 @@ class PathfindingLayer(GeoJSONLayer):
         pass
 
     def annotate(self, data: List[gpd.GeoDataFrame], raster_data: Tuple[Dict[str, np.array], np.array],
-                 **kwargs) -> Geometry:
+                 resolution=20, **kwargs) -> Geometry:
         from seedpod_ground_risk.pathfinding import environment
+
+        raster_grid = raster_data[1] * resolution ** 2
 
         snapped_start_lon_idx, snapped_start_lat_idx = self._snap_coords_to_grid(raster_data[0], self.start_coords[1],
                                                                                  self.start_coords[0])
         start_node = environment.Node(snapped_start_lon_idx, snapped_start_lat_idx,
-                                      raster_data[1][snapped_start_lat_idx, snapped_start_lon_idx])
+                                      raster_grid[snapped_start_lat_idx, snapped_start_lon_idx])
 
         snapped_end_lon_idx, snapped_end_lat_idx = self._snap_coords_to_grid(raster_data[0], self.end_coords[1],
                                                                              self.end_coords[0])
         end_node = environment.Node(snapped_end_lon_idx, snapped_end_lat_idx,
-                                    raster_data[1][snapped_end_lat_idx, snapped_end_lon_idx])
+                                    raster_grid[snapped_end_lat_idx, snapped_end_lon_idx])
 
-        if raster_data[1][snapped_start_lon_idx, snapped_start_lat_idx] < 0:
+        if raster_grid[snapped_start_lon_idx, snapped_start_lat_idx] < 0:
             print('Start node in blocked area, path impossible')
             return None
-        elif raster_data[1][snapped_end_lon_idx, snapped_end_lat_idx] < 0:
+        elif raster_grid[snapped_end_lon_idx, snapped_end_lat_idx] < 0:
             print('End node in blocked area, path impossible')
             return None
 
-        env = environment.GridEnvironment(raster_data[1], diagonals=True, pruning=False)
+        env = environment.GridEnvironment(raster_grid, diagonals=True, pruning=False)
         algo = self.algo(heuristic=self.heuristic(env, risk_to_dist_ratio=self.rdr))
         t0 = time()
         path = algo.find_path(env, start_node, end_node)

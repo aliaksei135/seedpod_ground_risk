@@ -30,7 +30,7 @@ class GeoJSONLayer(AnnotationLayer):
         self.endpoint = self.dataframe.iloc[0].geometry.coords[-1]
 
     def annotate(self, data: List[gpd.GeoDataFrame], raster_data: Tuple[Dict[str, np.array], np.array],
-                 **kwargs) -> Overlay:
+                 resolution=20, **kwargs) -> Overlay:
         import geoviews as gv
         from scipy.stats import multivariate_normal as mvn
 
