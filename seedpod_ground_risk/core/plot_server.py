@@ -225,7 +225,8 @@ class PlotServer:
 
                         annotations = []
                         for layer in self.annotation_layers:
-                            annotation = layer.annotate(raw_datas, (raster_indices, raster_grid))
+                            annotation = layer.annotate(raw_datas, (raster_indices, raster_grid),
+                                                        resolution=self.raster_resolution_m)
                             if annotation:
                                 annotations.append(annotation)
 
@@ -275,8 +276,8 @@ class PlotServer:
         layers = {}
         self._progress_callback('Generating layer data')
         with ThreadPoolExecutor() as pool:
-            layer_futures = [pool.submit(self.generate_layer, layer, bounds_poly, raster_shape, self._time_idx) for
-                             layer in self.data_layers]
+            layer_futures = [pool.submit(self.generate_layer, layer, bounds_poly, raster_shape, self._time_idx,
+                                         self.raster_resolution_m) for layer in self.data_layers]
         # Store generated layers as they are completed
         for future in as_completed(layer_futures):
             key, result = future.result()
@@ -298,7 +299,8 @@ class PlotServer:
                 {k: layers[k] for k in layers.keys() if k not in self._generated_data_layers})
 
     @staticmethod
-    def generate_layer(layer: DataLayer, bounds_poly: sg.Polygon, raster_shape: Tuple[int, int], hour: int) -> Union[
+    def generate_layer(layer: DataLayer, bounds_poly: sg.Polygon, raster_shape: Tuple[int, int], hour: int,
+                       resolution: float) -> Union[
         Tuple[str, Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]], Tuple[str, None]]:
 
         import shapely.ops as so
@@ -314,7 +316,8 @@ class PlotServer:
             layer_bounds_poly = bounds_poly.difference(layer.cached_area)
         layer.cached_area = so.unary_union([layer.cached_area, bounds_poly])
         try:
-            result = layer.key, layer.generate(layer_bounds_poly, raster_shape, from_cache=from_cache, hour=hour)
+            result = layer.key, layer.generate(layer_bounds_poly, raster_shape, from_cache=from_cache, hour=hour,
+                                               resolution=resolution)
             return result
         except Exception as e:
             print(e)
