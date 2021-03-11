@@ -16,6 +16,9 @@ class OSMTagLayer(BlockableDataLayer):
         self._osm_tag = osm_tag
         self._landuse_polygons = gpd.GeoDataFrame()
 
+    def preload_data(self):
+        pass
+
     def generate(self, bounds_polygon: sg.Polygon, raster_shape: Tuple[int, int], from_cache: bool = False, **kwargs) -> \
             Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]:
         import geoviews as gv
