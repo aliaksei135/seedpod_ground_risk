@@ -32,7 +32,7 @@ class OSMTagLayer(BlockableDataLayer):
         if self.buffer_dist > 0:
             self._landuse_polygons.geometry = self._landuse_polygons.to_crs('EPSG:27700') \
                 .buffer(self.buffer_dist).to_crs('EPSG:4326')
-        polys = gv.Polygons(self._landuse_polygons).opts(style={'alpha': 0.8, 'color': self._colour})
+        polys = gv.Polygons(self._landuse_polygons).opts(alpha=0.8, color=self._colour, line_color=self._colour)
         raster = rasterize(polys, width=raster_shape[0], height=raster_shape[1],
                            x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
         raster_grid = np.copy(list(raster.data.data_vars.items())[0][1].data.astype(np.float))

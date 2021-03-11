@@ -50,8 +50,8 @@ class ResidentialLayer(OSMTagLayer):
         # Construct the GeoViews Polygons
         gv_polys = gv.Polygons(census_df, kdims=['Longitude', 'Latitude'], vdims=['name', 'population']) \
             .opts(color='population',
-                  cmap=colorcet.CET_L18,
-                  colorbar=True, colorbar_opts={'title': 'Population'}, show_legend=False)
+                  cmap=colorcet.CET_L18, alpha=0.8,
+                  colorbar=True, colorbar_opts={'title': 'Population'}, show_legend=False, line_color='population')
 
         if self.buffer_dist > 0:
             buffered_df = deepcopy(census_df)
