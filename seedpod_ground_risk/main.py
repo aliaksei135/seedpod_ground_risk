@@ -74,6 +74,15 @@ class LayerItemDelegate(QWidget):
     def delete_layer(self):
         self._plot_worker.remove_layer(self._layer)
 
+    def edit_layer(self):
+        self._plot_worker.remove_layer(self._layer)
+        wizard = LayerWizard(self, Qt.Window)
+        wizard.exec_()  # Open wizard and block until result
+        if wizard.result() == QDialog.Accepted:
+            layerObj = list(LAYER_OBJECTS.values())[wizard.layerType]
+            layer = layerObj(wizard.layerKey, **wizard.opts)
+            self._plot_worker.add_layer(layer)
+
     def export_path_json(self):
         from PySide2.QtWidgets import QFileDialog
 
@@ -87,6 +96,7 @@ class LayerItemDelegate(QWidget):
         if event.button() == Qt.RightButton:
             menu = QMenu()
             menu.addAction("Delete", self.delete_layer)
+            menu.addAction("Edit Layer", self.edit_layer)
             if isinstance(self._layer, AnnotationLayer):
                 menu.addAction("Export .GeoJSON", self.export_path_json)
             menu.exec_(event.globalPos())
