@@ -10,9 +10,9 @@
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-from PySide2.QtWebEngineWidgets import QWebEngineView
 from PySide2.QtWidgets import *
 
+from PySide2.QtWebEngineWidgets import QWebEngineView
 from .maplayerslistwidget import MapLayersListWidget
 
 
@@ -20,7 +20,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1216, 818)
+        MainWindow.resize(1646, 1109)
         sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -46,9 +46,10 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
         self.centralwidget.setSizePolicy(sizePolicy)
         self.centralwidget.setMinimumSize(QSize(1216, 757))
+        self.gridLayout = QGridLayout(self.centralwidget)
+        self.gridLayout.setObjectName(u"gridLayout")
         self.splitter = QSplitter(self.centralwidget)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setGeometry(QRect(0, 0, 1221, 771))
         sizePolicy.setHeightForWidth(self.splitter.sizePolicy().hasHeightForWidth())
         self.splitter.setSizePolicy(sizePolicy)
         self.splitter.setMinimumSize(QSize(1221, 771))
@@ -85,6 +86,9 @@ class Ui_MainWindow(object):
         self.webview.setSizePolicy(sizePolicy)
         self.webview.setMinimumSize(QSize(800, 781))
         self.splitter.addWidget(self.webview)
+
+        self.gridLayout.addWidget(self.splitter, 0, 0, 1, 1)
+
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusBar = QStatusBar(MainWindow)
         self.statusBar.setObjectName(u"statusBar")
@@ -116,9 +120,9 @@ class Ui_MainWindow(object):
         self.actionAbout_App.setText(QCoreApplication.translate("MainWindow", u"About App", None))
         self.actionRasterise.setText(QCoreApplication.translate("MainWindow", u"Rasterise", None))
         self.actionGenerate.setText(QCoreApplication.translate("MainWindow", u"Generate", None))
-        # if QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
         self.actionGenerate.setToolTip(QCoreApplication.translate("MainWindow", u"Generate Map for current view", None))
-        #endif // QT_CONFIG(tooltip)
+#endif // QT_CONFIG(tooltip)
         self.addLayerButton.setText(QCoreApplication.translate("MainWindow", u"Add Layer", None))
         self.toolBar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
     # retranslateUi
