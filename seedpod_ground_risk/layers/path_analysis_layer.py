@@ -48,7 +48,7 @@ class PathAnalysisLayer(AnnotationLayer):
             path_grid_points = [bresenham.make_line(*pair[0], *pair[1]) for pair in path_pairs]
             # Bring all these points together and remove duplicate coords
             # Flip left to right as bresenham spits out in (y,x) order
-            path_grid_points = np.fliplr(np.unique(np.concatenate(path_grid_points, axis=0), axis=0))
+            path_grid_points = np.unique(np.concatenate(path_grid_points, axis=0), axis=0)
 
             ca_model = casex.CriticalAreaModels()  # Lethal area model using default params for human dimensions
             aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, 2, 2, 2)  # Default aircraft
