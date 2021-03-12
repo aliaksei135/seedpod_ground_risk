@@ -77,10 +77,6 @@ class PathfindingLayer(PathAnalysisLayer):
 
         snapped_path = sg.LineString(snapped_path)
         self.dataframe = gpd.GeoDataFrame({'geometry': [snapped_path]}).set_crs('EPSG:4326')
-        epsg27700_geom = self.dataframe.to_crs('EPSG:27700').geometry
-        self.buffer_poly = gpd.GeoDataFrame(
-            {'geometry': epsg27700_geom.buffer(self.buffer_dist).to_crs('EPSG:4326')}
-        )
         self.endpoint = self.dataframe.iloc[0].geometry.coords[-1]
 
         return super(PathfindingLayer, self).annotate(data, raster_data, **kwargs)
