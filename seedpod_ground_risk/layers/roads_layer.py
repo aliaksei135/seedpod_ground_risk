@@ -199,7 +199,6 @@ class RoadsLayer(DataLayer):
 
         all_road_gdfs = []
         for road_name in unique_road_names:
-            print(".", end='')
             if road_name.startswith('M'):
                 road_width = 22
             else:

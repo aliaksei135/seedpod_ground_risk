@@ -9,7 +9,6 @@ from holoviews.element import Geometry
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.layers.data_layer import DataLayer
 from seedpod_ground_risk.layers.layer import Layer
-from seedpod_ground_risk.layers.path_analysis_layer import PathAnalysisLayer
 
 
 def make_bounds_polygon(*args: Iterable[float]) -> sg.Polygon:
@@ -258,6 +257,8 @@ class PlotServer:
         except Exception as e:
             # Catch-all to prevent plot blanking out and/or crashing app
             # Just display map tiles in case this was transient
+            import traceback
+            traceback.print_exc()
             print(e)
             plot = self._base_tiles
 
@@ -322,6 +323,8 @@ class PlotServer:
                                                resolution=resolution)
             return result
         except Exception as e:
+            import traceback
+            traceback.print_tb(e.__traceback__)
             print(e)
             return layer.key + ' FAILED', None
 
