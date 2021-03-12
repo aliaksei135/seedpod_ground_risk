@@ -80,13 +80,9 @@ class PathAnalysisLayer(AnnotationLayer):
             pool.close()
             pdf_mat = np.rot90(np.sum(pdfs, axis=0))
 
-            labels = []
-            annotation_layers = []
-            for gdf in data:
-                if not gdf.crs:
-                    # If CRS is not set, set EPSG4326 without reprojection as it must be EPSG4326 to display properly
-                    gdf.set_crs(epsg=4326, inplace=True)
-                overlay = gpd.overlay(gdf, self.buffer_poly, how='intersection')
+        a_exp = self.get_lethal_area(30)
+        # Probability * Pop. Density * Lethal Area
+        risk_map = pdf_mat * raster_data[1] * a_exp
 
                 geom_type = overlay.geometry.geom_type.all()
                 if geom_type == 'Polygon' or geom_type == 'MultiPolygon':
@@ -148,3 +144,19 @@ class PathAnalysisLayer(AnnotationLayer):
         lon_idx = int(np.argmin(np.abs(grid['Longitude'] - lon)))
 
         return lon_idx, lat_idx
+
+    def get_lethal_area(self, theta: float):
+        """
+        Calculate lethal area of UAS impact from impact angle
+
+        Method from Smith, P.G. 2000
+
+        :param theta: impact angle in degrees
+        :return:
+        """
+        r_person = 1  # radius of a person
+        h_person = 1.8  # height of a person
+
+        r_uas = 0.5  # UAS radius/halfspan
+
+        return ((2 * (r_person + r_uas) * h_person) / np.tan(np.deg2rad(theta))) + (np.pi * (r_uas + r_person) ** 2)
