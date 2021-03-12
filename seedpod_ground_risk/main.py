@@ -75,7 +75,6 @@ class LayerItemDelegate(QWidget):
         self._plot_worker.remove_layer(self._layer)
 
     def edit_layer(self):
-        old_layer = self._layer
         self._plot_worker.remove_layer(self._layer)
         wizard = LayerWizard(self, Qt.Window)
         wizard.exec_()  # Open wizard and block until result
