@@ -12,4 +12,4 @@ class PlotWebview(QWebEngineView):
     def resizeEvent(self, event: PySide2.QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
         webview_size = self.size()
-        self.resize.emit(webview_size.width(), webview_size.height())
+        self.resize.emit(webview_size.width() - 50, webview_size.height() - 30)
