@@ -128,7 +128,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.addLayerButton.clicked.connect(self.layer_add)
 
-        self.PlotWebview.resize.connect(self.resize_plot)
+        self.plotWebview.resize.connect(self.resize_plot)
 
         self.actionRasterise.triggered.connect(self.menu_config_rasterise)
         # self.actionImport.triggered.connect(self.menu_file_import)
@@ -179,8 +179,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     @Slot(str)
     def plot_ready(self, url):
-        self.PlotWebview.load(url)
-        self.PlotWebview.show()
+        self.plotWebview.load(url)
+        self.plotWebview.show()
 
     @Slot(str)
     def status_update(self, update_str: str):
