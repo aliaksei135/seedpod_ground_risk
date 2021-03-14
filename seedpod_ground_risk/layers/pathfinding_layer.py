@@ -7,6 +7,7 @@ import shapely.geometry as sg
 from holoviews.element import Geometry
 
 from seedpod_ground_risk.layers.path_analysis_layer import PathAnalysisLayer
+from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid
 from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
 from seedpod_ground_risk.pathfinding.algorithm import Algorithm
 from seedpod_ground_risk.pathfinding.heuristic import ManhattanRiskHeuristic, Heuristic
@@ -34,13 +35,13 @@ class PathfindingLayer(PathAnalysisLayer):
 
         raster_grid = raster_data[1] * resolution ** 2
 
-        snapped_start_lon_idx, snapped_start_lat_idx = self._snap_coords_to_grid(raster_data[0], self.start_coords[1],
-                                                                                 self.start_coords[0])
+        snapped_start_lon_idx, snapped_start_lat_idx = snap_coords_to_grid(raster_data[0], self.start_coords[1],
+                                                                           self.start_coords[0])
         start_node = environment.Node(snapped_start_lon_idx, snapped_start_lat_idx,
                                       raster_grid[snapped_start_lat_idx, snapped_start_lon_idx])
 
-        snapped_end_lon_idx, snapped_end_lat_idx = self._snap_coords_to_grid(raster_data[0], self.end_coords[1],
-                                                                             self.end_coords[0])
+        snapped_end_lon_idx, snapped_end_lat_idx = snap_coords_to_grid(raster_data[0], self.end_coords[1],
+                                                                       self.end_coords[0])
         end_node = environment.Node(snapped_end_lon_idx, snapped_end_lat_idx,
                                     raster_grid[snapped_end_lat_idx, snapped_end_lon_idx])
 
