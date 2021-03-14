@@ -125,7 +125,7 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
         wind_vel_y = ss.norm(1, 1).rvs(samples)
 
         bm = BallisticModel(self.ac)
-        means, cov = bm.impact_distance_dist_params_ned_with_wind(alt, vel, heading, wind_vel_x, wind_vel_y, loc_x,
+        means, cov = bm.impact_distance_dist_params_ned_with_wind(alt, vel, heading, wind_vel_y, wind_vel_x, loc_x,
                                                                   loc_y)
         pdf = ss.multivariate_normal(mean=means, cov=cov).pdf
 
