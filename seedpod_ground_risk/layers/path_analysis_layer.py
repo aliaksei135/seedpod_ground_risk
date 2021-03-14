@@ -6,6 +6,8 @@ import numpy as np
 from holoviews.element import Overlay
 
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
+from seedpod_ground_risk.path_analysis.ballistic_model import BallisticModel
+from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid
 from seedpod_ground_risk.pathfinding import bresenham
 
 
@@ -45,7 +47,7 @@ class PathAnalysisLayer(AnnotationLayer):
     def annotate(self, data: List[gpd.GeoDataFrame], raster_data: Tuple[Dict[str, np.array], np.array],
                  resolution=20, **kwargs) -> Overlay:
         import geoviews as gv
-        from scipy.stats import multivariate_normal as mvn
+        import scipy.stats as ss
 
         bounds = (raster_data[0]['Longitude'].min(), raster_data[0]['Latitude'].min(),
                   raster_data[0]['Longitude'].max(), raster_data[0]['Latitude'].max())
@@ -80,8 +82,12 @@ class PathAnalysisLayer(AnnotationLayer):
         aircraft.set_glide_drag_coefficient(0.3)
         bm = BallisticModel(aircraft)
 
-        # Testing fixed pdf for now
-        dist_mean = np.array([-5, 5])
+        samples = 3000
+        # Conjure up our distributions for various things
+        alt = ss.norm(50, 5).rvs(samples)
+        vel = ss.norm(18, 2.5).rvs(samples)
+        wind_vel_y = ss.norm(5, 1).rvs(samples)
+        wind_vel_x = ss.norm(5, 1).rvs(samples)
 
         # Create grid on which to evaluate each point of path with its pdf
         raster_shape = raster_data[1].shape
