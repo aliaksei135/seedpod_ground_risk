@@ -95,7 +95,7 @@ class PathAnalysisLayer(AnnotationLayer):
         # Create grid on which to evaluate each point of path with its pdf
         raster_shape = raster_data[1].shape
         x, y = np.mgrid[0:raster_shape[0], 0:raster_shape[1]]
-        eval_grid = np.dstack((x, y))
+        eval_grid = np.vstack((x.ravel(), y.ravel())).T
 
         dists_for_hdg = {}
         for hdg in headings:
@@ -106,12 +106,12 @@ class PathAnalysisLayer(AnnotationLayer):
             dists_for_hdg[hdg] = (mean / resolution, cov / resolution)
 
         # TODO Use something like Dask or OpenCV to speed this up in future as it's a simple map-reduce
-        def point_dist(c):
-            pdf_mean = c + dist_mean
-            return mvn(pdf_mean, [[15, 5], [5, 7]]).pdf(eval_grid)
+        def point_distr(c):
+            dist_params = dists_for_hdg[c[2]]
+            pdf = ss.multivariate_normal(dist_params[0] + np.array([c[0], c[1]]), dist_params[1]).pdf(eval_grid)
+            return pdf
 
-        def map_chunk(coords):
-            return np.sum([point_dist(c) for c in coords], axis=0)
+        pdf_mat = np.sum([point_distr(c) for c in path_grid_points], axis=0).reshape(raster_shape)
 
         # TODO Remove all these flip and rotates; the indices must be swapping somewhere else?
         pdfs = pool.map(map_chunk, np.array_split(path_grid_points, cpu_count() * 2))
