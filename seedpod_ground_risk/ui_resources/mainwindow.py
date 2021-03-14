@@ -12,21 +12,21 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
-from PySide2.QtWebEngineWidgets import QWebEngineView
 from .maplayerslistwidget import MapLayersListWidget
+from .plot_webview import PlotWebview
 
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1646, 1109)
+        MainWindow.resize(1200, 836)
         sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
         MainWindow.setSizePolicy(sizePolicy)
-        MainWindow.setMinimumSize(QSize(1200, 800))
+        MainWindow.setMinimumSize(QSize(1200, 836))
         MainWindow.setBaseSize(QSize(1200, 800))
         self.actionImport = QAction(MainWindow)
         self.actionImport.setObjectName(u"actionImport")
@@ -45,25 +45,23 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(u"centralwidget")
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
         self.centralwidget.setSizePolicy(sizePolicy)
-        self.centralwidget.setMinimumSize(QSize(1216, 757))
+        self.centralwidget.setMinimumSize(QSize(1200, 757))
         self.gridLayout = QGridLayout(self.centralwidget)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.splitter = QSplitter(self.centralwidget)
-        self.splitter.setObjectName(u"splitter")
-        sizePolicy.setHeightForWidth(self.splitter.sizePolicy().hasHeightForWidth())
-        self.splitter.setSizePolicy(sizePolicy)
-        self.splitter.setMinimumSize(QSize(1221, 771))
-        self.splitter.setOrientation(Qt.Horizontal)
-        self.verticalLayoutWidget = QWidget(self.splitter)
-        self.verticalLayoutWidget.setObjectName(u"verticalLayoutWidget")
-        self.verticalLayout = QVBoxLayout(self.verticalLayoutWidget)
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.horizontalLayout_4.setSizeConstraint(QLayout.SetMinimumSize)
+        self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.listWidget = MapLayersListWidget(self.verticalLayoutWidget)
+        self.verticalLayout.setContentsMargins(-1, -1, 0, -1)
+        self.listWidget = MapLayersListWidget(self.centralwidget)
         self.listWidget.setObjectName(u"listWidget")
         self.listWidget.setEnabled(False)
-        sizePolicy.setHeightForWidth(self.listWidget.sizePolicy().hasHeightForWidth())
-        self.listWidget.setSizePolicy(sizePolicy)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.listWidget.sizePolicy().hasHeightForWidth())
+        self.listWidget.setSizePolicy(sizePolicy1)
         self.listWidget.setMinimumSize(QSize(405, 490))
 
         self.verticalLayout.addWidget(self.listWidget)
@@ -71,23 +69,24 @@ class Ui_MainWindow(object):
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalLayout.setContentsMargins(-1, 5, -1, 5)
-        self.addLayerButton = QPushButton(self.verticalLayoutWidget)
+        self.addLayerButton = QPushButton(self.centralwidget)
         self.addLayerButton.setObjectName(u"addLayerButton")
 
         self.horizontalLayout.addWidget(self.addLayerButton)
 
-
         self.verticalLayout.addLayout(self.horizontalLayout)
 
-        self.splitter.addWidget(self.verticalLayoutWidget)
-        self.webview = QWebEngineView(self.splitter)
-        self.webview.setObjectName(u"webview")
-        sizePolicy.setHeightForWidth(self.webview.sizePolicy().hasHeightForWidth())
-        self.webview.setSizePolicy(sizePolicy)
-        self.webview.setMinimumSize(QSize(800, 781))
-        self.splitter.addWidget(self.webview)
+        self.horizontalLayout_4.addLayout(self.verticalLayout)
 
-        self.gridLayout.addWidget(self.splitter, 0, 0, 1, 1)
+        self.plotWebview = PlotWebview(self.centralwidget)
+        self.plotWebview.setObjectName(u"plotWebview")
+        sizePolicy.setHeightForWidth(self.plotWebview.sizePolicy().hasHeightForWidth())
+        self.plotWebview.setSizePolicy(sizePolicy)
+        self.plotWebview.setMinimumSize(QSize(800, 781))
+
+        self.horizontalLayout_4.addWidget(self.plotWebview)
+
+        self.gridLayout.addLayout(self.horizontalLayout_4, 0, 0, 1, 1)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusBar = QStatusBar(MainWindow)

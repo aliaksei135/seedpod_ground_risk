@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1646</width>
-    <height>1109</height>
+    <width>1200</width>
+    <height>836</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,7 +19,7 @@
   <property name="minimumSize">
    <size>
     <width>1200</width>
-    <height>800</height>
+    <height>836</height>
    </size>
   </property>
   <property name="baseSize">
@@ -40,37 +40,28 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>1216</width>
+     <width>1200</width>
      <height>757</height>
     </size>
    </property>
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <widget class="QSplitter" name="splitter">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetMinimumSize</enum>
       </property>
-      <property name="minimumSize">
-       <size>
-        <width>1221</width>
-        <height>771</height>
-       </size>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <widget class="QWidget" name="verticalLayoutWidget">
+      <item>
        <layout class="QVBoxLayout" name="verticalLayout">
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
         <item>
          <widget class="MapLayersListWidget" name="listWidget">
           <property name="enabled">
            <bool>false</bool>
           </property>
           <property name="sizePolicy">
-           <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+           <sizepolicy hsizetype="Fixed" vsizetype="MinimumExpanding">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
@@ -101,22 +92,24 @@
          </layout>
         </item>
        </layout>
-      </widget>
-      <widget class="QWebEngineView" name="webview" native="true">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>800</width>
-         <height>781</height>
-        </size>
-       </property>
-      </widget>
-     </widget>
+      </item>
+      <item>
+       <widget class="PlotWebview" name="plotWebview" native="true">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>800</width>
+          <height>781</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -184,15 +177,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QWebEngineView</class>
-   <extends>QWidget</extends>
-   <header>qwebengineview.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>MapLayersListWidget</class>
    <extends>QListWidget</extends>
    <header>maplayerslistwidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>PlotWebview</class>
+   <extends>QWidget</extends>
+   <header>plot_webview.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
