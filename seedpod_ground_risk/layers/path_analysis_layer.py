@@ -77,6 +77,7 @@ class PathAnalysisLayer(AnnotationLayer):
         ac_width = 2
         ac_length = 2
         ac_mass = 2
+        event_probability = 0.05
         aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, ac_width, ac_length,
                                        ac_mass)  # Default aircraft
         aircraft.set_ballistic_drag_coefficient(0.8)
@@ -115,7 +116,7 @@ class PathAnalysisLayer(AnnotationLayer):
 
         a_exp = get_lethal_area(30, aircraft.width)
         # Probability * Pop. Density * Lethal Area
-        risk_map = pdf_mat * raster_data[1] * a_exp
+        risk_map = pdf_mat * raster_data[1] * a_exp * event_probability
 
         risk_raster = gv.Image(risk_map, bounds=bounds).options(alpha=0.7, cmap='viridis', tools=['hover'],
                                                                 clipping_colors={'min': (0, 0, 0, 0)})
