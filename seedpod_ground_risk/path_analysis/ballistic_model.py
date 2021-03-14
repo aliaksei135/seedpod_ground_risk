@@ -73,7 +73,7 @@ class BallisticModel(DescentModel):
         d_i, _, _, t_i = self.bm.compute_ballistic_distance(altitude, velocity, 0)
 
         # Compensate for x,y axes being rotated compared to bearings
-        theta = (heading - (np.pi / 2)) * (2 * np.pi)
+        theta = (heading - (np.pi / 2)) % (2 * np.pi)
         # Get angle distribution in between body and NED frame
         # Form the array structure required and transform
         arr = np.vstack((np.zeros(d_i.shape), d_i, t_i, theta, wind_vel_x, wind_vel_y))
