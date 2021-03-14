@@ -40,7 +40,6 @@ class PathAnalysisLayer(AnnotationLayer):
         self.buffer_poly = None
 
     def preload_data(self) -> NoReturn:
-
         self.dataframe = gpd.read_file(self.filepath)
         self.endpoint = self.dataframe.iloc[0].geometry.coords[-1]
 
@@ -67,6 +66,10 @@ class PathAnalysisLayer(AnnotationLayer):
             headings.append(angle)
         # Feed these pairs into the Bresenham algo to find the intermediate points
         path_grid_points = [bresenham.make_line(*pair[0], *pair[1]) for pair in path_pairs]
+        for idx, segment in enumerate(path_grid_points):
+            n = len(segment)
+            point_headings = np.full(n, headings[idx])
+            path_grid_points[idx] = np.column_stack((np.array(segment), point_headings))
         # Bring all these points together and remove duplicate coords
         # Flip left to right as bresenham spits out in (y,x) order
         path_grid_points = np.unique(np.concatenate(path_grid_points, axis=0), axis=0)
@@ -94,9 +97,13 @@ class PathAnalysisLayer(AnnotationLayer):
         x, y = np.mgrid[0:raster_shape[0], 0:raster_shape[1]]
         eval_grid = np.dstack((x, y))
 
-        from pathos.multiprocessing import Pool
-        from pathos.multiprocessing import cpu_count
-        pool = Pool()
+        dists_for_hdg = {}
+        for hdg in headings:
+            mean, cov = bm.impact_distance_dist_params_ned_with_wind(alt, vel,
+                                                                     ss.norm(hdg, np.deg2rad(2)).rvs(samples),
+                                                                     wind_vel_y, wind_vel_x,
+                                                                     0, 0)
+            dists_for_hdg[hdg] = (mean / resolution, cov / resolution)
 
         # TODO Use something like Dask or OpenCV to speed this up in future as it's a simple map-reduce
         def point_dist(c):
@@ -170,32 +177,3 @@ class PathAnalysisLayer(AnnotationLayer):
 
     def clear_cache(self) -> NoReturn:
         pass
-
-    def _snap_coords_to_grid(self, grid, lon: float, lat: float) -> Tuple[int, int]:
-        """
-        Snap coordinates to grid indices
-        :param grid: raster grid coordinates
-        :param lon: longitude to snap
-        :param lat: latitude to snap
-        :return: (x, y) tuple of grid indices
-        """
-        lat_idx = int(np.argmin(np.abs(grid['Latitude'] - lat)))
-        lon_idx = int(np.argmin(np.abs(grid['Longitude'] - lon)))
-
-        return lon_idx, lat_idx
-
-    def get_lethal_area(self, theta: float):
-        """
-        Calculate lethal area of UAS impact from impact angle
-
-        Method from Smith, P.G. 2000
-
-        :param theta: impact angle in degrees
-        :return:
-        """
-        r_person = 1  # radius of a person
-        h_person = 1.8  # height of a person
-
-        r_uas = 0.5  # UAS radius/halfspan
-
-        return ((2 * (r_person + r_uas) * h_person) / np.tan(np.deg2rad(theta))) + (np.pi * (r_uas + r_person) ** 2)
