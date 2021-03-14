@@ -41,7 +41,19 @@ LAYER_OPTIONS = {
     },
     'Existing Path Analysis': {
         'File': ('path', 'filepath', str),
-        'Buffer Distance [m]': (r'\d{0,3}', 'buffer_dist', int),
+        'Aircraft Width [m]': (r'-?\d{0,3}\.?\d+', 'ac_width', float),
+        'Aircraft Length [m]': (r'-?\d{0,3}\.?\d+', 'ac_length', float),
+        'Aircraft Mass [kg]': (r'-?\d{0,3}\.?\d+', 'ac_mass', float),
+        'Aircraft Glide Ratio': (r'-?\d{0,3}\.?\d+', 'ac_glide_ratio', float),
+        'Aircraft Glide Speed [m/s]': (r'-?\d{0,3}\.?\d+', 'ac_glide_speed', float),
+        'Aircraft Glide Drag Coeff': (r'-?\d{0,3}\.?\d+', 'ac_glide_drag_coeff', float),
+        'Aircraft Ballistic Drag Coeff': (r'-?\d{0,3}\.?\d+', 'ac_ballistic_drag_coeff', float),
+        'Aircraft Ballistic Frontal Area [m^2]': (r'-?\d{0,3}\.?\d+', 'ac_ballistic_frontal_area', float),
+        'Aircraft Failure Probability [0-1]': (r'-?\d{0,3}\.?\d+', 'ac_failure_prob', float),
+        'Flight Altitude [m]': (r'-?\d{0,3}\.?\d+', 'alt', float),
+        'Flight Airspeed [m/s]': (r'-?\d{0,3}\.?\d+', 'vel', float),
+        'Wind Speed [m/s]': (r'-?\d{0,3}\.?\d+', 'wind_vel', float),
+        'Wind Bearing [deg]': (r'-?\d{0,3}\.?\d+', 'wind_dir', float)
     },
     'External Obstacles': {
         'File': ('path', 'filepath', str),
@@ -50,12 +62,24 @@ LAYER_OPTIONS = {
         'Blocking': (bool, 'blocking', bool),
     },
     'Pathfinding': {
-        'Buffer Distance [m]': (r'\d{0,3}', 'buffer', int),
         'Start Latitude [dd]': (r'-?\d{0,3}\.\d+', 'start_lat', float),
         'Start Longitude [dd]': (r'-?\d{0,3}\.\d+', 'start_lon', float),
         'End Latitude [dd]': (r'-?\d{0,3}\.\d+', 'end_lat', float),
         'End Longitude [dd]': (r'-?\d{0,3}\.\d+', 'end_lon', float),
         'Algorithm': ('algos', 'algo', eval),
-        'Risk-Distance Ratio': (r'\d{0,3}(\.\d+)?', 'rdr', float)
+        'Risk-Distance Ratio': (r'\d{0,3}(\.\d+)?', 'rdr', float),
+        'Aircraft Width [m]': (r'-?\d{0,3}\.?\d+', 'ac_width', float),
+        'Aircraft Length [m]': (r'-?\d{0,3}\.?\d+', 'ac_length', float),
+        'Aircraft Mass [kg]': (r'-?\d{0,3}\.?\d+', 'ac_mass', float),
+        'Aircraft Glide Ratio': (r'-?\d{0,3}\.?\d+', 'ac_glide_ratio', float),
+        'Aircraft Glide Speed [m/s]': (r'-?\d{0,3}\.?\d+', 'ac_glide_speed', float),
+        'Aircraft Glide Drag Coeff': (r'-?\d{0,3}\.?\d+', 'ac_glide_drag_coeff', float),
+        'Aircraft Ballistic Drag Coeff': (r'-?\d{0,3}\.?\d+', 'ac_ballistic_drag_coeff', float),
+        'Aircraft Ballistic Frontal Area [m^2]': (r'-?\d{0,3}\.?\d+', 'ac_ballistic_frontal_area', float),
+        'Aircraft Failure Probability [0-1]': (r'-?\d{0,3}\.?\d+', 'ac_failure_prob', float),
+        'Flight Altitude [m]': (r'-?\d{0,3}\.?\d+', 'alt', float),
+        'Flight Airspeed [m/s]': (r'-?\d{0,3}\.?\d+', 'vel', float),
+        'Wind Speed [m/s]': (r'-?\d{0,3}\.?\d+', 'wind_vel', float),
+        'Wind Bearing [deg]': (r'-?\d{0,3}\.?\d+', 'wind_dir', float)
     }
 }
