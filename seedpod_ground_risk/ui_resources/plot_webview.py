@@ -1,3 +1,4 @@
+import PySide2
 from PySide2.QtCore import Signal
 from PySide2.QtWebEngineWidgets import QWebEngineView
 
@@ -8,7 +9,7 @@ class PlotWebview(QWebEngineView):
     def __init__(self, *args, **kwargs):
         super(PlotWebview, self).__init__(*args, **kwargs)
 
-    def resize_event(self, event):
-        super().resize_event(event)
+    def resizeEvent(self, event: PySide2.QtGui.QResizeEvent) -> None:
+        super().resizeEvent(event)
         webview_size = self.size()
         self.resize.emit(webview_size.width(), webview_size.height())

@@ -128,6 +128,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.addLayerButton.clicked.connect(self.layer_add)
 
+        self.PlotWebview.resize.connect(self.resize_plot)
+
         self.actionRasterise.triggered.connect(self.menu_config_rasterise)
         # self.actionImport.triggered.connect(self.menu_file_import)
         self.actionExport.triggered.connect(self.menu_file_export)
@@ -177,8 +179,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     @Slot(str)
     def plot_ready(self, url):
-        self.webview.load(url)
-        self.webview.show()
+        self.PlotWebview.load(url)
+        self.PlotWebview.show()
 
     @Slot(str)
     def status_update(self, update_str: str):
@@ -207,6 +209,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             layer = layerObj(wizard.layerKey, **wizard.opts)
             self.plot_worker.add_layer(layer)
 
+    def resize_plot(self, width, height):
+        self.plot_worker.resize_plot(width, height)
+
     def layer_edit(self, item):
         print('Editing ', item)
         pass
@@ -220,10 +225,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             [self.listWidget.item(n).text() for n in range(self.listWidget.count())])
 
     def time_changed(self, value):
+        from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps
         try:
             labels = generate_week_timesteps()
         except NameError:
-            from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps
             labels = generate_week_timesteps()
         self.plot_worker.signals.set_time.emit(value)
         self.timeSliderLabel.setText(labels[value])
