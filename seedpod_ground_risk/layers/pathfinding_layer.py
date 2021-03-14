@@ -16,12 +16,11 @@ from seedpod_ground_risk.pathfinding.heuristic import ManhattanRiskHeuristic, He
 class PathfindingLayer(PathAnalysisLayer):
 
     def __init__(self, key, start_lat: float = 0, start_lon: float = 0, end_lat: float = 0, end_lon: float = 0,
-                 buffer: float = 0, algo: Algorithm = RiskGridAStar, heuristic: Heuristic = ManhattanRiskHeuristic,
-                 rdr: float = 0.5):
-        super().__init__(key, '')
+                 algo: Algorithm = RiskGridAStar, heuristic: Heuristic = ManhattanRiskHeuristic,
+                 rdr: float = 0.5, **kwargs):
+        super().__init__(key, '', **kwargs)
         self.start_coords = (start_lat, start_lon)
         self.end_coords = (end_lat, end_lon)
-        self.buffer_dist = buffer
         self.algo = algo
         self.heuristic = heuristic
         self.rdr = rdr

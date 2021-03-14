@@ -30,10 +30,26 @@ def get_lethal_area(theta: float, uas_width: float):
 
 class PathAnalysisLayer(AnnotationLayer):
 
-    def __init__(self, key: str, filepath: str = '', buffer_dist: float = None, **kwargs):
+    def __init__(self, key: str, filepath: str = '', ac_width: float = 2, ac_length: float = 2,
+                 ac_mass: float = 2, ac_glide_ratio: float = 12, ac_glide_speed: float = 15,
+                 ac_glide_drag_coeff: float = 0.8, ac_ballistic_drag_coeff: float = 0.8,
+                 ac_ballistic_frontal_area: float = 3, ac_failure_prob: float = 0.05, alt: float = 50, vel: float = 18,
+                 wind_vel: float = 5, wind_dir: float = 45, **kwargs):
         super(PathAnalysisLayer, self).__init__(key)
         self.filepath = filepath
-        self.buffer_dist = buffer_dist
+
+        self.aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, ac_width, ac_length, ac_mass)
+        self.aircraft.set_ballistic_drag_coefficient(ac_ballistic_drag_coeff)
+        self.aircraft.set_ballistic_frontal_area(ac_ballistic_frontal_area)
+        self.aircraft.set_glide_speed_ratio(ac_glide_speed, ac_glide_ratio)
+        self.aircraft.set_glide_drag_coefficient(ac_glide_drag_coeff)
+
+        self.alt = alt
+        self.vel = vel
+        self.wind_vel = wind_vel
+        self.wind_dir = np.deg2rad(wind_dir)
+
+        self.event_prob = ac_failure_prob
 
         import geopandas as gpd
         self.dataframe = gpd.GeoDataFrame()
@@ -74,24 +90,16 @@ class PathAnalysisLayer(AnnotationLayer):
         # Flip left to right as bresenham spits out in (y,x) order
         path_grid_points = np.unique(np.concatenate(path_grid_points, axis=0), axis=0)
 
-        ac_width = 2
-        ac_length = 2
-        ac_mass = 2
-        event_probability = 0.05
-        aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, ac_width, ac_length,
-                                       ac_mass)  # Default aircraft
-        aircraft.set_ballistic_drag_coefficient(0.8)
-        aircraft.set_ballistic_frontal_area(3)
-        aircraft.set_glide_speed_ratio(15, 12)
-        aircraft.set_glide_drag_coefficient(0.3)
-        bm = BallisticModel(aircraft)
+        bm = BallisticModel(self.aircraft)
 
         samples = 3000
         # Conjure up our distributions for various things
-        alt = ss.norm(50, 5).rvs(samples)
-        vel = ss.norm(18, 2.5).rvs(samples)
-        wind_vel_y = ss.norm(5, 1).rvs(samples)
-        wind_vel_x = ss.norm(5, 1).rvs(samples)
+        alt = ss.norm(self.alt, 5).rvs(samples)
+        vel = ss.norm(self.vel, 2.5).rvs(samples)
+        wind_vels = ss.norm(self.wind_vel, 1).rvs(samples)
+        wind_dirs = ss.norm(self.wind_dir, 5).rvs(samples)
+        wind_vel_y = wind_vels * np.sin(wind_dirs)
+        wind_vel_x = wind_vels * np.cos(wind_dirs)
 
         # Create grid on which to evaluate each point of path with its pdf
         raster_shape = raster_data[1].shape
@@ -114,9 +122,9 @@ class PathAnalysisLayer(AnnotationLayer):
 
         pdf_mat = np.sum([point_distr(c) for c in path_grid_points], axis=0).reshape(raster_shape)
 
-        a_exp = get_lethal_area(30, aircraft.width)
+        a_exp = get_lethal_area(30, self.aircraft.width)
         # Probability * Pop. Density * Lethal Area
-        risk_map = pdf_mat * raster_data[1] * a_exp * event_probability
+        risk_map = pdf_mat * raster_data[1] * a_exp * self.event_prob
 
         risk_raster = gv.Image(risk_map, bounds=bounds).options(alpha=0.7, cmap='viridis', tools=['hover'],
                                                                 clipping_colors={'min': (0, 0, 0, 0)})
