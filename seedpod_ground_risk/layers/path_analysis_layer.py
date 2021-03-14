@@ -9,6 +9,23 @@ from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.pathfinding import bresenham
 
 
+def get_lethal_area(theta: float, uas_width: float):
+    """
+    Calculate lethal area of UAS impact from impact angle
+
+    Method from :cite: Smith, P.G. 2000
+
+    :param theta: impact angle in degrees
+    :param uas_width: UAS width in metres
+    :return:
+    """
+    r_person = 1  # radius of a person
+    h_person = 1.8  # height of a person
+    r_uas = uas_width / 2  # UAS halfspan
+
+    return ((2 * (r_person + r_uas) * h_person) / np.tan(np.deg2rad(theta))) + (np.pi * (r_uas + r_person) ** 2)
+
+
 class PathAnalysisLayer(AnnotationLayer):
 
     def __init__(self, key: str, filepath: str = '', buffer_dist: float = None, **kwargs):
