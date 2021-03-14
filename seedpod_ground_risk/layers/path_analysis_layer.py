@@ -113,12 +113,7 @@ class PathAnalysisLayer(AnnotationLayer):
 
         pdf_mat = np.sum([point_distr(c) for c in path_grid_points], axis=0).reshape(raster_shape)
 
-        # TODO Remove all these flip and rotates; the indices must be swapping somewhere else?
-        pdfs = pool.map(map_chunk, np.array_split(path_grid_points, cpu_count() * 2))
-        pool.close()
-        pdf_mat = np.sum(pdfs, axis=0)
-
-        a_exp = self.get_lethal_area(30)
+        a_exp = get_lethal_area(30, aircraft.width)
         # Probability * Pop. Density * Lethal Area
         risk_map = pdf_mat * raster_data[1] * a_exp
 
