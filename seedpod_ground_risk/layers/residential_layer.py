@@ -77,13 +77,14 @@ class ResidentialLayer(OSMTagLayer):
         import os
 
         # Import Census boundaries in Ordnance Survey grid and reproject
-        census_wards_df = gpd.read_file(os.sep.join(('static_data', 'england_wa_2011_clipped.shp'))).drop(
+        census_wards_df = gpd.read_file(
+            os.sep.join(('..', 'static_data', 'england_wa_2011_clipped.shp'))).drop(
             ['altname', 'oldcode'], axis=1)
         if not census_wards_df.crs:
             census_wards_df = census_wards_df.set_crs('EPSG:27700')
         census_wards_df = census_wards_df.to_crs('EPSG:4326')
         # Import census ward densities
-        density_df = pd.read_csv(os.sep.join(('static_data', 'density.csv')), header=0)
+        density_df = pd.read_csv(os.sep.join(('..', 'static_data', 'density.csv')), header=0)
         # Scale from hectares to m^2
         density_df['area'] = density_df['area'] * 10000
         density_df['density'] = density_df['density'] / 10000
