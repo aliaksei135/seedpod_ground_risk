@@ -69,20 +69,16 @@ class PathAnalysisLayer(AnnotationLayer):
         # Flip left to right as bresenham spits out in (y,x) order
         path_grid_points = np.unique(np.concatenate(path_grid_points, axis=0), axis=0)
 
-        ca_model = casex.CriticalAreaModels()  # Lethal area model using default params for human dimensions
-        aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, 2, 2, 2)  # Default aircraft
+        ac_width = 2
+        ac_length = 2
+        ac_mass = 2
+        aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, ac_width, ac_length,
+                                       ac_mass)  # Default aircraft
         aircraft.set_ballistic_drag_coefficient(0.8)
         aircraft.set_ballistic_frontal_area(3)
-        fc = casex.FrictionCoefficients()
-        aircraft.set_friction_coefficient(
-            fc.get_coefficient(casex.enums.AircraftMaterial.ALUMINUM, casex.enums.GroundMaterial.CONCRETE))
-        ballistic_model = casex.BallisticDescent2ndOrderDragApproximation()
-        ballistic_model.set_aircraft(aircraft)
-        distance_impact, velocity_impact, angle_impact, time_impact = ballistic_model.compute_ballistic_distance(
-            133, 20, 1)
-        ca_model.critical_area(casex.enums.CriticalAreaModel.JARUS,
-                               aircraft, velocity_impact,
-                               angle_impact, 0)
+        aircraft.set_glide_speed_ratio(15, 12)
+        aircraft.set_glide_drag_coefficient(0.3)
+        bm = BallisticModel(aircraft)
 
         # Testing fixed pdf for now
         dist_mean = np.array([-5, 5])
