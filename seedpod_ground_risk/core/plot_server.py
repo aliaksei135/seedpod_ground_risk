@@ -74,7 +74,7 @@ class PlotServer:
         self._generated_data_layers = {}
         self.data_layer_order = []
         self.data_layers = [ResidentialLayer('Residential Population', buffer_dist=30),
-                            RoadsLayer('Road Traffic Population per Hour')]
+                            RoadsLayer('Road Traffic Population/Hour')]
 
         self.annotation_layers = []
 
