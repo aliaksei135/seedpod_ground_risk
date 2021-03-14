@@ -50,11 +50,19 @@ class PathAnalysisLayer(AnnotationLayer):
         bounds = (raster_data[0]['Longitude'].min(), raster_data[0]['Latitude'].min(),
                   raster_data[0]['Longitude'].max(), raster_data[0]['Latitude'].max())
 
+        line_coords = list(self.dataframe.iloc[0].geometry.coords)
         # Snap the line string nodes to the raster grid
-        snapped_points = [self._snap_coords_to_grid(raster_data[0], *coords) for coords in
-                          self.dataframe.iloc[0].geometry.coords]
+        snapped_points = [snap_coords_to_grid(raster_data[0], *coords) for coords in line_coords]
         # Generate pairs of consecutive (x,y) coords
         path_pairs = list(map(list, zip(snapped_points, snapped_points[1:])))
+        headings = []
+        for i in range(1, len(line_coords)):
+            prev = line_coords[i - 1]
+            next = line_coords[i]
+            x = np.sin(next[0] - prev[0]) * np.cos(next[1])
+            y = np.cos(prev[1]) * np.sin(next[1]) - np.sin(prev[1]) * np.cos(next[1]) * np.cos(next[0] - prev[0])
+            angle = np.arctan2(x, y) % 2 * np.pi
+            headings.append(angle)
         # Feed these pairs into the Bresenham algo to find the intermediate points
         path_grid_points = [bresenham.make_line(*pair[0], *pair[1]) for pair in path_pairs]
         # Bring all these points together and remove duplicate coords
