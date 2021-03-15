@@ -78,6 +78,7 @@ class BallisticModel(DescentModel):
         # Form the array structure required and transform
         arr = np.vstack((np.zeros(d_i.shape), d_i, t_i, theta, wind_vel_x, wind_vel_y))
         transformed_arr = np.apply_along_axis(paef_to_ned_with_wind, 0, arr)
+        transformed_arr = transformed_arr[:, ~np.isnan(transformed_arr).all(axis=0)]
         gm = GaussianMixture()
         gm.fit_predict(transformed_arr.T)
         # If there the event and NED origins match, no need to translate
