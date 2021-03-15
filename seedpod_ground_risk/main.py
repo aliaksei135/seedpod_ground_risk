@@ -6,6 +6,7 @@ import time
 import PySide2
 
 from seedpod_ground_risk.core.plot_worker import PlotWorker
+from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.ui_resources.add_layer_wizard import LayerWizard
 from seedpod_ground_risk.ui_resources.layer_options import LAYER_OBJECTS
 from seedpod_ground_risk.ui_resources.layerlistdelegate import Ui_delegate
@@ -73,11 +74,31 @@ class LayerItemDelegate(QWidget):
     def delete_layer(self):
         self._plot_worker.remove_layer(self._layer)
 
+    def edit_layer(self):
+        self._plot_worker.remove_layer(self._layer)
+        wizard = LayerWizard(self, Qt.Window)
+        wizard.exec_()  # Open wizard and block until result
+        if wizard.result() == QDialog.Accepted:
+            layerObj = list(LAYER_OBJECTS.values())[wizard.layerType]
+            layer = layerObj(wizard.layerKey, **wizard.opts)
+            self._plot_worker.add_layer(layer)
+
+    def export_path_json(self):
+        from PySide2.QtWidgets import QFileDialog
+
+        file_dir = QFileDialog.getExistingDirectory(self, "Save plot .json file...", os.getcwd(),
+                                                    QFileDialog.ShowDirsOnly)
+        if file_dir:
+            self._plot_worker.export_path_json(self._layer, file_dir)
+
     def mousePressEvent(self, event: PySide2.QtGui.QMouseEvent) -> None:
         super().mousePressEvent(event)
         if event.button() == Qt.RightButton:
             menu = QMenu()
             menu.addAction("Delete", self.delete_layer)
+            menu.addAction("Edit Layer", self.edit_layer)
+            if isinstance(self._layer, AnnotationLayer):
+                menu.addAction("Export .GeoJSON", self.export_path_json)
             menu.exec_(event.globalPos())
 
 
@@ -116,6 +137,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.timeSlider.valueChanged.connect(self.time_changed)
 
         self.addLayerButton.clicked.connect(self.layer_add)
+
+        self.plotWebview.resize.connect(self.resize_plot)
 
         self.actionRasterise.triggered.connect(self.menu_config_rasterise)
         # self.actionImport.triggered.connect(self.menu_file_import)
@@ -166,8 +189,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     @Slot(str)
     def plot_ready(self, url):
-        self.webview.load(url)
-        self.webview.show()
+        self.plotWebview.load(url)
+        self.plotWebview.show()
 
     @Slot(str)
     def status_update(self, update_str: str):
@@ -196,6 +219,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             layer = layerObj(wizard.layerKey, **wizard.opts)
             self.plot_worker.add_layer(layer)
 
+    def resize_plot(self, width, height):
+        self.plot_worker.resize_plot(width, height)
+
     def layer_edit(self, item):
         print('Editing ', item)
         pass
@@ -209,10 +235,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             [self.listWidget.item(n).text() for n in range(self.listWidget.count())])
 
     def time_changed(self, value):
+        from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps
         try:
             labels = generate_week_timesteps()
         except NameError:
-            from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps
             labels = generate_week_timesteps()
         self.plot_worker.signals.set_time.emit(value)
         self.timeSliderLabel.setText(labels[value])

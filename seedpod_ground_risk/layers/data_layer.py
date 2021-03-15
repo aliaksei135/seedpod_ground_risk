@@ -23,10 +23,11 @@ class DataLayer(Layer, abc.ABC):
         self.cached_area = sg.Polygon()
 
     @abc.abstractmethod
-    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Tuple[
+    def generate(self, bounds_polygon: sg.Polygon, raster_shape: Tuple[int, int], from_cache: bool = False, **kwargs) -> Tuple[
         Geometry, np.ndarray, gpd.GeoDataFrame]:
         """
         Generate the map of this layer. This is called asynchronously, so cannot access plot_server members.
+        :param raster_shape:
         :param shapely.geometry.Polygon bounds_polygon: the bounding polygon for which to generate the map
         :param bool from_cache: flag to indicate whether to use cached data to fulfill this request
         :return: an Overlay-able holoviews layer with specific options
