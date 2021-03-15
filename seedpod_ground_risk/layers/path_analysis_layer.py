@@ -7,7 +7,7 @@ from holoviews.element import Overlay
 
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.path_analysis.ballistic_model import BallisticModel
-from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid
+from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid, bearing_to_angle
 from seedpod_ground_risk.pathfinding import bresenham
 
 
@@ -97,7 +97,7 @@ class PathAnalysisLayer(AnnotationLayer):
         alt = ss.norm(self.alt, 5).rvs(samples)
         vel = ss.norm(self.vel, 2.5).rvs(samples)
         wind_vels = ss.norm(self.wind_vel, 1).rvs(samples)
-        wind_dirs = ss.norm(self.wind_dir, 5).rvs(samples)
+        wind_dirs = bearing_to_angle(ss.norm(self.wind_dir, 5).rvs(samples))
         wind_vel_y = wind_vels * np.sin(wind_dirs)
         wind_vel_x = wind_vels * np.cos(wind_dirs)
 
