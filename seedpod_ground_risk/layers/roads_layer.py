@@ -115,8 +115,8 @@ class RoadsLayer(DataLayer):
                              kdims=['Longitude', 'Latitude'], vdims=['population_per_hour', 'density']).opts(
             colorbar=True,
             cmap=colorcet.CET_L18,
-            color='population',
-            line_color='population')
+            color='population_per_hour',
+            line_color='population_per_hour')
         bounds = bounds_polygon.bounds
         raster = rasterize(points, aggregator=ds.mean('density'), width=raster_shape[0], height=raster_shape[1],
                            x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
