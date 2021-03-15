@@ -128,7 +128,8 @@ class PathAnalysisLayer(AnnotationLayer):
 
         risk_raster = gv.Image(risk_map, bounds=bounds).options(alpha=0.7, cmap='viridis', tools=['hover'],
                                                                 clipping_colors={'min': (0, 0, 0, 0)})
-        risk_raster = risk_raster.redim.range(z=(1e-11, risk_map.max()))
+        risk_raster = risk_raster.redim.range(z=(1e-9, risk_map.max()))
+        print('Max probability of striking person: ', risk_map.max())
 
         # labels = []
         # annotation_layers = []
