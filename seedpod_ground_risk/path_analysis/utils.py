@@ -32,3 +32,19 @@ def snap_coords_to_grid(grid, lon: float, lat: float) -> Tuple[int, int]:
     lon_idx = int(np.argmin(np.abs(grid['Longitude'] - lon)))
 
     return lon_idx, lat_idx
+
+
+def bearing_to_angle(bearing, is_rad=True):
+    """
+    Convert bearing(s) to standard x-y axes with the angle anti clockwise from the x axis.
+
+    :param bearing: the bearings
+    :type bearing: float or np.array
+    :param is_rad: flag indicating whether bearings are in radians
+    :type is_rad: bool
+    :return: angles of same shape and units as input
+    """
+    if is_rad:
+        return (2 * np.pi - (bearing - (0.5 * np.pi))) % (2 * np.pi)
+    else:
+        return (360 - (bearing - 90)) % 360
