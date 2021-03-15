@@ -225,6 +225,7 @@ class PlotServer:
                         raster_grid = np.flipud(raster_grid)
                         raster_indices['Latitude'] = np.flip(raster_indices['Latitude'])
                         annotations = []
+                        print('Annotating Layers...')
                         for layer in self.annotation_layers:
                             annotation = layer.annotate(raw_datas, (raster_indices, raster_grid),
                                                         resolution=self.raster_resolution_m)
