@@ -4,6 +4,7 @@ import scipy.stats as ss
 from casex import *
 
 from seedpod_ground_risk.path_analysis.ballistic_model import BallisticModel
+from seedpod_ground_risk.path_analysis.utils import bearing_to_angle
 
 
 class BallisticModelPAEFTestCase(unittest.TestCase):
@@ -95,8 +96,8 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
                                 )
         self.ac.set_ballistic_frontal_area(2)
         self.ac.set_glide_speed_ratio(15, 12)
-        self.ac.set_glide_drag_coefficient(0.3)
-        self.ac.set_ballistic_drag_coefficient(1.1)
+        self.ac.set_glide_drag_coefficient(0.1)
+        self.ac.set_ballistic_drag_coefficient(0.8)
 
         self.bm = BallisticDescent2ndOrderDragApproximation()
         self.bm.set_aircraft(self.ac)
@@ -106,40 +107,67 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
         Profile ballistic model impact distance distributions in the North East Down frame with wind compensation
         """
         make_plot = False  # Set flag to plot result
-        samples = 5000
+        samples = 3000
+
+        loc_x, loc_y = 0, 0
 
         # Conjure up our distributions for various things
         alt_mean = 50
         alt_std = 5
-        alt = ss.norm(alt_mean, alt_std).rvs(samples)
+
         vx_mean = 18
         vx_std = 2.5
+
+        # In degrees!
+        track_mean = 45
+        track_std = 2
+
+        # In degrees!
+        wind_dir_mean = 135
+        wind_dir_std = 5
+        wind_vel_mean = 10
+        wind_vel_std = 2
+
+        alt = ss.norm(alt_mean, alt_std).rvs(samples)
         vel = ss.norm(vx_mean, vx_std).rvs(samples)
-        heading_mean = np.deg2rad(270)
-        heading_std = np.deg2rad(2)
-        heading = ss.norm(heading_mean, heading_std).rvs(samples)
+        track = np.deg2rad(ss.norm(track_mean, track_std).rvs(samples))
+        wind_vel = ss.norm(wind_vel_mean, wind_vel_std).rvs(samples)
+        wind_dir = np.deg2rad(ss.norm(wind_dir_mean - 90, wind_dir_std).rvs(samples) % 360)
 
-        loc_x, loc_y = 0, 50
-
-        wind_vel_x = ss.norm(5, 1).rvs(samples)
-        wind_vel_y = ss.norm(1, 1).rvs(samples)
+        wind_vel_x = wind_vel * np.cos(wind_dir)
+        wind_vel_y = wind_vel * np.sin(wind_dir)
 
         bm = BallisticModel(self.ac)
-        means, cov = bm.impact_distance_dist_params_ned_with_wind(alt, vel, heading, wind_vel_y, wind_vel_x, loc_x,
+        means, cov = bm.impact_distance_dist_params_ned_with_wind(alt, vel, track, wind_vel_y, wind_vel_x, loc_x,
                                                                   loc_y)
         pdf = ss.multivariate_normal(mean=means, cov=cov).pdf
 
         if make_plot:
             # Make a sampling grid for plotting
-            x, y = np.mgrid[(loc_x - 100):(loc_x + 100), (loc_y - 100):(loc_y + 100)]
+            x, y = np.mgrid[(loc_x - 10):(loc_x + 100), (loc_y - 100):(loc_y + 100)]
             pos = np.vstack([x.ravel(), y.ravel()])
             # Sample KDE PDF on these points
             density = pdf(pos.T)
             # Plot sampled KDE PDF
             import matplotlib.pyplot as mpl
-            fig, ax = mpl.subplots(1, 1)
+            fig, ax = mpl.subplots(1, 1, figsize=(8, 8))
             sc = ax.scatter(x, y, c=density)
-            fig.colorbar(sc)
+            cbar = fig.colorbar(sc)
+            cbar.set_label('Probability')
+            ax.set_xlabel('Distance [m]')
+            ax.set_ylabel('Distance [m]')
+            ax.set_title(f'Ground Impact Probability Density \n'
+                         f' Altitude $\sim \mathcal{{N}}({alt_mean},{alt_std}^2)$m,'
+                         f' Groundspeed $\sim \mathcal{{N}}({vx_mean},{vx_std}^2)$m/s,'
+                         f' Track $\sim \mathcal{{N}}({track_mean},{track_std}^2)$deg,\n'
+                         f' Wind speed $\sim \mathcal{{N}}({wind_vel_mean},{wind_vel_std}^2)$m/s,'
+                         f' Wind bearing $\sim \mathcal{{N}}({wind_dir_mean},{wind_dir_std}^2)$deg')
+            ax.arrow(loc_x, loc_y, vx_mean * np.cos(bearing_to_angle(np.deg2rad(track_mean))),
+                     vx_mean * np.sin(bearing_to_angle(np.deg2rad(track_mean))), label='UAS Track', width=1,
+                     color='blue')
+            ax.arrow(loc_x, loc_y, wind_vel_mean * np.cos(bearing_to_angle(np.deg2rad(wind_dir_mean))),
+                     wind_vel_mean * np.sin(bearing_to_angle(np.deg2rad(wind_dir_mean))), label='Wind Direction',
+                     width=1, color='red')
             fig.show()
 
 
