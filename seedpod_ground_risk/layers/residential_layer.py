@@ -24,8 +24,8 @@ class ResidentialLayer(OSMTagLayer):
         print("Preloading Residential Layer")
         self.ingest_census_data()
 
-    def generate(self, bounds_polygon: sg.Polygon, from_cache: bool = False, **kwargs) -> Tuple[
-        Geometry, np.ndarray, gpd.GeoDataFrame]:
+    def generate(self, bounds_polygon: sg.Polygon, raster_shape: Tuple[int, int], from_cache: bool = False, **kwargs) -> \
+            Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]:
         import colorcet
         import datashader as ds
         from holoviews.operation.datashader import rasterize
@@ -50,18 +50,19 @@ class ResidentialLayer(OSMTagLayer):
         # Construct the GeoViews Polygons
         gv_polys = gv.Polygons(census_df, kdims=['Longitude', 'Latitude'], vdims=['name', 'population']) \
             .opts(color='population',
-                  cmap=colorcet.CET_L18,
-                  colorbar=True, colorbar_opts={'title': 'Population'}, show_legend=False)
+                  cmap=colorcet.CET_L18, alpha=0.8,
+                  colorbar=True, colorbar_opts={'title': 'Population'}, show_legend=False, line_color='population')
 
         if self.buffer_dist > 0:
             buffered_df = deepcopy(census_df)
             buffered_df.geometry = buffered_df.to_crs('EPSG:27700') \
                 .buffer(self.buffer_dist).to_crs('EPSG:4326')
-            buffered_polys = gv.Polygons(buffered_df, kdims=['Longitude', 'Latitude'], vdims=['name', 'population'])
-            raster = rasterize(buffered_polys, aggregator=ds.sum('population'),
-                               x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
+            buffered_polys = gv.Polygons(buffered_df, kdims=['Longitude', 'Latitude'], vdims=['name', 'density'])
+            raster = rasterize(buffered_polys, aggregator=ds.sum('density'), width=raster_shape[0],
+                               height=raster_shape[1], x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]),
+                               dynamic=False)
         else:
-            raster = rasterize(gv_polys, aggregator=ds.sum('population'),
+            raster = rasterize(gv_polys, aggregator=ds.sum('density'), width=raster_shape[0], height=raster_shape[1],
                                x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
 
         raster_grid = np.copy(list(raster.data.data_vars.items())[0][1].data.astype(np.float))
@@ -76,7 +77,8 @@ class ResidentialLayer(OSMTagLayer):
         import os
 
         # Import Census boundaries in Ordnance Survey grid and reproject
-        census_wards_df = gpd.read_file(os.sep.join(('static_data', 'england_wa_2011_clipped.shp'))).drop(
+        census_wards_df = gpd.read_file(
+            os.sep.join(('static_data', 'england_wa_2011_clipped.shp'))).drop(
             ['altname', 'oldcode'], axis=1)
         if not census_wards_df.crs:
             census_wards_df = census_wards_df.set_crs('EPSG:27700')

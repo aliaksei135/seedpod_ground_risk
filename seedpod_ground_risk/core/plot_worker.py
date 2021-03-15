@@ -75,6 +75,14 @@ class PlotWorker(QRunnable):
     def layers_reorder(self, layer_order):
         self.plot_server.set_layer_order(layer_order)
 
+    @Slot(Layer, str)
+    def export_path_json(self, layer, filepath):
+        self.plot_server.export_path_geojson(layer, filepath)
+
+    @Slot(int, int)
+    def resize_plot(self, width, height):
+        self.plot_server.plot_size = (width, height)
+
     def layers_update(self, layers):
         self.signals.update_layers.emit(layers)
 
