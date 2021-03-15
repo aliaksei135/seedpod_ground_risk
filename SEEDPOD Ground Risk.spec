@@ -12,6 +12,7 @@ import panel
 import pyviz_comms
 import rtree
 import shiboken2
+import sklearn
 from PyInstaller.building.api import PYZ, EXE, COLLECT
 from PyInstaller.building.build_main import Analysis
 
@@ -62,6 +63,7 @@ a = Analysis(['seedpod_ground_risk/main.py'],
                  ("README.md", '.'),
                  (os.path.join(pyviz_comms.comm_path, "notebook.js"), "pyviz_comms"),
                  (panel.__path__[0], "panel"),
+                 (sklearn.__path__[0], "sklearn"),
                  (datashader.__path__[0], "datashader"),
                  (distributed.__path__[0], "distributed"),
                  (os.path.join(fiona.__path__[0], "*.pyd"), "fiona"),  # Geospatial primitives
@@ -101,7 +103,7 @@ a = Analysis(['seedpod_ground_risk/main.py'],
                  "PyQt5",
                  "PyQt4",
                  "tkinter",
-                 "pydoc",
+                 # "pydoc",
                  "pdb",
                  "IPython",
                  "jupyter",
