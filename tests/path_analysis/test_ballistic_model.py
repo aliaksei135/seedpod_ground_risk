@@ -44,6 +44,17 @@ class BallisticModelPAEFTestCase(unittest.TestCase):
         self.assertAlmostEqual(di_mean, 13.4, delta=0.5)
         self.assertAlmostEqual(di_std, 1.5, delta=0.2)
 
+        import matplotlib.pyplot as mpl
+        x = np.linspace(d_i.min(), d_i.max())
+        y = ss.norm(di_mean, di_std).pdf(x)
+        fig, ax = mpl.subplots(1, 1)
+        ax.hist(d_i, density=True)
+        ax.plot(x, y, 'r')
+        ax.set_title('Event to Impact 1D Distance')
+        ax.set_ylabel('Probability Density')
+        ax.set_xlabel('Distance to Impact [m]')
+        fig.show()
+
     def test_ballistic_time(self):
         """
         Test ballistic model impact time distributions in the Path Aligned Event frame
@@ -63,6 +74,17 @@ class BallisticModelPAEFTestCase(unittest.TestCase):
         ti_mean, ti_std = ss.norm.fit(t_i)
         self.assertAlmostEqual(ti_mean, 7.4, delta=0.5)
         self.assertAlmostEqual(ti_std, 0.7, delta=0.2)
+
+        import matplotlib.pyplot as mpl
+        x = np.linspace(t_i.min(), t_i.max())
+        y = ss.norm(ti_mean, ti_std).pdf(x)
+        fig, ax = mpl.subplots(1, 1)
+        ax.hist(t_i, density=True)
+        ax.plot(x, y, 'r')
+        ax.set_title('Event to Impact Time')
+        ax.set_ylabel('Probability Density')
+        ax.set_xlabel('Time to Impact [sec]')
+        fig.show()
 
     def test_ballistic_vel(self):
         """
@@ -106,7 +128,7 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
         """
         Profile ballistic model impact distance distributions in the North East Down frame with wind compensation
         """
-        make_plot = False  # Set flag to plot result
+        make_plot = True  # Set flag to plot result
         samples = 3000
 
         loc_x, loc_y = 0, 0
@@ -119,7 +141,7 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
         vx_std = 2.5
 
         # In degrees!
-        track_mean = 45
+        track_mean = 90
         track_std = 2
 
         # In degrees!
@@ -132,7 +154,7 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
         vel = ss.norm(vx_mean, vx_std).rvs(samples)
         track = np.deg2rad(ss.norm(track_mean, track_std).rvs(samples))
         wind_vel = ss.norm(wind_vel_mean, wind_vel_std).rvs(samples)
-        wind_dir = np.deg2rad(ss.norm(wind_dir_mean - 90, wind_dir_std).rvs(samples) % 360)
+        wind_dir = bearing_to_angle(np.deg2rad(ss.norm(wind_dir_mean, wind_dir_std).rvs(samples)))
 
         wind_vel_x = wind_vel * np.cos(wind_dir)
         wind_vel_y = wind_vel * np.sin(wind_dir)
