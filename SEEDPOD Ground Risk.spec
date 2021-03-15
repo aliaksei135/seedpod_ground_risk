@@ -63,7 +63,7 @@ a = Analysis(['seedpod_ground_risk/main.py'],
                  ("README.md", '.'),
                  (os.path.join(pyviz_comms.comm_path, "notebook.js"), "pyviz_comms"),
                  (panel.__path__[0], "panel"),
-                 (sklearn.utils.__path__[0], "sklearn/utils"),
+                 (sklearn.__path__[0], "sklearn"),
                  (datashader.__path__[0], "datashader"),
                  (distributed.__path__[0], "distributed"),
                  (os.path.join(fiona.__path__[0], "*.pyd"), "fiona"),  # Geospatial primitives
