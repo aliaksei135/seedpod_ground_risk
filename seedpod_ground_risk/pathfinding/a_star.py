@@ -56,12 +56,17 @@ class GridAStar(Algorithm):
         # mpl.title(f'Full Path, length={len(path)}')
         # mpl.show()
 
-        return path
+        # return path
 
         # @jit(nopython=True, nogil=True)
         def get_path_sum(nx, ny, tx, ty, grid):
             line = bresenham.make_line(nx, ny, tx, ty)
-            return grid[line[:, 0], line[:, 1]].sum()
+            line_points = grid[line[:, 0], line[:, 1]]
+            # If the new line crosses any blocked areas the cost is inf
+            if -1 in line_points:
+                return np.inf
+            else:
+                return line_points.sum()
             # integral_val = 0
             # for y, x in line:
             #     integral_val += grid[y, x]

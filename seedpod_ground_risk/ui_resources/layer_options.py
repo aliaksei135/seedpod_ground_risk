@@ -1,10 +1,9 @@
 from seedpod_ground_risk.layers.arbitrary_obstacle_layer import ArbitraryObstacleLayer
-from seedpod_ground_risk.layers.geojson_layer import GeoJSONLayer
 from seedpod_ground_risk.layers.osm_tag_layer import OSMTagLayer
+from seedpod_ground_risk.layers.path_analysis_layer import PathAnalysisLayer
 from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
 from seedpod_ground_risk.layers.residential_layer import ResidentialLayer
 from seedpod_ground_risk.layers.roads_layer import RoadsLayer
-
 from seedpod_ground_risk.pathfinding.a_star import *
 from seedpod_ground_risk.pathfinding.rjps_a_star import *
 
@@ -13,7 +12,7 @@ LAYER_OBJECTS = {
     'Generic OSM': OSMTagLayer,
     'Residential - England': ResidentialLayer,
     'Road Traffic Flow - England': RoadsLayer,
-    'Existing Path Analysis': GeoJSONLayer,
+    'Existing Path Analysis': PathAnalysisLayer,
     'External Obstacles': ArbitraryObstacleLayer,
     'Pathfinding': PathfindingLayer
 }
@@ -42,7 +41,19 @@ LAYER_OPTIONS = {
     },
     'Existing Path Analysis': {
         'File': ('path', 'filepath', str),
-        'Buffer Distance [m]': (r'\d{0,3}', 'buffer_dist', int),
+        'Aircraft Width [m]': (r'-?\d{0,3}\.?\d+', 'ac_width', float),
+        'Aircraft Length [m]': (r'-?\d{0,3}\.?\d+', 'ac_length', float),
+        'Aircraft Mass [kg]': (r'-?\d{0,3}\.?\d+', 'ac_mass', float),
+        'Aircraft Glide Ratio': (r'-?\d{0,3}\.?\d+', 'ac_glide_ratio', float),
+        'Aircraft Glide Speed [m/s]': (r'-?\d{0,3}\.?\d+', 'ac_glide_speed', float),
+        'Aircraft Glide Drag Coeff': (r'-?\d{0,3}\.?\d+', 'ac_glide_drag_coeff', float),
+        'Aircraft Ballistic Drag Coeff': (r'-?\d{0,3}\.?\d+', 'ac_ballistic_drag_coeff', float),
+        'Aircraft Ballistic Frontal Area [m^2]': (r'-?\d{0,3}\.?\d+', 'ac_ballistic_frontal_area', float),
+        'Aircraft Failure Probability [0-1]': (r'-?\d{0,3}\.?\d+', 'ac_failure_prob', float),
+        'Flight Altitude [m]': (r'-?\d{0,3}\.?\d+', 'alt', float),
+        'Flight Airspeed [m/s]': (r'-?\d{0,3}\.?\d+', 'vel', float),
+        'Wind Speed [m/s]': (r'-?\d{0,3}\.?\d+', 'wind_vel', float),
+        'Wind Bearing [deg]': (r'-?\d{0,3}\.?\d+', 'wind_dir', float)
     },
     'External Obstacles': {
         'File': ('path', 'filepath', str),
@@ -51,12 +62,24 @@ LAYER_OPTIONS = {
         'Blocking': (bool, 'blocking', bool),
     },
     'Pathfinding': {
-        'Buffer Distance [m]': (r'\d{0,3}', 'buffer', int),
         'Start Latitude [dd]': (r'-?\d{0,3}\.\d+', 'start_lat', float),
         'Start Longitude [dd]': (r'-?\d{0,3}\.\d+', 'start_lon', float),
         'End Latitude [dd]': (r'-?\d{0,3}\.\d+', 'end_lat', float),
         'End Longitude [dd]': (r'-?\d{0,3}\.\d+', 'end_lon', float),
         'Algorithm': ('algos', 'algo', eval),
-        'Risk-Distance Ratio': (r'\d{0,3}(\.\d+)?', 'rdr', float)
+        'Risk-Distance Ratio': (r'\d{0,3}(\.\d+)?', 'rdr', float),
+        'Aircraft Width [m]': (r'-?\d{0,3}\.?\d+', 'ac_width', float),
+        'Aircraft Length [m]': (r'-?\d{0,3}\.?\d+', 'ac_length', float),
+        'Aircraft Mass [kg]': (r'-?\d{0,3}\.?\d+', 'ac_mass', float),
+        'Aircraft Glide Ratio': (r'-?\d{0,3}\.?\d+', 'ac_glide_ratio', float),
+        'Aircraft Glide Speed [m/s]': (r'-?\d{0,3}\.?\d+', 'ac_glide_speed', float),
+        'Aircraft Glide Drag Coeff': (r'-?\d{0,3}\.?\d+', 'ac_glide_drag_coeff', float),
+        'Aircraft Ballistic Drag Coeff': (r'-?\d{0,3}\.?\d+', 'ac_ballistic_drag_coeff', float),
+        'Aircraft Ballistic Frontal Area [m^2]': (r'-?\d{0,3}\.?\d+', 'ac_ballistic_frontal_area', float),
+        'Aircraft Failure Probability [0-1]': (r'-?\d{0,3}\.?\d+', 'ac_failure_prob', float),
+        'Flight Altitude [m]': (r'-?\d{0,3}\.?\d+', 'alt', float),
+        'Flight Airspeed [m/s]': (r'-?\d{0,3}\.?\d+', 'vel', float),
+        'Wind Speed [m/s]': (r'-?\d{0,3}\.?\d+', 'wind_vel', float),
+        'Wind Bearing [deg]': (r'-?\d{0,3}\.?\d+', 'wind_dir', float)
     }
 }

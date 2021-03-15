@@ -1,4 +1,4 @@
-from typing import NoReturn, List, Tuple
+from typing import NoReturn, Tuple
 
 import geopandas as gpd
 import numpy as np
@@ -39,6 +39,37 @@ def generate_week_timesteps():
     return timestep_index
 
 
+# https://gis.stackexchange.com/questions/291247/interchange-y-x-to-x-y-with-geopandas-python-or-qgis
+def swap_xy(geom):
+    if geom.is_empty:
+        return geom
+
+    if geom.has_z:
+        def swap_xy_coords(coords):
+            for x, y, z in coords:
+                yield (y, x, z)
+    else:
+        def swap_xy_coords(coords):
+            for x, y in coords:
+                yield (y, x)
+
+    # Process coordinates from each supported geometry type
+    if geom.type in ('Point', 'LineString', 'LinearRing'):
+        return type(geom)(list(swap_xy_coords(geom.coords)))
+    elif geom.type == 'Polygon':
+        ring = geom.exterior
+        shell = type(ring)(list(swap_xy_coords(ring.coords)))
+        holes = list(geom.interiors)
+        for pos, ring in enumerate(holes):
+            holes[pos] = type(ring)(list(swap_xy_coords(ring.coords)))
+        return type(geom)(shell, holes)
+    elif geom.type.startswith('Multi') or geom.type == 'GeometryCollection':
+        # Recursive call
+        return type(geom)([swap_xy(part) for part in geom.geoms])
+    else:
+        raise ValueError('Type %r not recognized' % geom.type)
+
+
 class RoadsLayer(DataLayer):
     _traffic_counts: gpd.GeoDataFrame
 
@@ -65,7 +96,7 @@ class RoadsLayer(DataLayer):
         self._ingest_relative_traffic_variations()
 
     def generate(self, bounds_polygon: sg.Polygon, raster_shape: Tuple[int, int], from_cache: bool = False,
-                 hour: int = 0, **kwargs) -> \
+                 hour: int = 0, resolution: float = 20, **kwargs) -> \
             Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]:
         from holoviews.operation.datashader import rasterize
         import geoviews as gv
@@ -74,22 +105,23 @@ class RoadsLayer(DataLayer):
 
         relative_variation = self.relative_variations_flat[hour]
 
-        road_points = self._interpolate_traffic_counts(bounds_polygon)
-        points = np.array(road_points)[:, :3].astype(np.float)
-        names = np.array(road_points)[:, 3]
-        tfc_df = gpd.GeoDataFrame(
-            {'geometry': [sg.Point(lon, lat) for lon, lat in zip(points[:, 0], points[:, 1])],
-             'population': points[:, 2] * relative_variation,
-             'road_name': names})
-        points = gv.Points(tfc_df,
-                           kdims=['Longitude', 'Latitude'], vdims=['population']).opts(colorbar=True,
-                                                                                       cmap=colorcet.CET_L18,
-                                                                                       color='population')
+        roads_gdf = self._interpolate_traffic_counts(bounds_polygon)
+        roads_gdf['population_per_hour'] = roads_gdf['population_per_hour'] * relative_variation
+        roads_gdf['population'] = roads_gdf['population_per_hour'] / 3600
+        roads_gdf['density'] = roads_gdf['population'] / roads_gdf.geometry.area
+        roads_gdf = roads_gdf.set_crs('EPSG:27700').to_crs('EPSG:4326')
+
+        points = gv.Polygons(roads_gdf,
+                             kdims=['Longitude', 'Latitude'], vdims=['population_per_hour', 'density']).opts(
+            colorbar=True,
+            cmap=colorcet.CET_L18,
+            color='population',
+            line_color='population')
         bounds = bounds_polygon.bounds
-        raster = rasterize(points, aggregator=ds.mean('population'), width=raster_shape[0], height=raster_shape[1],
+        raster = rasterize(points, aggregator=ds.mean('density'), width=raster_shape[0], height=raster_shape[1],
                            x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
         raster_grid = np.copy(list(raster.data.data_vars.items())[0][1].data.astype(np.float))
-        return points, raster_grid, gpd.GeoDataFrame(tfc_df)
+        return points, raster_grid, gpd.GeoDataFrame(roads_gdf)
 
     def clear_cache(self) -> NoReturn:
         self._traffic_counts = gpd.GeoDataFrame()
@@ -104,7 +136,7 @@ class RoadsLayer(DataLayer):
         import os
 
         # Ingest raw data
-        counts_df = pd.read_csv(os.sep.join(('static_data', 'dft_traffic_counts_aadf.csv')))
+        counts_df = pd.read_csv(os.sep.join(('..', 'static_data', 'dft_traffic_counts_aadf.csv')))
         # Select only desired columns
         counts_df = counts_df[TRAFFIC_COUNT_COLUMNS]
         # Groupby year and select out only the latest year
@@ -132,7 +164,7 @@ class RoadsLayer(DataLayer):
         import os
 
         # Ingest data, ignoring header and footer info
-        relative_variations_df = pd.read_excel(os.sep.join(('static_data', 'tra0307.ods')), engine='odf',
+        relative_variations_df = pd.read_excel(os.sep.join(('..', 'static_data', 'tra0307.ods')), engine='odf',
                                                header=5, skipfooter=8)
         # Flatten into continuous list of hourly variations for the week
         self.relative_variations_flat = (relative_variations_df.iloc[:, 1:] / 100).melt()['value']
@@ -143,13 +175,12 @@ class RoadsLayer(DataLayer):
         """
         import os
 
-        self._roads_geometries = gpd.read_file(os.sep.join(('static_data', '2018-MRDB-minimal.shp'))).rename(
+        self._roads_geometries = gpd.read_file(os.sep.join(('..', 'static_data', '2018-MRDB-minimal.shp'))).rename(
             columns={'CP_Number': 'count_point_id'})
         if not self._roads_geometries.crs:
             self._roads_geometries = self._roads_geometries.set_crs('EPSG:27700')
 
-    def _interpolate_traffic_counts(self, bounds_poly: sg.Polygon, resolution: int = 20) -> List[
-        List[float]]:
+    def _interpolate_traffic_counts(self, bounds_poly: sg.Polygon, resolution: int = 20) -> gpd.GeoDataFrame:
         """
         Interpolate traffic count values between count points along all roads.
         Interpolation points are created at frequency depending on resolution
@@ -158,6 +189,7 @@ class RoadsLayer(DataLayer):
         """
         import numpy as np
         import shapely.ops as so
+        import pandas as pd
 
         b = bounds_poly.bounds
         bounds = [0] * 4
@@ -165,10 +197,12 @@ class RoadsLayer(DataLayer):
         bounds[2], bounds[3] = self.reverse_proj.transform(b[3], b[2])
         unique_road_names = self._roads_geometries.cx[bounds[0]:bounds[2], bounds[1]:bounds[3]]['RoadNumber'].unique()
 
-        all_interp_points = []
-        all_interp_points_append = all_interp_points.append
+        all_road_gdfs = []
         for road_name in unique_road_names:
-            print(".", end='')
+            if road_name.startswith('M'):
+                road_width = 22
+            else:
+                road_width = 14.6
             # Get the line segments that make up the road
             road_segments = self._roads_geometries[self._roads_geometries['RoadNumber'] == road_name].cx[
                             bounds[0]:bounds[2], bounds[1]:bounds[3]]
@@ -198,7 +232,8 @@ class RoadsLayer(DataLayer):
                     # If not, carry the length of this segment in the hope the next one will have a counter!
                     carried_length += seg['geometry'].length
             flat_proj = np.array(flat_proj)
-            road_ls = so.linemerge(all_segments)  # Stitch the line segments together
+            road_ls = swap_xy(so.linemerge(all_segments))  # Stitch the line segments together
+            road_width_buffer_gdf = gpd.GeoDataFrame(geometry=[road_ls.buffer(road_width)])
             road_length = flat_proj[-1, 0]
             # Generate some intermediate points to interpolate on
             coord_spacing = np.linspace(0, road_length,
@@ -206,10 +241,19 @@ class RoadsLayer(DataLayer):
             # Interpolate linearly on the 1D projection of the road to estimate the interstitial values
             interp_flat_proj = np.interp(coord_spacing, flat_proj[:, 0], flat_proj[:, 1])
 
+            point_polys = []
+            pops = []
             # Recover the true road geometry along with the interpolated values
             for idx, mark in enumerate(coord_spacing):
                 c = road_ls.interpolate(mark)
-                all_interp_points_append([*self.proj.transform(c.y, c.x), interp_flat_proj[idx], road_name])
+                point_poly = c.buffer(resolution / 2, cap_style=sg.CAP_STYLE.square)
+                point_polys.append(point_poly)
+                pops.append(interp_flat_proj[idx])
 
-        print(".")
-        return all_interp_points
+            road_gdf = gpd.GeoDataFrame(
+                {'geometry': point_polys, 'population_per_hour': pops, 'road_name': len(pops) * [road_name]})
+            road_gdf = gpd.overlay(road_gdf, road_width_buffer_gdf, how='intersection')
+            all_road_gdfs.append(road_gdf)
+
+        roads_gdf = pd.concat(all_road_gdfs)
+        return roads_gdf
