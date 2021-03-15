@@ -136,7 +136,7 @@ class RoadsLayer(DataLayer):
         import os
 
         # Ingest raw data
-        counts_df = pd.read_csv(os.sep.join(('..', 'static_data', 'dft_traffic_counts_aadf.csv')))
+        counts_df = pd.read_csv(os.sep.join(('static_data', 'dft_traffic_counts_aadf.csv')))
         # Select only desired columns
         counts_df = counts_df[TRAFFIC_COUNT_COLUMNS]
         # Groupby year and select out only the latest year
@@ -164,7 +164,7 @@ class RoadsLayer(DataLayer):
         import os
 
         # Ingest data, ignoring header and footer info
-        relative_variations_df = pd.read_excel(os.sep.join(('..', 'static_data', 'tra0307.ods')), engine='odf',
+        relative_variations_df = pd.read_excel(os.sep.join(('static_data', 'tra0307.ods')), engine='odf',
                                                header=5, skipfooter=8)
         # Flatten into continuous list of hourly variations for the week
         self.relative_variations_flat = (relative_variations_df.iloc[:, 1:] / 100).melt()['value']
@@ -175,7 +175,7 @@ class RoadsLayer(DataLayer):
         """
         import os
 
-        self._roads_geometries = gpd.read_file(os.sep.join(('..', 'static_data', '2018-MRDB-minimal.shp'))).rename(
+        self._roads_geometries = gpd.read_file(os.sep.join(('static_data', '2018-MRDB-minimal.shp'))).rename(
             columns={'CP_Number': 'count_point_id'})
         if not self._roads_geometries.crs:
             self._roads_geometries = self._roads_geometries.set_crs('EPSG:27700')
