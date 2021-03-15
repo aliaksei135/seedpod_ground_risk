@@ -42,7 +42,7 @@ class PlotServer:
     def __init__(self, tiles: str = 'Wikipedia', tools: Optional[Iterable[str]] = None,
                  active_tools: Optional[Iterable[str]] = None,
                  cmap: str = 'CET_L18',
-                 raster_resolution: float = 30,
+                 raster_resolution: float = 40,
                  plot_size: Tuple[int, int] = (760, 735),
                  progress_callback: Optional[Callable[[str], None]] = None,
                  update_callback: Optional[Callable[[str], None]] = None):
@@ -74,7 +74,7 @@ class PlotServer:
         self._generated_data_layers = {}
         self.data_layer_order = []
         self.data_layers = [ResidentialLayer('Residential Population', buffer_dist=30),
-                            RoadsLayer('Road Traffic Population per Hour')]
+                            RoadsLayer('Road Traffic Population/Hour')]
 
         self.annotation_layers = []
 
@@ -221,11 +221,14 @@ class PlotServer:
                             layer_raster_grid = res[1]
                             nans = np.isnan(layer_raster_grid)
                             layer_raster_grid[nans] = 0
-                            raster_grid += res[1]
-
+                            raster_grid += layer_raster_grid
+                        raster_grid = np.flipud(raster_grid)
+                        raster_indices['Latitude'] = np.flip(raster_indices['Latitude'])
                         annotations = []
+                        print('Annotating Layers...')
                         for layer in self.annotation_layers:
-                            annotation = layer.annotate(raw_datas, (raster_indices, raster_grid))
+                            annotation = layer.annotate(raw_datas, (raster_indices, raster_grid),
+                                                        resolution=self.raster_resolution_m)
                             if annotation:
                                 annotations.append(annotation)
 
@@ -255,6 +258,8 @@ class PlotServer:
         except Exception as e:
             # Catch-all to prevent plot blanking out and/or crashing app
             # Just display map tiles in case this was transient
+            import traceback
+            traceback.print_exc()
             print(e)
             plot = self._base_tiles
 
@@ -275,8 +280,8 @@ class PlotServer:
         layers = {}
         self._progress_callback('Generating layer data')
         with ThreadPoolExecutor() as pool:
-            layer_futures = [pool.submit(self.generate_layer, layer, bounds_poly, raster_shape, self._time_idx) for
-                             layer in self.data_layers]
+            layer_futures = [pool.submit(self.generate_layer, layer, bounds_poly, raster_shape, self._time_idx,
+                                         self.raster_resolution_m) for layer in self.data_layers]
         # Store generated layers as they are completed
         for future in as_completed(layer_futures):
             key, result = future.result()
@@ -298,7 +303,8 @@ class PlotServer:
                 {k: layers[k] for k in layers.keys() if k not in self._generated_data_layers})
 
     @staticmethod
-    def generate_layer(layer: DataLayer, bounds_poly: sg.Polygon, raster_shape: Tuple[int, int], hour: int) -> Union[
+    def generate_layer(layer: DataLayer, bounds_poly: sg.Polygon, raster_shape: Tuple[int, int], hour: int,
+                       resolution: float) -> Union[
         Tuple[str, Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]], Tuple[str, None]]:
 
         import shapely.ops as so
@@ -314,9 +320,12 @@ class PlotServer:
             layer_bounds_poly = bounds_poly.difference(layer.cached_area)
         layer.cached_area = so.unary_union([layer.cached_area, bounds_poly])
         try:
-            result = layer.key, layer.generate(layer_bounds_poly, raster_shape, from_cache=from_cache, hour=hour)
+            result = layer.key, layer.generate(layer_bounds_poly, raster_shape, from_cache=from_cache, hour=hour,
+                                               resolution=resolution)
             return result
         except Exception as e:
+            import traceback
+            traceback.print_tb(e.__traceback__)
             print(e)
             return layer.key + ' FAILED', None
 
