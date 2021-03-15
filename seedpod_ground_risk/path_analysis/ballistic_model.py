@@ -3,7 +3,7 @@ from numba import njit
 from sklearn.mixture import GaussianMixture
 
 from seedpod_ground_risk.path_analysis.descent_model import DescentModel
-from seedpod_ground_risk.path_analysis.utils import rotate_2d
+from seedpod_ground_risk.path_analysis.utils import rotate_2d, bearing_to_angle
 
 
 @njit(cache=True)
@@ -55,7 +55,7 @@ class BallisticModel(DescentModel):
         :type altitude: float or np.array
         :param velocity: the velocity over the ground of the aircraft in the direction of flight in m/s
         :type velocity: float or np.array
-        :param heading: the ground track angle of the aircraf in deg
+        :param heading: the ground track bearing of the aircraft in deg (North is 000)
         :type heading: float or np.array
         :param wind_vel_x: the x component of the wind in m/s
         :type wind_vel_x: float or nd.array
@@ -73,7 +73,7 @@ class BallisticModel(DescentModel):
         d_i, _, _, t_i = self.bm.compute_ballistic_distance(altitude, velocity, 0)
 
         # Compensate for x,y axes being rotated compared to bearings
-        theta = (heading - (np.pi / 2)) % (2 * np.pi)
+        theta = bearing_to_angle(heading)
         # Get angle distribution in between body and NED frame
         # Form the array structure required and transform
         arr = np.vstack((np.zeros(d_i.shape), d_i, t_i, theta, wind_vel_x, wind_vel_y))
