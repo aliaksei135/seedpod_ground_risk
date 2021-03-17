@@ -83,9 +83,9 @@ class BallisticModel(DescentModel):
         gm.fit_predict(transformed_arr.T)
         # If there the event and NED origins match, no need to translate
         if not loc_x or not loc_y:
-            means = gm.means_[0] + np.array([loc_x, loc_y])
-        else:
             means = gm.means_[0]
+        else:
+            means = gm.means_[0] + np.array([loc_x, loc_y])
         # Gaussian Mixture model can deal with up to 3D distributions, but we are only dealing with 2D here,
         # so take first index into the depth
         return means, gm.covariances_[0]
