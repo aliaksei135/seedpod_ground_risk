@@ -47,7 +47,7 @@ class PathAnalysisLayer(AnnotationLayer):
         self.alt = alt
         self.vel = vel
         self.wind_vel = wind_vel
-        self.wind_dir = np.deg2rad(wind_dir)
+        self.wind_dir = np.deg2rad((wind_dir - 90) % 360)
 
         self.event_prob = ac_failure_prob
 
@@ -78,7 +78,7 @@ class PathAnalysisLayer(AnnotationLayer):
             next = line_coords[i]
             x = np.sin(next[0] - prev[0]) * np.cos(next[1])
             y = np.cos(prev[1]) * np.sin(next[1]) - np.sin(prev[1]) * np.cos(next[1]) * np.cos(next[0] - prev[0])
-            angle = np.arctan2(x, y) % 2 * np.pi
+            angle = (np.arctan2(x, y) + (2 * np.pi)) % (2 * np.pi)
             headings.append(angle)
         # Feed these pairs into the Bresenham algo to find the intermediate points
         path_grid_points = [bresenham.make_line(*pair[0], *pair[1]) for pair in path_pairs]
@@ -97,7 +97,7 @@ class PathAnalysisLayer(AnnotationLayer):
         alt = ss.norm(self.alt, 5).rvs(samples)
         vel = ss.norm(self.vel, 2.5).rvs(samples)
         wind_vels = ss.norm(self.wind_vel, 1).rvs(samples)
-        wind_dirs = bearing_to_angle(ss.norm(self.wind_dir, 5).rvs(samples))
+        wind_dirs = bearing_to_angle(ss.norm(self.wind_dir, np.deg2rad(5)).rvs(samples))
         wind_vel_y = wind_vels * np.sin(wind_dirs)
         wind_vel_x = wind_vels * np.cos(wind_dirs)
 
