@@ -74,6 +74,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.addLayerButton)
 
+
         self.verticalLayout.addLayout(self.horizontalLayout)
 
         self.horizontalLayout_4.addLayout(self.verticalLayout)
@@ -87,6 +88,12 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4.addWidget(self.plotWebview)
 
         self.gridLayout.addLayout(self.horizontalLayout_4, 0, 0, 1, 1)
+
+        self.progressBar = QProgressBar(self.centralwidget)
+        self.progressBar.setObjectName(u"progressBar")
+        self.progressBar.setValue(0)
+
+        self.gridLayout.addWidget(self.progressBar, 1, 0, 1, 1)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusBar = QStatusBar(MainWindow)
