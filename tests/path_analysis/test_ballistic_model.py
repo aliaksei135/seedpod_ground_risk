@@ -112,14 +112,14 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         self.ac = AircraftSpecs(enums.AircraftType.FIXED_WING,
-                                2,  # width
-                                1.8,  # length
-                                7  # mass
+                                1,  # width
+                                0.3,  # length
+                                3.75  # mass
                                 )
-        self.ac.set_ballistic_frontal_area(2)
-        self.ac.set_glide_speed_ratio(15, 12)
+        self.ac.set_ballistic_frontal_area(0.1)
+        self.ac.set_glide_speed_ratio(16, 12)
         self.ac.set_glide_drag_coefficient(0.1)
-        self.ac.set_ballistic_drag_coefficient(0.8)
+        self.ac.set_ballistic_drag_coefficient(0.9)
 
         self.bm = BallisticDescent2ndOrderDragApproximation()
         self.bm.set_aircraft(self.ac)
@@ -141,11 +141,11 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
         vx_std = 2.5
 
         # In degrees!
-        track_mean = 90
+        track_mean = 60
         track_std = 2
 
         # In degrees!
-        wind_dir_mean = 135
+        wind_dir_mean = 120
         wind_dir_std = 5
         wind_vel_mean = 10
         wind_vel_std = 2
@@ -162,14 +162,14 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
         bm = BallisticModel(self.ac)
         means, cov = bm.impact_distance_dist_params_ned_with_wind(alt, vel, track, wind_vel_y, wind_vel_x, loc_x,
                                                                   loc_y)
-        pdf = ss.multivariate_normal(mean=means, cov=cov).pdf
+        dist = ss.multivariate_normal(mean=means, cov=cov)
 
         if make_plot:
             # Make a sampling grid for plotting
             x, y = np.mgrid[(loc_x - 10):(loc_x + 100), (loc_y - 100):(loc_y + 100)]
             pos = np.vstack([x.ravel(), y.ravel()])
             # Sample KDE PDF on these points
-            density = pdf(pos.T)
+            density = dist.pdf(pos.T)
             # Plot sampled KDE PDF
             import matplotlib.pyplot as mpl
             fig, ax = mpl.subplots(1, 1, figsize=(8, 8))
@@ -178,7 +178,7 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
             cbar.set_label('Probability')
             ax.set_xlabel('Distance [m]')
             ax.set_ylabel('Distance [m]')
-            ax.set_title(f'Ground Impact Probability Density \n'
+            ax.set_title(f'Ballistic Ground Impact Probability Density \n'
                          f' Altitude $\sim \mathcal{{N}}({alt_mean},{alt_std}^2)$m,'
                          f' Groundspeed $\sim \mathcal{{N}}({vx_mean},{vx_std}^2)$m/s,'
                          f' Track $\sim \mathcal{{N}}({track_mean},{track_std}^2)$deg,\n'
