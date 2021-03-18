@@ -2,7 +2,7 @@ from casex import *
 from numba import njit
 from sklearn.mixture import GaussianMixture
 
-from seedpod_ground_risk.path_analysis.descent_model import DescentModel
+from seedpod_ground_risk.path_analysis.descent_models.descent_model import DescentModel
 from seedpod_ground_risk.path_analysis.utils import rotate_2d, bearing_to_angle
 
 
@@ -29,8 +29,8 @@ class BallisticModel(DescentModel):
         self.bm = BallisticDescent2ndOrderDragApproximation()
         self.bm.set_aircraft(aircraft)
 
-    def impact_distance_dist_params_ned_with_wind(self, altitude, velocity, heading, wind_vel_y, wind_vel_x, loc_x,
-                                                  loc_y):
+    def transform(self, altitude, velocity, heading, wind_vel_y, wind_vel_x, loc_x,
+                  loc_y):
         """
         Return the parameters to a multivariate normal distribution describing the ground impact probability under a
         ballistic descent.

@@ -3,7 +3,7 @@ import unittest
 import scipy.stats as ss
 from casex import *
 
-from seedpod_ground_risk.path_analysis.ballistic_model import BallisticModel
+from seedpod_ground_risk.path_analysis.descent_models.ballistic_model import BallisticModel
 from seedpod_ground_risk.path_analysis.utils import bearing_to_angle
 
 
@@ -160,8 +160,7 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
         wind_vel_y = wind_vel * np.sin(wind_dir)
 
         bm = BallisticModel(self.ac)
-        means, cov = bm.impact_distance_dist_params_ned_with_wind(alt, vel, track, wind_vel_y, wind_vel_x, loc_x,
-                                                                  loc_y)
+        means, cov = bm.transform(alt, vel, track, wind_vel_y, wind_vel_x, loc_x, loc_y)
         dist = ss.multivariate_normal(mean=means, cov=cov)
 
         if make_plot:
