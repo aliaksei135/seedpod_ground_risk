@@ -6,26 +6,10 @@ import numpy as np
 from holoviews.element import Overlay
 
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
-from seedpod_ground_risk.path_analysis.ballistic_model import BallisticModel
+from seedpod_ground_risk.path_analysis.descent_models.ballistic_model import BallisticModel
+from seedpod_ground_risk.path_analysis.harm_models.strike_model import StrikeModel
 from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid, bearing_to_angle
 from seedpod_ground_risk.pathfinding import bresenham
-
-
-def get_lethal_area(theta: float, uas_width: float):
-    """
-    Calculate lethal area of UAS impact from impact angle
-
-    Method from :cite: Smith, P.G. 2000
-
-    :param theta: impact angle in degrees
-    :param uas_width: UAS width in metres
-    :return:
-    """
-    r_person = 1  # radius of a person
-    h_person = 1.8  # height of a person
-    r_uas = uas_width / 2  # UAS halfspan
-
-    return ((2 * (r_person + r_uas) * h_person) / np.tan(np.deg2rad(theta))) + (np.pi * (r_uas + r_person) ** 2)
 
 
 class PathAnalysisLayer(AnnotationLayer):
@@ -108,10 +92,10 @@ class PathAnalysisLayer(AnnotationLayer):
 
         dists_for_hdg = {}
         for hdg in headings:
-            mean, cov = bm.impact_distance_dist_params_ned_with_wind(alt, vel,
-                                                                     ss.norm(hdg, np.deg2rad(2)).rvs(samples),
-                                                                     wind_vel_y, wind_vel_x,
-                                                                     0, 0)
+            mean, cov = bm.transform(alt, vel,
+                                     ss.norm(hdg, np.deg2rad(2)).rvs(samples),
+                                     wind_vel_y, wind_vel_x,
+                                     0, 0)
             dists_for_hdg[hdg] = (mean / resolution, cov / resolution)
 
         # TODO Use something like Dask or OpenCV to speed this up in future as it's a simple map-reduce
@@ -120,11 +104,14 @@ class PathAnalysisLayer(AnnotationLayer):
             pdf = ss.multivariate_normal(dist_params[0] + np.array([c[0], c[1]]), dist_params[1]).pdf(eval_grid)
             return pdf
 
-        pdf_mat = np.sum([point_distr(c) for c in path_grid_points], axis=0).reshape(raster_shape)
+        impact_pdf = np.sum([point_distr(c) for c in path_grid_points], axis=0).reshape(raster_shape) * self.event_prob
 
-        a_exp = get_lethal_area(30, self.aircraft.width)
-        # Probability * Pop. Density * Lethal Area
-        risk_map = pdf_mat * raster_data[1] * a_exp * self.event_prob
+        sm = StrikeModel(raster_data[1], np.deg2rad(30), self.aircraft.width)
+        strike_pdf = sm.transform(impact_pdf)
+
+        # TODO: Fatality model here
+
+        risk_map = strike_pdf
 
         risk_raster = gv.Image(risk_map, bounds=bounds).options(alpha=0.7, cmap='viridis', tools=['hover'],
                                                                 clipping_colors={'min': (0, 0, 0, 0)})

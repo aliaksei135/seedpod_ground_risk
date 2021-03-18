@@ -91,6 +91,5 @@ typing-extensions==3.7.4.3
 urllib3==1.26.2
 xarray==0.16.2
 zict==2.0.0
-
-fastparquet~=0.5.0
 casex~=1.0.5
+scikit-learn~=0.24.1
