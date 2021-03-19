@@ -106,7 +106,7 @@ class PathAnalysisLayer(AnnotationLayer):
 
         impact_pdf = np.sum([point_distr(c) for c in path_grid_points], axis=0).reshape(raster_shape) * self.event_prob
 
-        sm = StrikeModel(raster_data[1], np.deg2rad(30), self.aircraft.width)
+        sm = StrikeModel(raster_data[1], resolution * resolution, np.deg2rad(30), self.aircraft.width)
         strike_pdf = sm.transform(impact_pdf)
 
         # TODO: Fatality model here
