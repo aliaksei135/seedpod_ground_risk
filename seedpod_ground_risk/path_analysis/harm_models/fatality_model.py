@@ -23,22 +23,20 @@ def prob_fatality(ke_impact, alpha, beta, p_s):
 
 class FatalityModel(HarmModel):
 
-    def __init__(self, impact_ke, shelter_prob, alpha, beta) -> None:
+    def __init__(self, shelter_prob, alpha, beta) -> None:
         """
         All params can either be a scalar or np.array.
 
         All np.array must share a common shape.
 
-        :param impact_ke: Kinetic energy of impact in Joules
         :param alpha: KE required at 0.5 p_s for 50% lethality probability
         :param beta: Fatal KE of direct impact (0 p_s)
         :param shelter_prob: probability of sheltering [0-1]
         """
         super().__init__()
-        self.impact_ke = impact_ke
         self.shelter_prob = shelter_prob
         self.alpha = alpha
         self.beta = beta
 
-    def transform(self, val):
-        return val * prob_fatality(self.impact_ke, self.alpha, self.beta, self.shelter_prob)
+    def transform(self, val, impact_ke=100):
+        return val * prob_fatality(impact_ke, self.alpha, self.beta, self.shelter_prob)
