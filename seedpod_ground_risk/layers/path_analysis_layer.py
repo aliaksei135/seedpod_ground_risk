@@ -104,14 +104,17 @@ class PathAnalysisLayer(AnnotationLayer):
             pdf = ss.multivariate_normal(dist_params[0] + np.array([c[0], c[1]]), dist_params[1]).pdf(eval_grid)
             return pdf
 
-        impact_pdf = np.sum([point_distr(c) for c in path_grid_points], axis=0).reshape(raster_shape) * self.event_prob
+        impact_pdfs = [point_distr(c) for c in path_grid_points]
+        # impact_vels = [dists_for_hdg[c[2]][2] for c in path_grid_points]
+        impact_angles = [dists_for_hdg[c[2]][3] for c in path_grid_points]
 
-        sm = StrikeModel(raster_data[1], resolution * resolution, np.deg2rad(30), self.aircraft.width)
-        strike_pdf = sm.transform(impact_pdf)
+        sm = StrikeModel(raster_data[1].ravel(), resolution * resolution, self.aircraft.width)
+        strike_pdfs = [sm.transform(impact_pdf, impact_angle) for impact_pdf, impact_angle in
+                       zip(impact_pdfs, impact_angles)]
 
         # TODO: Fatality model here
 
-        risk_map = strike_pdf
+        risk_map = np.sum(strike_pdfs, axis=0).reshape(raster_shape) * self.event_prob
 
         risk_raster = gv.Image(risk_map, bounds=bounds).options(alpha=0.7, cmap='viridis', tools=['hover'],
                                                                 clipping_colors={'min': (0, 0, 0, 0)})
