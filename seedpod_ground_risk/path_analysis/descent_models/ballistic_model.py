@@ -70,14 +70,14 @@ class BallisticModel(DescentModel):
         """
         # Compute impact distances and times in the PAE frame
         # The velocity vector is assumed to be aligned with path vector, hence v_y is 0
-        d_i, _, _, t_i = self.bm.compute_ballistic_distance(altitude, velocity, 0)
+        d_i, v_i, a_i, t_i = self.bm.compute_ballistic_distance(altitude, velocity, 0)
 
         # Compensate for x,y axes being rotated compared to bearings
         theta = bearing_to_angle(heading)
-        # Get angle distribution in between body and NED frame
         # Form the array structure required and transform
         arr = np.vstack((np.zeros(d_i.shape), d_i, t_i, theta, wind_vel_x, wind_vel_y))
         transformed_arr = np.apply_along_axis(paef_to_ned_with_wind, 0, arr)
+        # Remove nan rows
         transformed_arr = transformed_arr[:, ~np.isnan(transformed_arr).all(axis=0)]
         gm = GaussianMixture()
         gm.fit_predict(transformed_arr.T)
@@ -88,4 +88,4 @@ class BallisticModel(DescentModel):
             means = gm.means_[0] + np.array([loc_x, loc_y])
         # Gaussian Mixture model can deal with up to 3D distributions, but we are only dealing with 2D here,
         # so take first index into the depth
-        return means, gm.covariances_[0]
+        return (means, gm.covariances_[0]), v_i.mean(), a_i.mean()

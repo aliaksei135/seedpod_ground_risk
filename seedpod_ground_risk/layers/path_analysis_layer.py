@@ -92,11 +92,11 @@ class PathAnalysisLayer(AnnotationLayer):
 
         dists_for_hdg = {}
         for hdg in headings:
-            mean, cov = bm.transform(alt, vel,
-                                     ss.norm(hdg, np.deg2rad(2)).rvs(samples),
-                                     wind_vel_y, wind_vel_x,
-                                     0, 0)
-            dists_for_hdg[hdg] = (mean / resolution, cov / resolution)
+            (mean, cov), v_i, a_i = bm.transform(alt, vel,
+                                                 ss.norm(hdg, np.deg2rad(2)).rvs(samples),
+                                                 wind_vel_y, wind_vel_x,
+                                                 0, 0)
+            dists_for_hdg[hdg] = (mean / resolution, cov / resolution, v_i, a_i)
 
         # TODO Use something like Dask or OpenCV to speed this up in future as it's a simple map-reduce
         def point_distr(c):
