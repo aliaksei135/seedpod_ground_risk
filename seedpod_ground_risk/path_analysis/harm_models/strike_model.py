@@ -22,19 +22,17 @@ def get_lethal_area(theta: float, uas_width: float):
 
 class StrikeModel(HarmModel):
 
-    def __init__(self, pop_density, pixel_area, impact_angle, uas_width) -> None:
+    def __init__(self, pop_density, pixel_area, uas_width) -> None:
         """
         :param pop_density: population density value or np.array
         :param pixel_area: area of a single pixel in the raster grid
-        :param impact_angle: impact angle value or np.array
         :param uas_width: characteristic dimension of the UAS
         """
         super().__init__()
         self.pop_density = pop_density
         self.pix_area = pixel_area
-        self.impact_angle = impact_angle
         self.uas_width = uas_width
 
-    def transform(self, val):
+    def transform(self, val, impact_angle=np.deg2rad(30)):
         # Product of vars divided by pixel area to scale lethal area to proportion of pixel area
-        return val * self.pop_density * get_lethal_area(self.impact_angle, uas_width=self.uas_width) / self.pix_area
+        return val * self.pop_density * get_lethal_area(impact_angle, uas_width=self.uas_width) / self.pix_area
