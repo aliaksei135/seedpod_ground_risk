@@ -48,6 +48,7 @@ class PathAnalysisLayer(AnnotationLayer):
                  resolution=20, **kwargs) -> Overlay:
         import geoviews as gv
         import scipy.stats as ss
+        import joblib as jl
 
         bounds = (raster_data[0]['Longitude'].min(), raster_data[0]['Latitude'].min(),
                   raster_data[0]['Longitude'].max(), raster_data[0]['Latitude'].max())
@@ -104,34 +105,32 @@ class PathAnalysisLayer(AnnotationLayer):
             pdf = ss.multivariate_normal(dist_params[0] + np.array([c[0], c[1]]), dist_params[1]).pdf(eval_grid)
             return pdf
 
-        # TODO these all wait sequentially for each step to be finished when they could really be pipelined then summed
-        #  at the end. Something like Dask or a wrapped func with joblib could do this
-
-        impact_pdfs = [point_distr(c) for c in path_grid_points]
-        impact_vels = np.array([dists_for_hdg[c[2]][2] for c in path_grid_points])
-        impact_kes = velocity_to_kinetic_energy(self.aircraft.mass, impact_vels)
-        impact_angles = np.array([dists_for_hdg[c[2]][3] for c in path_grid_points])
-
         sm = StrikeModel(raster_data[1].ravel(), resolution * resolution, self.aircraft.width)
-        strike_pdfs = [sm.transform(impact_pdf, impact_angle=impact_angle) for impact_pdf, impact_angle in
-                       zip(impact_pdfs, impact_angles)]
-
         fm = FatalityModel(0.5, 1e6, 34)
-        fatality_pdfs = [fm.transform(strike_pdf, impact_ke=impact_ke) for strike_pdf, impact_ke in
-                         zip(strike_pdfs, impact_kes)]
+        ac_mass = self.aircraft.mass
 
-        # Compute risk stats along path
-        pathwise_maxs = [pdf.max() for pdf in fatality_pdfs]
-        pathwise_meds = [np.median(pdf) for pdf in fatality_pdfs]
-        pathwise_mins = [pdf.min() for pdf in fatality_pdfs]
+        def wrap_pipeline(path_point_state):
+            impact_pdf = point_distr(path_point_state)
+            impact_vel = dists_for_hdg[path_point_state[2]][2]
+            impact_angle = dists_for_hdg[path_point_state[2]][3]
+            impact_ke = velocity_to_kinetic_energy(ac_mass, impact_vel)
+
+            strike_pdf = sm.transform(impact_pdf, impact_angle=impact_angle)
+            fatality_pdf = fm.transform(strike_pdf, impact_ke=impact_ke)
+
+            return fatality_pdf, fatality_pdf.max()
+
+        res = jl.Parallel(n_jobs=-1, prefer='processes', verbose=10)(
+            jl.delayed(wrap_pipeline)(c) for c in path_grid_points)
+        fatality_pdfs = [r[0] for r in res]
+        pathwise_maxs = np.array([r[1] for r in res])
 
         import matplotlib.pyplot as mpl
         fig, ax = mpl.subplots(1, 1)
         ax.set_yscale('log')
-        ax.set_ylim(bottom=1e-16)
-        ax.plot(pathwise_mins, 'b', label='Minimum')
-        ax.plot(pathwise_meds, 'g', label='Median')
-        ax.plot(pathwise_maxs, 'r', label='Maximum')
+        ax.set_ylim(bottom=1e-13)
+        ax.axhline(y=pathwise_maxs.mean(), c='b', label='Mean')
+        ax.plot(pathwise_maxs, 'r', label='Point Maximum')
         ax.legend()
         ax.set_ylabel('Casualty Risk [$h^{-1}$]')
         ax.set_title('Casualty Risk along path')
