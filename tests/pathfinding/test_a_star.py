@@ -17,8 +17,8 @@ class BaseAStarTestCase(unittest.TestCase):
         self.small_no_diag_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=False, pruning=False)
         self.large_diag_environment = GridEnvironment(LARGE_TEST_GRID, diagonals=True, pruning=False)
         self.large_no_diag_environment = GridEnvironment(LARGE_TEST_GRID, diagonals=False, pruning=False)
-        self.start = Node(0, 0, 0)
-        self.end = Node(4, 4, 0)
+        self.start = (0, 0)
+        self.end = (4, 4)
 
     def test_start_is_goal(self):
         """
@@ -59,7 +59,7 @@ class GridAStarTestCase(BaseAStarTestCase):
         self.assertEqual(path[-1], self.end, 'Goal node not included in path')
         # Could take either zigzag path both of which are correct but have same path length
         # There are no other paths of length 9 other than these zigzag paths, so tests for either of these
-        self.assertEqual(len(path), 9, 'Path wrong length (not direct?)')
+        self.assertEqual(len(path), 5, 'Path wrong length (not direct?)')
 
     def test_direct_with_diagonals(self):
         """
@@ -70,11 +70,9 @@ class GridAStarTestCase(BaseAStarTestCase):
         self.assertEqual(path[0], self.start, "Start node not included in path")
         self.assertEqual(path[-1], self.end, 'Goal node not included in path')
         self.assertEqual(path, [
-            Node(0, 0, 0),
-            Node(1, 1, 5),
-            Node(2, 2, 45),
-            Node(3, 3, 30),
-            Node(4, 4, 0)
+            (0, 0),
+            (2, 2),
+            (4, 4)
         ],
                          "Incorrect path")
 
@@ -95,7 +93,7 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         self.assertEqual(path[-1], self.end, 'Goal node not included in path')
         # Could take either zigzag path both of which are correct but have same path length
         # There are no other paths of length 9 other than these zigzag paths, so tests for either of these
-        self.assertEqual(len(path), 9, 'Path wrong length (not direct?)')
+        self.assertEqual(len(path), 5, 'Path wrong length (not direct?)')
 
     def test_direct_with_diagonals(self):
         """
@@ -106,11 +104,10 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         self.assertEqual(path[0], self.start, "Start node not included in path")
         self.assertEqual(path[-1], self.end, 'Goal node not included in path')
         self.assertEqual(path, [
-            Node(0, 0, 0),
-            Node(1, 1, 5),
-            Node(2, 2, 45),
-            Node(3, 3, 30),
-            Node(4, 4, 0)
+            (0, 0),
+            (2, 1),
+            (4, 3),
+            (4, 4)
         ],
                          "Incorrect path")
 
@@ -121,18 +118,18 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         algo = RiskGridAStar(ManhattanRiskHeuristic(self.large_diag_environment,
                                                     risk_to_dist_ratio=1))
         path = algo.find_path(self.large_diag_environment,
-                              self.large_diag_environment.get_node(10, 10),
-                              self.large_diag_environment.get_node(392, 392))
+                              (10, 10),
+                              (392, 392))
         self.assertIsNotNone(path, 'Failed to find possible path')
 
     def test_repeatability(self):
         import matplotlib.pyplot as mpl
         import numpy as np
 
-        start, end = Node(10, 10, 0), Node(350, 250, 0)
+        start, end = (10, 10), (350, 250)
         repeats = 2
         equal_paths = []
-        rdrs = np.linspace(-1, 1, 20)
+        rdrs = np.linspace(-1, 1, 10)
         risk_sums = []
 
         def make_path(start, end, rdr):
@@ -145,7 +142,7 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
             equal_paths.append(all([p == paths[0] for p in paths]))
             if not paths[0]:
                 return [rdr, np.inf]
-            risk_sum = sum([n.n for n in paths[0]])
+            risk_sum = sum([self.large_diag_environment.grid[n[0], n[1]] for n in paths[0]])
             return [rdr, risk_sum]
 
         pool = ProcessPool(nodes=8)
@@ -206,8 +203,8 @@ class JumpPointSearchAStarTestCase(BaseAStarTestCase):
         self.assertEqual(path[0], self.start, "Start node not included in path")
         self.assertEqual(path[-1], self.end, 'Goal node not included in path')
         self.assertEqual(path, [
-            Node(0, 0, 0),
-            Node(4, 4, 0)
+            (0, 0),
+            (4, 4)
         ],
                          "Incorrect path")
 
@@ -234,10 +231,9 @@ class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
         self.assertEqual(path[0], self.start, "Start node not included in path")
         self.assertEqual(path[-1], self.end, 'Goal node not included in path')
         self.assertEqual(path, [
-            Node(0, 0, 0),
-            Node(1, 1, 5),
-            Node(3, 2, 45),
-            Node(4, 4, 0)
+            (0, 0),
+            (2, 3),
+            (4, 4)
         ],
                          "Incorrect path")
 
@@ -249,12 +245,12 @@ class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
 
         algo = RiskJumpPointSearchAStar(ManhattanRiskHeuristic(self.large_diag_environment,
                                                                risk_to_dist_ratio=1))
-        path = algo.find_path(self.large_diag_environment, Node(10, 10, 0), Node(392, 392, 0))
-        risk_sum = sum([n.y for n in path])
+        path = algo.find_path(self.large_diag_environment, (10, 10), (392, 392))
+        risk_sum = sum([self.large_diag_environment.grid[n[0], n[1]] for n in path])
 
         fig = mpl.figure()
         ax = fig.add_subplot(111)
-        ax.plot([n.x for n in path], [n.y for n in path], color='red')
+        ax.plot([n[1] for n in path], [n[0] for n in path], color='red')
         im = ax.imshow(self.large_diag_environment.grid)
         fig.colorbar(im, ax=ax)
         ax.set_title(f'Risk JPS A* RDR=1, JG=0, JL=200 \n Risk sum={risk_sum:.4g}')
@@ -268,7 +264,7 @@ class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
         from pathos.multiprocessing import ProcessPool
         from itertools import product
 
-        start, end = Node(10, 10, 0), Node(350, 250, 0)
+        start, end = (10, 10), (350, 250)
         repeats = 2
         equal_paths = []
         rdrs = np.linspace(-100, 100, 10)
