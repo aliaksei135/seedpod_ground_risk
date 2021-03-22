@@ -106,6 +106,48 @@ class BallisticModelPAEFTestCase(unittest.TestCase):
         self.assertAlmostEqual(vi_mean, 7.1, delta=0.05)
         self.assertAlmostEqual(vi_std, 0.2, delta=0.2)
 
+        import matplotlib.pyplot as mpl
+        x = np.linspace(v_i.min(), v_i.max())
+        y = ss.norm(vi_mean, vi_std).pdf(x)
+        fig, ax = mpl.subplots(1, 1)
+        ax.hist(v_i, density=True)
+        ax.plot(x, y, 'r')
+        ax.set_title('Impact Velocity')
+        ax.set_ylabel('Probability Density')
+        ax.set_xlabel('Impact Velocity [m/s]')
+        fig.show()
+
+    def test_ballistic_angle(self):
+        """
+        Test ballistic model impact angle distributions in the Path Aligned Event frame
+        """
+        alt_mean = 50
+        alt_std = 5
+        vx_mean = 18
+        vx_std = 2.5
+        vy = 1
+        samples = 2000
+
+        # Compute ballistic distances in the path aligned LTP frame with origin at the directly below the event location
+        # AKA PAEF
+        d_i, v_i, a_i, t_i = self.bm.compute_ballistic_distance(ss.norm(alt_mean, alt_std).rvs(samples),
+                                                                ss.norm(vx_mean, vx_std).rvs(samples), vy)
+
+        ai_mean, ai_std = ss.norm.fit(a_i)
+        self.assertAlmostEqual(ai_mean, 1.57, delta=0.2)
+        self.assertAlmostEqual(ai_std, 0.001, delta=0.002)
+
+        import matplotlib.pyplot as mpl
+        x = np.linspace(a_i.min(), a_i.max())
+        y = ss.norm(ai_mean, ai_std).pdf(x)
+        fig, ax = mpl.subplots(1, 1)
+        ax.hist(a_i, density=True)
+        ax.plot(x, y, 'r')
+        ax.set_title('Impact Angle')
+        ax.set_ylabel('Probability Density')
+        ax.set_xlabel('Impact Angle [rad]')
+        fig.show()
+
 
 class BallisticModelNEDWindTestCase(unittest.TestCase):
 
@@ -160,7 +202,7 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
         wind_vel_y = wind_vel * np.sin(wind_dir)
 
         bm = BallisticModel(self.ac)
-        means, cov = bm.transform(alt, vel, track, wind_vel_y, wind_vel_x, loc_x, loc_y)
+        (means, cov), v_i, a_i = bm.transform(alt, vel, track, wind_vel_y, wind_vel_x, loc_x, loc_y)
         dist = ss.multivariate_normal(mean=means, cov=cov)
 
         if make_plot:
