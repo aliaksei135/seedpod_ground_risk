@@ -120,6 +120,23 @@ class PathAnalysisLayer(AnnotationLayer):
         fatality_pdfs = [fm.transform(strike_pdf, impact_ke=impact_ke) for strike_pdf, impact_ke in
                          zip(strike_pdfs, impact_kes)]
 
+        # Compute risk stats along path
+        pathwise_maxs = [pdf.max() for pdf in fatality_pdfs]
+        pathwise_meds = [np.median(pdf) for pdf in fatality_pdfs]
+        pathwise_mins = [pdf.min() for pdf in fatality_pdfs]
+
+        import matplotlib.pyplot as mpl
+        fig, ax = mpl.subplots(1, 1)
+        ax.set_yscale('log')
+        ax.set_ylim(bottom=1e-16)
+        ax.plot(pathwise_mins, 'b', label='Minimum')
+        ax.plot(pathwise_meds, 'g', label='Median')
+        ax.plot(pathwise_maxs, 'r', label='Maximum')
+        ax.legend()
+        ax.set_ylabel('Casualty Risk [$h^{-1}$]')
+        ax.set_title('Casualty Risk along path')
+        fig.show()
+
         risk_map = np.sum(fatality_pdfs, axis=0).reshape(raster_shape) * self.event_prob
 
         risk_raster = gv.Image(risk_map, bounds=bounds).options(alpha=0.7, cmap='viridis', tools=['hover'],
