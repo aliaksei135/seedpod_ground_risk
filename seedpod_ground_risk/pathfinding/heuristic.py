@@ -1,14 +1,14 @@
 import abc
+from typing import Tuple
 
 import numpy as np
 
 from seedpod_ground_risk.pathfinding import bresenham
-from seedpod_ground_risk.pathfinding.environment import Node
 
 
 class Heuristic(abc.ABC):
     @abc.abstractmethod
-    def h(self, node: Node, goal: Node):
+    def h(self, node: Tuple[int, int], goal: Tuple[int, int]):
         pass
 
 
@@ -23,17 +23,17 @@ class RiskHeuristic(Heuristic, abc.ABC):
 
 
 class EuclideanHeuristic(Heuristic):
-    def h(self, node: Node, goal: Node):
-        return ((node.x - goal.x) ** 2 + (node.y - goal.y) ** 2) ** 0.5
+    def h(self, node: Tuple[int, int], goal: Tuple[int, int]):
+        return ((node[0] - goal[0]) ** 2 + (node[1] - goal[1]) ** 2) ** 0.5
 
 
 class ManhattanHeuristic(Heuristic):
-    def h(self, node: Node, goal: Node):
-        return abs((node.x - goal.x)) + abs((node.y - goal.y))
+    def h(self, node: Tuple[int, int], goal: Tuple[int, int]):
+        return abs((node[0] - goal[0])) + abs((node[1] - goal[1]))
 
 
 class EuclideanRiskHeuristic(RiskHeuristic):
-    def h(self, node: Node, goal: Node):
+    def h(self, node: Tuple[int, int], goal: Tuple[int, int]):
         if node == goal:
             return 0
 
@@ -53,11 +53,11 @@ class EuclideanRiskHeuristic(RiskHeuristic):
                     return r + dist
             return dist
 
-        return calc(self.environment.grid, node.y, node.x, goal.y, goal.x, self.k)
+        return calc(self.environment.grid, node[0], node[1], goal[0], goal[1], self.k)
 
 
 class ManhattanRiskHeuristic(RiskHeuristic):
-    def h(self, node: Node, goal: Node):
+    def h(self, node: Tuple[int, int], goal: Tuple[int, int]):
         if node == goal:
             return 0
 
@@ -77,4 +77,4 @@ class ManhattanRiskHeuristic(RiskHeuristic):
                     return r + dist
             return dist
 
-        return calc(self.environment.grid, node.y, node.x, goal.y, goal.x, self.k)
+        return calc(self.environment.grid, node[0], node[1], goal[0], goal[1], self.k)

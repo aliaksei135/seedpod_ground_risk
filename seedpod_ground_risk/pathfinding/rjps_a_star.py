@@ -1,11 +1,11 @@
 from heapq import *
-from typing import List, Union
+from typing import List, Union, Tuple
 
 import numpy as np
 from numba import jit
 
 from seedpod_ground_risk.pathfinding.a_star import JumpPointSearchAStar
-from seedpod_ground_risk.pathfinding.environment import Node, GridEnvironment
+from seedpod_ground_risk.pathfinding.environment import GridEnvironment
 from seedpod_ground_risk.pathfinding.heuristic import Heuristic, RiskHeuristic
 
 global max_y, max_x
@@ -85,7 +85,8 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
         self.jump_limit = jump_limit
         self.heuristic_env_hash = hash(heuristic.environment)
 
-    def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[List[Node], None]:
+    def find_path(self, environment: GridEnvironment, start: Tuple[int, int], end: Tuple[int, int]) -> Union[
+        List[Tuple[int, int]], None]:
         if not environment.diagonals:
             raise ValueError('JPS relies on a grid environment with diagonals')
         if self.heuristic_env_hash != hash(environment):
@@ -105,7 +106,7 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
         open = []
         closed = {start: None}
         costs = np.full(environment.grid.shape, np.inf)
-        costs[start.y, start.x] = 0
+        costs[start[0], start[1]] = 0
         # if __debug__:
         #     debug_heuristic_cost = np.full(environment.grid.shape, np.inf)
 
@@ -113,9 +114,9 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
             h = self.heuristic(neighbour, end)
             heappush(open, (h, neighbour))
             closed[neighbour] = start
-            costs[neighbour.y, neighbour.x] = self.heuristic(start, neighbour)
+            costs[neighbour[0], neighbour[1]] = self.heuristic(start, neighbour)
             # if __debug__:
-            #     debug_heuristic_cost[neighbour.y, neighbour.x] = h
+            #     debug_heuristic_cost[neighbour[0], neighbour[1]] = h
 
         while open:
 
@@ -133,22 +134,22 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
                 return self._reconstruct_path(end, closed, environment.grid)
 
             parent = closed[node]
-            py, px = parent.y, parent.x
-            cy, cx = node.y, node.x
+            py, px = parent[0], parent[1]
+            cy, cx = node[0], node[1]
             current_cost = costs[cy, cx]
             dy, dx = np.clip(cy - py, -1, 1), np.clip(cx - px, -1, 1)
             ny, nx = cy + dy, cx + dx
             # If the next node is not passable, the current node will be a dead end
             if not is_passable(grid, ny, nx):
                 continue
-            jump_points = jump(grid, cy, cx, dy, dx, self.goal.y, self.goal.x, grid[ny, nx], self.jump_gap,
+            jump_points = jump(grid, cy, cx, dy, dx, self.goal[0], self.goal[1], grid[ny, nx], self.jump_gap,
                                self.jump_limit, 0)
 
             for node_vals in jump_points:
                 if (node_vals == -1).all():
                     continue
                 x, y = node_vals[0], node_vals[1]
-                successor = Node(*node_vals)
+                successor = (y, x)
                 cost = current_cost + self.heuristic(node, successor)
                 if costs[y, x] > cost:
                     costs[y, x] = cost

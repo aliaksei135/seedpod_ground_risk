@@ -34,27 +34,20 @@ class PathfindingLayer(PathAnalysisLayer):
 
         raster_grid = raster_data[1] * resolution ** 2
 
-        snapped_start_lon_idx, snapped_start_lat_idx = snap_coords_to_grid(raster_data[0], self.start_coords[1],
-                                                                           self.start_coords[0])
-        start_node = environment.Node(snapped_start_lon_idx, snapped_start_lat_idx,
-                                      raster_grid[snapped_start_lat_idx, snapped_start_lon_idx])
+        start_x, start_y = snap_coords_to_grid(raster_data[0], self.start_coords[1], self.start_coords[0])
+        end_x, end_y = snap_coords_to_grid(raster_data[0], self.end_coords[1], self.end_coords[0])
 
-        snapped_end_lon_idx, snapped_end_lat_idx = snap_coords_to_grid(raster_data[0], self.end_coords[1],
-                                                                       self.end_coords[0])
-        end_node = environment.Node(snapped_end_lon_idx, snapped_end_lat_idx,
-                                    raster_grid[snapped_end_lat_idx, snapped_end_lon_idx])
-
-        if raster_grid[snapped_start_lon_idx, snapped_start_lat_idx] < 0:
+        if raster_grid[start_y, start_x] < 0:
             print('Start node in blocked area, path impossible')
             return None
-        elif raster_grid[snapped_end_lon_idx, snapped_end_lat_idx] < 0:
+        elif raster_grid[end_y, end_x] < 0:
             print('End node in blocked area, path impossible')
             return None
 
         env = environment.GridEnvironment(raster_grid, diagonals=True, pruning=False)
         algo = self.algo(heuristic=self.heuristic(env, risk_to_dist_ratio=self.rdr))
         t0 = time()
-        path = algo.find_path(env, start_node, end_node)
+        path = algo.find_path(env, (start_y, start_x), (end_y, end_x))
         if path is None:
             print("Path not found")
             return None
@@ -71,8 +64,8 @@ class PathfindingLayer(PathAnalysisLayer):
 
         snapped_path = []
         for node in path:
-            lat = raster_data[0]['Latitude'][node.y]
-            lon = raster_data[0]['Longitude'][node.x]
+            lat = raster_data[0]['Latitude'][node[0]]
+            lon = raster_data[0]['Longitude'][node[1]]
             snapped_path.append((lon, lat))
 
         snapped_path = sg.LineString(snapped_path)
