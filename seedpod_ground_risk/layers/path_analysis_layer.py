@@ -7,8 +7,9 @@ from holoviews.element import Overlay
 
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.path_analysis.descent_models.ballistic_model import BallisticModel
+from seedpod_ground_risk.path_analysis.harm_models.fatality_model import FatalityModel
 from seedpod_ground_risk.path_analysis.harm_models.strike_model import StrikeModel
-from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid, bearing_to_angle
+from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid, bearing_to_angle, velocity_to_kinetic_energy
 from seedpod_ground_risk.pathfinding import bresenham
 
 
@@ -98,28 +99,33 @@ class PathAnalysisLayer(AnnotationLayer):
                                                  0, 0)
             dists_for_hdg[hdg] = (mean / resolution, cov / resolution, v_i, a_i)
 
-        # TODO Use something like Dask or OpenCV to speed this up in future as it's a simple map-reduce
         def point_distr(c):
             dist_params = dists_for_hdg[c[2]]
             pdf = ss.multivariate_normal(dist_params[0] + np.array([c[0], c[1]]), dist_params[1]).pdf(eval_grid)
             return pdf
 
+        # TODO these all wait sequentially for each step to be finished when they could really be pipelined then summed
+        #  at the end. Something like Dask or a wrapped func with joblib could do this
+
         impact_pdfs = [point_distr(c) for c in path_grid_points]
-        # impact_vels = [dists_for_hdg[c[2]][2] for c in path_grid_points]
-        impact_angles = [dists_for_hdg[c[2]][3] for c in path_grid_points]
+        impact_vels = np.array([dists_for_hdg[c[2]][2] for c in path_grid_points])
+        impact_kes = velocity_to_kinetic_energy(self.aircraft.mass, impact_vels)
+        impact_angles = np.array([dists_for_hdg[c[2]][3] for c in path_grid_points])
 
         sm = StrikeModel(raster_data[1].ravel(), resolution * resolution, self.aircraft.width)
-        strike_pdfs = [sm.transform(impact_pdf, impact_angle) for impact_pdf, impact_angle in
+        strike_pdfs = [sm.transform(impact_pdf, impact_angle=impact_angle) for impact_pdf, impact_angle in
                        zip(impact_pdfs, impact_angles)]
 
-        # TODO: Fatality model here
+        fm = FatalityModel(0.5, 1e6, 34)
+        fatality_pdfs = [fm.transform(strike_pdf, impact_ke=impact_ke) for strike_pdf, impact_ke in
+                         zip(strike_pdfs, impact_kes)]
 
-        risk_map = np.sum(strike_pdfs, axis=0).reshape(raster_shape) * self.event_prob
+        risk_map = np.sum(fatality_pdfs, axis=0).reshape(raster_shape) * self.event_prob
 
         risk_raster = gv.Image(risk_map, bounds=bounds).options(alpha=0.7, cmap='viridis', tools=['hover'],
                                                                 clipping_colors={'min': (0, 0, 0, 0)})
-        risk_raster = risk_raster.redim.range(z=(1e-9, risk_map.max()))
-        print('Max probability of striking person: ', risk_map.max())
+        risk_raster = risk_raster.redim.range(z=(risk_map.min() + 1e-15, risk_map.max()))
+        print('Max probability of fatality: ', risk_map.max())
 
         # labels = []
         # annotation_layers = []
