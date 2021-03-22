@@ -5,6 +5,7 @@ import numpy as np
 from labellines import labelLines
 
 from seedpod_ground_risk.path_analysis.harm_models.fatality_model import prob_fatality
+from seedpod_ground_risk.path_analysis.utils import velocity_to_kinetic_energy
 
 
 class FatalityModelTestCase(unittest.TestCase):
@@ -72,6 +73,41 @@ class FatalityModelTestCase(unittest.TestCase):
         ax.set_xscale('symlog')
         ax.set_title(f'Probability of Fatality - Dalamagkidis Model\n $\\alpha={alpha:3g}$, $\\beta={beta:3g}$')
         fig.show()
+
+
+class TestFatalityModelUtilsTestCase(unittest.TestCase):
+
+    def test_kinetic_energy_single_scalar(self):
+        mass = 2
+        vel = 5
+
+        out = velocity_to_kinetic_energy(mass, vel)
+
+        self.assertEqual(out, 25)
+
+    def test_kinetic_energy_multiple_scalar(self):
+        mass = 2
+        vel = np.linspace(5, 20, 4)
+
+        out = velocity_to_kinetic_energy(mass, vel)
+
+        np.testing.assert_array_equal(out, np.array([25, 100, 225, 400]))
+
+    def test_kinetic_energy_single_vect(self):
+        mass = 2
+        vel = np.array([[3], [4]])
+
+        out = velocity_to_kinetic_energy(mass, vel)
+
+        np.testing.assert_equal(out, 25)
+
+    def test_kinetic_energy_multiple_vect(self):
+        mass = 2
+        vel = np.array([[3, 5, 8, 7], [4, 12, 15, 24]])
+
+        out = velocity_to_kinetic_energy(mass, vel)
+
+        np.testing.assert_equal(out, np.array([5 ** 2, 13 ** 2, 17 ** 2, 25 ** 2]))
 
 
 if __name__ == '__main__':
