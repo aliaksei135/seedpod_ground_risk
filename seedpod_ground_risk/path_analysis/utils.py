@@ -48,3 +48,16 @@ def bearing_to_angle(bearing, is_rad=True):
         return (2 * np.pi - (bearing - (0.5 * np.pi))) % (2 * np.pi)
     else:
         return (360 - (bearing - 90)) % 360
+
+
+def velocity_to_kinetic_energy(mass, vel):
+    """
+    Return the kinetic energy
+    :param mass: mass of object [kg]
+    :param vel: velocity (column vector) or speed of object [m/s]
+    :return: kinetic energy in Joules
+    """
+    # If velocities are in column vector form, take their norm
+    if isinstance(vel, np.ndarray) and len(vel.shape) > 1:
+        vel = np.sqrt((vel * vel).sum(axis=0))
+    return 0.5 * mass * (vel ** 2)
