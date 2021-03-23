@@ -2,7 +2,6 @@ from heapq import *
 from typing import List, Union, Tuple
 
 import numpy as np
-from numba import jit
 
 from seedpod_ground_risk.pathfinding.a_star import JumpPointSearchAStar
 from seedpod_ground_risk.pathfinding.environment import GridEnvironment
@@ -11,7 +10,6 @@ from seedpod_ground_risk.pathfinding.heuristic import Heuristic, RiskHeuristic
 global max_y, max_x
 
 
-@jit(nopython=True)
 def is_passable(grid, y, x):
     if y > max_y or x > max_x or y < 0 or x < 0:
         return False
@@ -19,7 +17,6 @@ def is_passable(grid, y, x):
     return grid[y, x] != -1
 
 
-@jit(nopython=True)
 def jump(grid: np.ndarray, cy: int, cx: int, dy: int, dx: int, gy: int, gx: int, start_cost: float, jump_gap: float,
          jump_limit: float, jump_count: int) -> np.array:
     ny, nx = cy + dy, cx + dx
