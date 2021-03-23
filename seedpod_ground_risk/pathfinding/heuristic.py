@@ -19,7 +19,7 @@ class RiskHeuristic(Heuristic, abc.ABC):
         self.environment = environment
         self.resolution = resolution
         self.max = environment.grid.max()
-        self.k = risk_to_dist_ratio
+        self.k = risk_to_dist_ratio if risk_to_dist_ratio > 0 else 0
 
 
 class EuclideanHeuristic(Heuristic):
@@ -37,23 +37,14 @@ class EuclideanRiskHeuristic(RiskHeuristic):
         if node == goal:
             return 0
 
-        # @jit(nopython=True)
-        def calc(grid, ny, nx, gy, gx, k):
-            dist = ((nx - gx) ** 2 + (ny - gy) ** 2) ** 0.5
-            line = bresenham.make_line(nx, ny, gx, gy)
-            integral_val = grid[line[:, 0], line[:, 1]].sum()
-            # integral_val = 0
-            # for y, x in line:
-            #     integral_val += grid[y, x]
-            # integral_val = np.array([grid[y, x] for y, x in line]).sum()
+        dist = ((node[1] - goal[1]) ** 2 + (node[0] - goal[0]) ** 2) ** 0.5
+        line = bresenham.make_line(node[1], node[0], goal[1], goal[0])
+        integral_val = self.environment.grid[line[:, 0], line[:, 1]].sum()
 
-            if integral_val > 1:
-                r = k * np.log10(integral_val)
-                if r > 0:
-                    return r + dist
+        if integral_val > 1:
+            return self.k * np.log10(integral_val) + dist
+        else:
             return dist
-
-        return calc(self.environment.grid, node[0], node[1], goal[0], goal[1], self.k)
 
 
 class ManhattanRiskHeuristic(RiskHeuristic):
@@ -61,20 +52,11 @@ class ManhattanRiskHeuristic(RiskHeuristic):
         if node == goal:
             return 0
 
-        # @jit(nopython=True)
-        def calc(grid, ny, nx, gy, gx, k):
-            dist = abs((nx - gx)) + abs((ny - gy))
-            line = bresenham.make_line(nx, ny, gx, gy)
-            integral_val = grid[line[:, 0], line[:, 1]].sum()
-            # integral_val = np.array([grid[y, x] for y, x in line]).sum()
-            # integral_val = 0
-            # for y, x in line:
-            #     integral_val += grid[y, x]
+        dist = abs((node[1] - goal[1])) + abs((node[0] - goal[0]))
+        line = bresenham.make_line(node[1], node[0], goal[1], goal[0])
+        integral_val = self.environment.grid[line[:, 0], line[:, 1]].sum()
 
-            if integral_val > 1:
-                r = k * np.log10(integral_val)
-                if r > 0:
-                    return r + dist
+        if integral_val > 1:
+            return self.k * np.log10(integral_val) + dist
+        else:
             return dist
-
-        return calc(self.environment.grid, node[0], node[1], goal[0], goal[1], self.k)
