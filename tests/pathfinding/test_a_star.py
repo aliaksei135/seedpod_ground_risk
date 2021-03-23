@@ -12,11 +12,11 @@ class BaseAStarTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.small_deadend_environment = GridEnvironment(SMALL_DEADEND_TEST_GRID, diagonals=True, pruning=False)
-        self.small_diag_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=True, pruning=False)
-        self.small_no_diag_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=False, pruning=False)
-        self.large_diag_environment = GridEnvironment(LARGE_TEST_GRID, diagonals=True, pruning=False)
-        self.large_no_diag_environment = GridEnvironment(LARGE_TEST_GRID, diagonals=False, pruning=False)
+        self.small_deadend_environment = GridEnvironment(SMALL_DEADEND_TEST_GRID, diagonals=True)
+        self.small_diag_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=True)
+        self.small_no_diag_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=False)
+        self.large_diag_environment = GridEnvironment(LARGE_TEST_GRID, diagonals=True)
+        self.large_no_diag_environment = GridEnvironment(LARGE_TEST_GRID, diagonals=False)
         self.start = (0, 0)
         self.end = (4, 4)
 

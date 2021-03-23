@@ -10,6 +10,7 @@ from seedpod_ground_risk.layers.path_analysis_layer import PathAnalysisLayer
 from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid
 from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
 from seedpod_ground_risk.pathfinding.algorithm import Algorithm
+from seedpod_ground_risk.pathfinding.environment import GridEnvironment
 from seedpod_ground_risk.pathfinding.heuristic import ManhattanRiskHeuristic, Heuristic
 
 
@@ -30,7 +31,6 @@ class PathfindingLayer(PathAnalysisLayer):
 
     def annotate(self, data: List[gpd.GeoDataFrame], raster_data: Tuple[Dict[str, np.array], np.array],
                  resolution=20, **kwargs) -> Geometry:
-        from seedpod_ground_risk.pathfinding import environment
 
         raster_grid = raster_data[1] * resolution ** 2
 
@@ -44,7 +44,7 @@ class PathfindingLayer(PathAnalysisLayer):
             print('End node in blocked area, path impossible')
             return None
 
-        env = environment.GridEnvironment(raster_grid, diagonals=True, pruning=False)
+        env = GridEnvironment(raster_grid, diagonals=True)
         algo = self.algo(heuristic=self.heuristic(env, risk_to_dist_ratio=self.rdr))
         t0 = time()
         path = algo.find_path(env, (start_y, start_x), (end_y, end_x))
