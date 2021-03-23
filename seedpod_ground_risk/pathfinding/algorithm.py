@@ -1,11 +1,11 @@
 import abc
 from typing import Tuple
 
-from seedpod_ground_risk.pathfinding.environment import Environment
+from seedpod_ground_risk.pathfinding.environment import GridEnvironment
 
 
 class Algorithm(abc.ABC):
 
     @abc.abstractmethod
-    def find_path(self, environment: Environment, start: Tuple[int, int], goal: Tuple[int, int]):
+    def find_path(self, environment: GridEnvironment, start: Tuple[int, int], goal: Tuple[int, int]):
         pass

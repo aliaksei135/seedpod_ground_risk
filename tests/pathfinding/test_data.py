@@ -7,7 +7,7 @@ SMALL_TEST_GRID = np.array([
     [12, 34, 45, 45, 12],
     [10, 24, 30, 30, 10],
     [25, 12, 10, 2, 0]
-])
+], dtype=float)
 SMALL_TEST_GRAPH_NO_DIAGONAL = {
     (0, 0): {
         (1, 0),

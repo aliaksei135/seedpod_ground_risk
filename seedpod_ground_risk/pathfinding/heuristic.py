@@ -13,9 +13,9 @@ class Heuristic(abc.ABC):
 
 
 class RiskHeuristic(Heuristic, abc.ABC):
-    from seedpod_ground_risk.pathfinding.environment import Environment
+    from seedpod_ground_risk.pathfinding.environment import GridEnvironment
 
-    def __init__(self, environment: Environment, risk_to_dist_ratio=1, resolution=1):
+    def __init__(self, environment: GridEnvironment, risk_to_dist_ratio=1, resolution=1):
         self.environment = environment
         self.resolution = resolution
         self.max = environment.grid.max()
