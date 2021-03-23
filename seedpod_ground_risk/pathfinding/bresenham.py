@@ -4,7 +4,7 @@ from numba import jit
 
 # Reference: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 
-@jit(nopython=True, nogil=True, cache=True)
+@jit(nopython=True, nogil=True, cache=True, fastmath=True)
 def _make_line_low(x0: int, y0: int, x1: int, y1: int):
     dx = x1 - x0
     dy = y1 - y0
@@ -30,7 +30,7 @@ def _make_line_low(x0: int, y0: int, x1: int, y1: int):
     return line
 
 
-@jit(nopython=True, nogil=True, cache=True)
+@jit(nopython=True, nogil=True, cache=True, fastmath=True)
 def _make_line_high(x0: int, y0: int, x1: int, y1: int):
     dx = x1 - x0
     dy = y1 - y0
@@ -56,7 +56,7 @@ def _make_line_high(x0: int, y0: int, x1: int, y1: int):
     return line
 
 
-@jit(nopython=True, nogil=True, cache=True)
+@jit(nopython=True, nogil=True, cache=True, fastmath=True)
 def make_line(x0: int, y0: int, x1: int, y1: int) -> np.array:
     """
     Return a rasterised line between pairs of coordinates on a 2d integer grid according to the Bresenham algorithm.
