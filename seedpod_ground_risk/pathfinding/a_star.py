@@ -60,7 +60,6 @@ class GridAStar(Algorithm):
 
         # return path
 
-        # @jit(nopython=True, nogil=True)
         def get_path_sum(nx, ny, tx, ty, grid):
             line = bresenham.make_line(nx, ny, tx, ty)
             line_points = grid[line[:, 0], line[:, 1]]
@@ -69,12 +68,7 @@ class GridAStar(Algorithm):
                 return np.inf
             else:
                 return line_points.sum()
-            # integral_val = 0
-            # for y, x in line:
-            #     integral_val += grid[y, x]
-            # return integral_val
 
-        # @jit(nopython=True)
         def jump_path(node: Tuple[int, int], path, grid, goal: Tuple[int, int]):
             nx, ny = node[1], node[0]
             gx, gy = goal[1], goal[0]
