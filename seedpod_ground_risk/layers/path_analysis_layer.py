@@ -120,7 +120,7 @@ class PathAnalysisLayer(AnnotationLayer):
 
             return fatality_pdf, fatality_pdf.max()
 
-        res = jl.Parallel(n_jobs=-1, prefer='processes', verbose=10)(
+        res = jl.Parallel(n_jobs=-1, prefer='processes', verbose=1)(
             jl.delayed(wrap_pipeline)(c) for c in path_grid_points)
         fatality_pdfs = [r[0] for r in res]
         pathwise_maxs = np.array([r[1] for r in res])
