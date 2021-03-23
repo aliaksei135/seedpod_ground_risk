@@ -1,6 +1,7 @@
 from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn, Optional, List, Sequence
 
 import geopandas as gpd
+import joblib as jl
 import numpy as np
 import shapely.geometry as sg
 from holoviews import Overlay, Element
@@ -9,6 +10,7 @@ from holoviews.element import Geometry
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.layers.data_layer import DataLayer
 from seedpod_ground_risk.layers.layer import Layer
+from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
 
 
 def make_bounds_polygon(*args: Iterable[float]) -> sg.Polygon:
@@ -224,15 +226,13 @@ class PlotServer:
                             raster_grid += layer_raster_grid
                         raster_grid = np.flipud(raster_grid)
                         raster_indices['Latitude'] = np.flip(raster_indices['Latitude'])
-                        annotations = []
-                        print('Annotating Layers...')
-                        for layer in self.annotation_layers:
-                            annotation = layer.annotate(raw_datas, (raster_indices, raster_grid),
-                                                        resolution=self.raster_resolution_m)
-                            if annotation:
-                                annotations.append(annotation)
 
-                        annotation_overlay = Overlay(annotations)
+                        print('Annotating Layers...')
+                        res = jl.Parallel(n_jobs=1, verbose=1, prefer='threads')(
+                            jl.delayed(layer.annotate)(raw_datas, (raster_indices, raster_grid)) for layer in
+                            self.annotation_layers)
+
+                        annotation_overlay = Overlay([annot for annot in res if annot is not None])
                         plot = Overlay([self._base_tiles, plot, annotation_overlay]).collate()
                     else:
                         plot = Overlay([self._base_tiles, plot]).collate()
@@ -270,23 +270,16 @@ class PlotServer:
         """
         Generate static layers of map
 
+        :param raster_shape: shape of raster grid
         :param shapely.geometry.Polygon bounds_poly: the bounding polygon for which to generate the map
         """
-        # Polygons aren't much use without a base map context
-        assert self.data_layers is not None
-        from concurrent.futures import as_completed
-        from concurrent.futures.thread import ThreadPoolExecutor
 
         layers = {}
         self._progress_callback('Generating layer data')
-        with ThreadPoolExecutor() as pool:
-            layer_futures = [pool.submit(self.generate_layer, layer, bounds_poly, raster_shape, self._time_idx,
-                                         self.raster_resolution_m) for layer in self.data_layers]
-        # Store generated layers as they are completed
-        for future in as_completed(layer_futures):
-            key, result = future.result()
-            # Store layer
-            # Lock not needed as this loop is synchronous
+        res = jl.Parallel(n_jobs=-1, verbose=1, prefer='threads')(
+            jl.delayed(self.generate_layer)(layer, bounds_poly, raster_shape, self._time_idx,
+                                            self.raster_resolution_m) for layer in self.data_layers)
+        for key, result in res:
             if result:
                 layers[key] = result
 
