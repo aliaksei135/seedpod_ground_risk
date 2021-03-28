@@ -157,6 +157,8 @@ class PlotServer:
             doc.clear()
             self._reproject_ranges()
         hvPlot = self.compose_overlay_plot(self._x_range, self._y_range)
+        if self._preload_complete:
+            self._progress_bar_callback(100)
         fig = hv.render(hvPlot, backend='bokeh')
         fig.output_backend = 'webgl'
 
@@ -268,7 +270,6 @@ class PlotServer:
             traceback.print_exc()
             print(e)
             plot = self._base_tiles
-        self._progress_bar_callback(100)
         return plot.opts(width=self.plot_size[0], height=self.plot_size[1],
                          tools=self.tools, active_tools=self.active_tools)
 
