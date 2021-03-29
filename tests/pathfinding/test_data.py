@@ -141,7 +141,10 @@ SMALL_TEST_GRAPH_NO_DIAGONAL = {
     }
 }
 
-LARGE_TEST_GRID = np.genfromtxt('costmap.csv', delimiter=',')
+import os
+
+LARGE_TEST_GRID = np.genfromtxt(os.sep.join((os.path.dirname(os.path.realpath(__file__)), 'costmap.csv')),
+                                delimiter=',')
 
 # 5x5
 SMALL_DEADEND_TEST_GRID = np.array([

@@ -78,6 +78,7 @@ class ManhattanHeuristicTestCase(unittest.TestCase):
 
 
 class EuclideanRiskHeuristicTestCase(unittest.TestCase):
+
     def setUp(self) -> None:
         super().setUp()
         self.env = GridEnvironment(SMALL_TEST_GRID)
@@ -87,10 +88,11 @@ class EuclideanRiskHeuristicTestCase(unittest.TestCase):
         """
         Test both dimension differences being positive
         """
+        import numpy as np
         n1 = (0, 0)
         n2 = (1, 1)
         cost = self.heuristic.h(n1, n2)
-        self.assertEqual(cost, 2.5 + 2 ** 0.5, 'Wrong cost')
+        self.assertEqual(cost, 1 * np.log10(5) + 2 ** 0.5, 'Wrong cost')
 
 
 if __name__ == '__main__':

@@ -271,8 +271,6 @@ class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
         jgs = [0]  # np.linspace(0, 5000, 2)
         jls = np.linspace(0, 50, 2)
 
-        self.large_diag_environment.get_as_graph()
-
         def make_path(start, end, rdr, jg, jl):
             algo = RiskJumpPointSearchAStar(ManhattanRiskHeuristic(self.large_diag_environment,
                                                                    risk_to_dist_ratio=rdr),
@@ -284,10 +282,11 @@ class RiskJumpPointSearchAStarTestCase(BaseAStarTestCase):
             equal_paths.append(all([p == paths[0] for p in paths]))
             if not paths[0]:
                 return [rdr, np.inf, jl, jg]
-            risk_sum = sum([n.n for n in paths[0]])
+            risk_sum = sum([self.large_diag_environment.grid[n[0], n[1]] for n in paths[0]])
             return [rdr, risk_sum, jl, jg]
 
         pool = ProcessPool(nodes=8)
+        pool.restart(force=True)
         params = np.array(list(product(rdrs, jgs, jls)))
         risk_sums = pool.map(run_params, params[:, 0], params[:, 1], params[:, 2])
         pool.close()
