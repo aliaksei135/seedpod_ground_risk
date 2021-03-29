@@ -252,8 +252,9 @@ class RoadsLayer(DataLayer):
 
             road_gdf = gpd.GeoDataFrame(
                 {'geometry': point_polys, 'population_per_hour': pops, 'road_name': len(pops) * [road_name]})
-            road_gdf = gpd.overlay(road_gdf, road_width_buffer_gdf, how='intersection')
-            all_road_gdfs.append(road_gdf)
+            if not road_gdf.empty:
+                road_gdf = gpd.overlay(road_gdf, road_width_buffer_gdf, how='intersection')
+                all_road_gdfs.append(road_gdf)
 
         roads_gdf = pd.concat(all_road_gdfs)
         return roads_gdf
