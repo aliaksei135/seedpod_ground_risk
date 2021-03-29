@@ -125,12 +125,14 @@ class PathAnalysisLayer(AnnotationLayer):
             strike_pdf = sm.transform(impact_pdf, impact_angle=impact_angle)
             fatality_pdf = fm.transform(strike_pdf, impact_ke=impact_ke)
 
-            return fatality_pdf, fatality_pdf.max()
+            return fatality_pdf, fatality_pdf.max(), strike_pdf.max()
 
         res = jl.Parallel(n_jobs=-1, prefer='processes', verbose=1)(
             jl.delayed(wrap_pipeline)(c) for c in path_grid_points)
         fatality_pdfs = [r[0] for r in res]
-        pathwise_maxs = np.array([r[1] for r in res])
+        # PDFs come out in input order so sorting not required
+        pathwise_fatality_maxs = np.array([r[1] for r in res], dtype=np.longdouble)
+        pathwise_strike_maxs = np.array([r[2] for r in res], dtype=np.longdouble)
 
         import matplotlib.pyplot as mpl
         fig, ax = mpl.subplots(1, 1)
