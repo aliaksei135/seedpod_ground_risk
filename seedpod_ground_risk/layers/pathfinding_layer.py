@@ -44,7 +44,7 @@ class PathfindingLayer(PathAnalysisLayer):
             print('End node in blocked area, path impossible')
             return None
 
-        env = GridEnvironment(raster_grid, diagonals=True)
+        env = GridEnvironment(raster_grid, diagonals=False)
         algo = self.algo(heuristic=self.heuristic(env, risk_to_dist_ratio=self.rdr))
         t0 = time()
         path = algo.find_path(env, (start_y, start_x), (end_y, end_x))
