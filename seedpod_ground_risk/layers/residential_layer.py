@@ -48,7 +48,7 @@ class ResidentialLayer(OSMTagLayer):
         census_df['population'] = census_df['density'] * census_df['geometry'].to_crs('EPSG:3395').area
 
         # Construct the GeoViews Polygons
-        gv_polys = gv.Polygons(census_df, kdims=['Longitude', 'Latitude'], vdims=['name', 'population']) \
+        gv_polys = gv.Polygons(census_df, kdims=['Longitude', 'Latitude'], vdims=['name', 'population', 'density']) \
             .opts(color='population',
                   cmap=colorcet.CET_L18, alpha=0.8,
                   colorbar=True, colorbar_opts={'title': 'Population'}, show_legend=False, line_color='population')
