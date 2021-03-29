@@ -92,17 +92,24 @@ class PathAnalysisLayer(AnnotationLayer):
         x, y = np.mgrid[0:raster_shape[0], 0:raster_shape[1]]
         eval_grid = np.vstack((x.ravel(), y.ravel())).T
 
-        dists_for_hdg = {}
-        for hdg in headings:
+        def wrap_hdg_dists(alt, vel, hdg, wind_vel_y, wind_vel_x):
             (mean, cov), v_i, a_i = bm.transform(alt, vel,
                                                  ss.norm(hdg, np.deg2rad(2)).rvs(samples),
                                                  wind_vel_y, wind_vel_x,
                                                  0, 0)
-            dists_for_hdg[hdg] = (mean / resolution, cov / resolution, v_i, a_i)
+            return hdg, (mean / resolution, cov / resolution, v_i, a_i)
+
+        njobs = 1 if len(headings) < 3 else -1
+
+        res = jl.Parallel(n_jobs=njobs, prefer='processes', verbose=1)(
+            jl.delayed(wrap_hdg_dists)(alt, vel, hdg, wind_vel_y, wind_vel_x) for hdg in headings)
+        dists_for_hdg = dict(res)
 
         def point_distr(c):
             dist_params = dists_for_hdg[c[2]]
-            pdf = ss.multivariate_normal(dist_params[0] + np.array([c[0], c[1]]), dist_params[1]).pdf(eval_grid)
+            pdf = np.array(
+                ss.multivariate_normal(dist_params[0] + np.array([c[0], c[1]]), dist_params[1]).pdf(eval_grid),
+                dtype=np.longdouble)
             return pdf
 
         sm = StrikeModel(raster_data[1].ravel(), resolution * resolution, self.aircraft.width)
