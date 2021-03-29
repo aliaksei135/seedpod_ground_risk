@@ -101,7 +101,7 @@ class PathAnalysisLayer(AnnotationLayer):
 
         njobs = 1 if len(headings) < 3 else -1
 
-        res = jl.Parallel(n_jobs=njobs, prefer='processes', verbose=1)(
+        res = jl.Parallel(n_jobs=njobs, prefer='threads', verbose=1)(
             jl.delayed(wrap_hdg_dists)(alt, vel, hdg, wind_vel_y, wind_vel_x) for hdg in headings)
         dists_for_hdg = dict(res)
 
@@ -127,7 +127,7 @@ class PathAnalysisLayer(AnnotationLayer):
 
             return fatality_pdf, fatality_pdf.max(), strike_pdf.max()
 
-        res = jl.Parallel(n_jobs=-1, prefer='processes', verbose=1)(
+        res = jl.Parallel(n_jobs=-1, prefer='threads', verbose=1)(
             jl.delayed(wrap_pipeline)(c) for c in path_grid_points)
         fatality_pdfs = [r[0] for r in res]
         # PDFs come out in input order so sorting not required
