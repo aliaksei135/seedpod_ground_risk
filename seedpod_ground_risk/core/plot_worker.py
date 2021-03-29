@@ -15,6 +15,8 @@ class PlotWorkerSignals(QObject):
     reorder_layers = Signal(list)
     add_layer = Signal(Layer)
 
+    external_plot = Signal(list)
+
 
 class PlotWorker(QRunnable):
 
@@ -46,7 +48,8 @@ class PlotWorker(QRunnable):
 
         self.plot_server = PlotServer(tiles=tiles,
                                       progress_callback=self.status_update,
-                                      update_callback=self.layers_update)
+                                      update_callback=self.layers_update,
+                                      plot_callback=self.plot_external)
         self.plot_server.start()
         self.signals.ready.emit(self.plot_server.url)
 
@@ -88,3 +91,6 @@ class PlotWorker(QRunnable):
 
     def status_update(self, status):
         self.signals.update_status.emit(status)
+
+    def plot_external(self, plots):
+        self.signals.external_plot.emit(plots)

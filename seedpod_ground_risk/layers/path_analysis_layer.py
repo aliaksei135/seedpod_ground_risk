@@ -45,7 +45,7 @@ class PathAnalysisLayer(AnnotationLayer):
         self.endpoint = self.dataframe.iloc[0].geometry.coords[-1]
 
     def annotate(self, data: List[gpd.GeoDataFrame], raster_data: Tuple[Dict[str, np.array], np.array],
-                 resolution=20, **kwargs) -> Overlay:
+                 resolution=20, external_plot_callback=None) -> Overlay:
         import geoviews as gv
         import scipy.stats as ss
         import joblib as jl
@@ -135,23 +135,35 @@ class PathAnalysisLayer(AnnotationLayer):
         pathwise_fatality_maxs = np.array([r[1] for r in res], dtype=np.longdouble)
         pathwise_strike_maxs = np.array([r[2] for r in res], dtype=np.longdouble)
 
-        # import matplotlib.pyplot as mpl
-        # fig, ax = mpl.subplots(1, 1)
-        # path_dist = self.dataframe.to_crs('EPSG:27700').iloc[0].geometry.length
-        # ax.set_yscale('log')
-        # ax.set_ylim(bottom=1e-16, top=1e-4)
-        # x = np.linspace(0, path_dist, len(pathwise_fatality_maxs))
-        # ax.axhline(y=np.median(pathwise_fatality_maxs), c='y',
-        #            label='Fatality Median')  # This seems to be as stable as fsum
-        # ax.plot(x, pathwise_fatality_maxs[::-1], c='r', label='Fatality Risk')
-        # ax.axhline(y=np.median(pathwise_strike_maxs), c='g',
-        #            label='Strike Median')  # This seems to be as stable as fsum
-        # ax.plot(x, pathwise_strike_maxs[::-1], c='b', label='Strike Risk')
-        # ax.legend()
-        # ax.set_ylabel('Risk [$h^{-1}$]')
-        # ax.set_xlabel('Path Distance [m]')
-        # ax.set_title('Casualty Risk along path')
-        # fig.show()
+        if external_plot_callback:
+            import dvg_pyqtgraph_threadsafe as tsc
+            import pyqtgraph as pg
+            import matplotlib.pyplot as mpl
+            fig, ax = mpl.subplots(1, 1)
+            path_dist = self.dataframe.to_crs('EPSG:27700').iloc[0].geometry.length
+            ax.set_yscale('log')
+            ax.set_ylim(bottom=1e-16, top=1e-4)
+            x = np.linspace(0, path_dist, len(pathwise_fatality_maxs))
+            ax.axhline(y=np.median(pathwise_fatality_maxs), c='y',
+                       label='Fatality Median')  # This seems to be as stable as fsum
+            ax.plot(x, pathwise_fatality_maxs[::-1], c='r', label='Fatality Risk')
+            ax.axhline(y=np.median(pathwise_strike_maxs), c='g',
+                       label='Strike Median')  # This seems to be as stable as fsum
+            ax.plot(x, pathwise_strike_maxs[::-1], c='b', label='Strike Risk')
+            ax.legend()
+            ax.set_ylabel('Risk [$h^{-1}$]')
+            ax.set_xlabel('Path Distance [m]')
+            ax.set_title('Casualty Risk along path')
+
+            plots = [
+                tsc.PlotCurve(len(x), pg.PlotDataItem(x, pathwise_fatality_maxs[::-1], name='Fatality Risk')),
+                tsc.PlotCurve(len(x), pg.PlotDataItem(x, pathwise_strike_maxs[::-1], name='Strike Risk')),
+                tsc.PlotCurve(len(x), pg.PlotDataItem(x, len(x) * [np.median(pathwise_fatality_maxs)],
+                                                      name='Median Fatality Risk')),
+                tsc.PlotCurve(len(x), pg.PlotDataItem(x, len(x) * [np.median(pathwise_strike_maxs)],
+                                                      name='Median Strike Risk')),
+            ]
+            external_plot_callback(plots)
 
         risk_map = np.sum(fatality_pdfs, axis=0).reshape(raster_shape) * self.event_prob
 

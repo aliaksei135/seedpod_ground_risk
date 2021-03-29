@@ -6,6 +6,7 @@ import numpy as np
 import shapely.geometry as sg
 from holoviews import Overlay, Element
 from holoviews.element import Geometry
+from matplotlib.pyplot import Figure
 
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.layers.data_layer import DataLayer
@@ -47,6 +48,7 @@ class PlotServer:
                  raster_resolution: float = 40,
                  plot_size: Tuple[int, int] = (760, 735),
                  progress_callback: Optional[Callable[[str], None]] = None,
+                 plot_callback: Optional[Callable[[Figure], None]] = None,
                  update_callback: Optional[Callable[[str], None]] = None):
         """
         Initialise a Plot Server
@@ -78,11 +80,15 @@ class PlotServer:
         self.data_layers = [ResidentialLayer('Residential Population', buffer_dist=30),
                             RoadsLayer('Road Traffic Population/Hour')]
 
-        self.annotation_layers = []
+        self.annotation_layers = [
+            # PathAnalysisLayer('test', 'C:\\Users\\Aliak\\Downloads\\geoman(1).json'),
+            PathfindingLayer('path', start_lon=-1.5, start_lat=50.85, end_lon=-1.3, end_lat=50.95)
+        ]
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
         self._update_callback = update_callback if update_callback is not None else lambda *args: None
+        self._plot_callback = plot_callback if plot_callback is not None else lambda *args: None
 
         self._x_range, self._y_range = [-1.45, -1.35], [50.85, 50.95]
 
@@ -228,9 +234,10 @@ class PlotServer:
                         raster_indices['Latitude'] = np.flip(raster_indices['Latitude'])
 
                         print('Annotating Layers...')
-                        res = jl.Parallel(n_jobs=1, verbose=1, prefer='threads')(
-                            jl.delayed(layer.annotate)(raw_datas, (raster_indices, raster_grid)) for layer in
-                            self.annotation_layers)
+                        res = jl.Parallel(n_jobs=-1, verbose=1, prefer='threads')(
+                            jl.delayed(layer.annotate)(raw_datas, (raster_indices, raster_grid),
+                                                       external_plot_callback=self._plot_callback)
+                            for layer in self.annotation_layers)
 
                         annotation_overlay = Overlay([annot for annot in res if annot is not None])
                         plot = Overlay([self._base_tiles, plot, annotation_overlay]).collate()

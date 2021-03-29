@@ -113,6 +113,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.plot_worker.signals.update_layers.connect(self.layers_update)
         self.plot_worker.signals.update_status.connect(self.status_update)
         self.plot_worker.signals.ready.connect(self.plot_ready)
+        self.plot_worker.signals.external_plot.connect(self.external_plot)
         threadpool.start(self.plot_worker)
         print("Initialising Plot Server")
         self.plot_worker.signals.init.emit('Wikipedia')
@@ -218,6 +219,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             layerObj = list(LAYER_OBJECTS.values())[wizard.layerType]
             layer = layerObj(wizard.layerKey, **wizard.opts)
             self.plot_worker.add_layer(layer)
+
+    def external_plot(self, plots):
+        import pyqtgraph as pg
+        self.external_plot_view = pg.GraphicsLayoutWidget()
+        for p in plots:
+            self.external_plot_view.addItem(p)
+            p.update()
 
     def resize_plot(self, width, height):
         self.plot_worker.resize_plot(width, height)
