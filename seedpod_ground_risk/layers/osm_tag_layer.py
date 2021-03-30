@@ -38,6 +38,8 @@ class OSMTagLayer(BlockableDataLayer):
         raster_grid = np.copy(list(raster.data.data_vars.items())[0][1].data.astype(np.float))
         if self.blocking:
             raster_grid[raster_grid != 0] = -1
+        else:
+            raster_grid = None
 
         return polys, raster_grid, gpd.GeoDataFrame(self._landuse_polygons)
 
