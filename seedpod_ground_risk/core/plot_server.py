@@ -221,9 +221,10 @@ class PlotServer:
                         raster_grid = np.zeros((raster_shape[1], raster_shape[0]), dtype=np.float64)
                         for res in self._generated_data_layers.values():
                             layer_raster_grid = res[1]
-                            nans = np.isnan(layer_raster_grid)
-                            layer_raster_grid[nans] = 0
-                            raster_grid += layer_raster_grid
+                            if layer_raster_grid is not None:
+                                nans = np.isnan(layer_raster_grid)
+                                layer_raster_grid[nans] = 0
+                                raster_grid += layer_raster_grid
                         raster_grid = np.flipud(raster_grid)
                         raster_indices['Latitude'] = np.flip(raster_indices['Latitude'])
 
