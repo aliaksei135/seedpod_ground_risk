@@ -57,7 +57,7 @@ psutil==5.8.0
 pyarrow==2.0.0
 pyct==0.4.6
 pygeos==0.8
-Pygments==2.7.3
+Pygments==2.7.4
 pyinstaller @ https://github.com/pyinstaller/pyinstaller/tarball/develop
 pyinstaller-hooks-contrib==2020.11
 pyparsing==2.4.7
