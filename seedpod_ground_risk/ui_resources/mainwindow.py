@@ -83,7 +83,7 @@ class Ui_MainWindow(object):
         self.plotWebview.setObjectName(u"plotWebview")
         sizePolicy.setHeightForWidth(self.plotWebview.sizePolicy().hasHeightForWidth())
         self.plotWebview.setSizePolicy(sizePolicy)
-        self.plotWebview.setMinimumSize(QSize(800, 781))
+        self.plotWebview.setMinimumSize(QSize(800, 770))
 
         self.horizontalLayout_4.addWidget(self.plotWebview)
 
