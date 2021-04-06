@@ -88,7 +88,7 @@ topojson==1.0
 tornado==6.1
 tqdm==4.54.1
 typing-extensions==3.7.4.3
-urllib3==1.26.2
+urllib3==1.26.4
 xarray==0.16.2
 zict==2.0.0
 
