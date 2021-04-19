@@ -160,6 +160,7 @@ class PlotServer:
         if doc.roots:
             doc.clear()
             self._reproject_ranges()
+            self._progress_callback(10)
         hvPlot = self.compose_overlay_plot(self._x_range, self._y_range)
         if self._preload_complete:
             self._progress_bar_callback(100)
@@ -216,9 +217,10 @@ class PlotServer:
                     from time import time
 
                     t0 = time()
+                    self._progress_bar_callback(10)
                     self.generate_layers(bounds_poly, raster_shape)
                     self._progress_callback("Rendering new map...")
-                    self._progress_bar_callback(10)
+                    self._progress_bar_callback(50)
                     plot = Overlay([res[0] for res in self._generated_data_layers.values()])
                     print("Generated all layers in ", time() - t0)
                     if self.annotation_layers:
@@ -246,7 +248,7 @@ class PlotServer:
                         plot = Overlay([self._base_tiles, plot, annotation_overlay]).collate()
                     else:
                         plot = Overlay([self._base_tiles, plot]).collate()
-                    self._progress_bar_callback(50)
+                    self._progress_bar_callback(90)
 
                 else:
                     self._progress_callback('Area too large to render!')
