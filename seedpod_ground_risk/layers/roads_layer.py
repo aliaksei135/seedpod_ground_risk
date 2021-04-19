@@ -113,7 +113,7 @@ class RoadsLayer(DataLayer):
 
         points = gv.Polygons(roads_gdf,
                              kdims=['Longitude', 'Latitude'], vdims=['population_per_hour', 'density']).opts(
-            colorbar=True,
+            # colorbar=True,
             cmap=colorcet.CET_L18,
             color='population_per_hour',
             line_color='population_per_hour')
