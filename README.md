@@ -29,7 +29,7 @@ the [drone code](https://dronesafe.uk/drone-code/).***
 
     MIT License
     
-    Copyright (c) 2020 Aliaksei Pilko
+    Copyright (c) 2021 Aliaksei Pilko
     
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
