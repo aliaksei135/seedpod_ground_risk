@@ -44,7 +44,6 @@ class ResidentialLayer(OSMTagLayer):
         # EPSG:4326 is *not* an equal area projection so would give gibberish areas
         # Project geometries to an equidistant/equal areq projection
         census_df['population'] = census_df['density'] * census_df['geometry'].to_crs('EPSG:3395').area
-        total_population = census_df['population'].sum()
 
         # Construct the GeoViews Polygons
         gv_polys = gv.Polygons(census_df, kdims=['Longitude', 'Latitude'], vdims=['name', 'population']) \
