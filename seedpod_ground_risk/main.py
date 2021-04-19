@@ -115,7 +115,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.plot_worker.signals.ready.connect(self.plot_ready)
         threadpool.start(self.plot_worker)
         print("Initialising Plot Server")
-        self.plot_worker.signals.init.emit('Wikipedia')
+        self.plot_worker.signals.init.emit('OSM')
 
         self.listWidget.setEnabled(True)
         self.listWidget.setDragDropMode(QAbstractItemView.InternalMove)

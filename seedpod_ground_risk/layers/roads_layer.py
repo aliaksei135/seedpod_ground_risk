@@ -96,7 +96,7 @@ class RoadsLayer(DataLayer):
         self._ingest_relative_traffic_variations()
 
     def generate(self, bounds_polygon: sg.Polygon, raster_shape: Tuple[int, int], from_cache: bool = False,
-                 hour: int = 0, resolution: float = 20, **kwargs) -> \
+                 hour: int = 8, resolution: float = 20, **kwargs) -> \
             Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]:
         from holoviews.operation.datashader import rasterize
         import geoviews as gv
@@ -113,7 +113,7 @@ class RoadsLayer(DataLayer):
 
         points = gv.Polygons(roads_gdf,
                              kdims=['Longitude', 'Latitude'], vdims=['population_per_hour', 'density']).opts(
-            colorbar=True,
+            # colorbar=True,
             cmap=colorcet.CET_L18,
             color='population_per_hour',
             line_color='population_per_hour')
