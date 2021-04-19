@@ -1,3 +1,4 @@
+from itertools import combinations
 from typing import Tuple
 
 import geopandas as gpd
@@ -45,32 +46,164 @@ def query_osm_polygons(osm_tag, bound_poly: sg.Polygon) -> gpd.GeoDataFrame:
     nodes = {o['id']: (o['lon'], o['lat']) for o in data['elements'] if o['type'] == 'node'}
     relations = [o for o in data['elements'] if o['type'] == 'relation']
 
-    related_way_ids = []
-    for rel in relations:
-        rw = [w['ref'] for w in rel['members']]
-        related_way_ids += rw
-        rel_nodes = []
-        for way_id in rw:
-            if way_id in ways:
-                rel_nodes += ways[way_id]
-                ways.pop(way_id)
-        ways[rel['id']] = rel_nodes
-
+    used_ways = []
     df_list = []
+    for rel in relations:
+        if rel['type'] == 'multipolygon':
+            # Get all the id and role (inner/outer) of all relation members that are ways
+            rw = [(w['ref'], w['role']) for w in rel['members'] if w['type'] == 'way']
+            rel_outer_rings = []
+            rel_inner_rings = []
+
+            unclosed_ways = []
+            # Iterate each way in relation
+            for way_id, role in rw:
+                # Find the way ID in ways
+                if way_id in ways:
+                    way = ways[way_id]
+                    # Find the vertices (AKA nodes) that make up each polygon
+                    locs = [nodes[i] for i in way]
+                    start = locs[0]
+                    end = locs[-1]
+                    # Check if way is already a closed ring
+                    if start == end:
+                        # Simplest case where way is already valid ring
+                        # Create linear ring from vertices and classify by role
+                        ring = sg.LinearRing(locs)
+                        if role == 'inner':
+                            rel_inner_rings.append(ring)
+                        else:
+                            rel_outer_rings.append(ring)
+                    elif len(unclosed_ways) > 0:
+                        consumed = False
+                        # Way is not a valid ring
+                        # Check if there are any matching dangling nodes in other unclosed ways
+                        for _, uw in unclosed_ways:
+                            uw_start = uw[0]
+                            uw_end = uw[-1]
+                            if uw_end == start:
+                                # If the start of this way is the same as the end of the unclosed way
+                                # Append this ways nodes with duplicate coord sliced off
+                                uw += locs
+                                consumed = True
+                            elif uw_end == end:
+                                # If the end of this way is the same as the end of the unclosed way
+                                # Append this ways nodes reversed with the duplicate coord sliced off
+                                uw += locs[::-1]
+                                consumed = True
+                            elif uw_start == end:
+                                # If the end of this way is the same as the start of the unclosed way
+                                # Prepend this ways nodes with the duplicate coord sliced off
+                                uw[0:0] = locs
+                                consumed = True
+                            elif uw_start == start:
+                                # If the start of this way is the same as the start of the unclosed way
+                                # Prepend this ways nodes reversed with the duplicate coord sliced off
+                                uw[0:0] = locs[::-1]
+                                consumed = True
+
+                            # Check if this way has been used
+                            if consumed:
+                                # uw_start/end may have changed by now
+                                if uw[0] == uw[-1]:
+                                    # Made a closed ring
+                                    # Create linear ring from vertices and classify by role
+                                    ring = sg.LinearRing(uw)
+                                    if role == 'inner':
+                                        rel_inner_rings.append(ring)
+                                    else:
+                                        rel_outer_rings.append(ring)
+                                    # Remove from unclosed ways
+                                    unclosed_ways.remove((role, uw))
+                                break
+
+                        # unclosed_ways is never empty in this if block, therefore loop is always entered
+                        # and consumed is always defined
+                        if not consumed:
+                            # This way is currently isolated so store as another unclosed way
+                            unclosed_ways.append((role, locs))
+                    else:
+                        unclosed_ways.append((role, locs))
+                    # Store used ways to prevent double processing later on
+                    # Do not pop them out as other relations could be using them!
+                    used_ways.append(way_id)
+            # Link up remaining unclosed polys
+            if unclosed_ways:
+                for (r1, uw1), (r2, uw2) in combinations(unclosed_ways, 2):
+                    consumed = False
+                    uw1_start = uw1[0]
+                    uw1_end = uw1[-1]
+                    uw2_start = uw2[0]
+                    uw2_end = uw2[-1]
+                    if uw1_end == uw2_start:
+                        # If the start of this way is the same as the end of the unclosed way
+                        # Append this ways nodes with duplicate coord sliced off
+                        uw1 += uw2[1:]
+                        consumed = True
+                    elif uw1_end == uw2_end:
+                        # If the end of this way is the same as the end of the unclosed way
+                        # Append this ways nodes reversed with the duplicate coord sliced off
+                        uw1 += uw2[:0:-1]
+                        consumed = True
+                    elif uw1_start == uw2_end:
+                        # If the end of this way is the same as the start of the unclosed way
+                        # Prepend this ways nodes with the duplicate coord sliced off
+                        uw1[0:0] = uw2[:-1]
+                        consumed = True
+                    elif uw1_start == uw2_start:
+                        # If the start of this way is the same as the start of the unclosed way
+                        # Prepend this ways nodes reversed with the duplicate coord sliced off
+                        uw1[0:0] = uw2[:0:-1]
+                        consumed = True
+
+                    # Check if this way has been used
+                    if consumed:
+                        unclosed_ways.remove((r2, uw2))
+                        # uw_start/end may have changed by now
+                        if uw1[0] == uw1[-1]:
+                            # Made a closed ring
+                            # Create linear ring from vertices and classify by role
+                            ring = sg.LinearRing(uw1)
+                            if r1 == 'inner':
+                                rel_inner_rings.append(ring)
+                            else:
+                                rel_outer_rings.append(ring)
+                            # Remove from unclosed ways
+                            unclosed_ways.remove((r1, uw1))
+                            if not unclosed_ways:
+                                break
+
+            # Combine outer rings to a single ring
+            if len(rel_outer_rings) > 1:
+                coords = []
+                for c in rel_outer_rings:
+                    coords += c.coords
+                outer_ring = sg.LinearRing(coords)
+            elif len(rel_outer_rings) < 1:
+                if len(unclosed_ways) == 1:
+                    outer_ring = sg.LinearRing(unclosed_ways[0][1])
+                else:
+                    print("No outer rings in multipolygon")
+                    continue
+            else:
+                outer_ring = rel_outer_rings[0]
+            poly = sg.Polygon(shell=outer_ring, holes=rel_inner_rings)
+            df_list.append(poly)
+
     # Iterate polygons ways
-    for element in ways.values():
+    for way_id, element in ways.items():
+        if way_id in used_ways:
+            continue
         # Find the vertices (AKA nodes) that make up each polygon
-        locs = [nodes[id] for id in element]
+        locs = [nodes[i] for i in element]
         # Not a polygon if less than 3 vertices, so ignore
         if len(locs) < 3:
             continue
         # Add Shapely polygon to list
         poly = sg.Polygon(locs)
-        df_list.append([poly])
-    assert len(df_list) > 0
+        df_list.append(poly)
     # OSM uses Web Mercator so set CRS without projecting as CRS is known
     poly_df = gpd.GeoDataFrame(df_list, columns=['geometry']).set_crs('EPSG:4326')
-
     poly_df.drop_duplicates(subset='geometry', inplace=True, ignore_index=True)
     return poly_df
 
