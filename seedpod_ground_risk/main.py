@@ -112,6 +112,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.plot_worker = PlotWorker()
         self.plot_worker.signals.update_layers.connect(self.layers_update)
         self.plot_worker.signals.update_status.connect(self.status_update)
+        self.plot_worker.signals.update_progress.connect(self.progress_update)
         self.plot_worker.signals.ready.connect(self.plot_ready)
         threadpool.start(self.plot_worker)
         print("Initialising Plot Server")
@@ -223,7 +224,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.plot_worker.resize_plot(width, height)
 
     def layer_edit(self, item):
-        print('Editing ', item)
+        print('Editing', item)
         pass
 
     def closeEvent(self, event: QCloseEvent) -> None:
@@ -253,6 +254,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ts = QTextStream(file)
         string = ts.readAll()
         return string
+
+    def progress_update(self, progress):
+        self.progressBar.setValue(progress)
 
 
 if __name__ == '__main__':
