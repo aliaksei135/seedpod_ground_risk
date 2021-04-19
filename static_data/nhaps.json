@@ -1,16 +1,4 @@
 {
-  "Locations": {
-    "0": "Residence Indoors",
-    "1": "Residence Outdoors",
-    "2": "Inside Vehicle",
-    "3": "Near Vehicle",
-    "4": "Other Outdoor",
-    "5": "Office\/Factory",
-    "6": "Mall\/Store",
-    "7": "School\/Public Bldg",
-    "8": "Bar\/Restaurant",
-    "9": "Other Indoor"
-  },
   "0000": {
     "0": 0.94,
     "1": 0.01,
