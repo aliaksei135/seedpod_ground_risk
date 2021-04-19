@@ -10,7 +10,7 @@ from holoviews.element import Geometry
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.layers.data_layer import DataLayer
 from seedpod_ground_risk.layers.layer import Layer
-from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
+from seedpod_ground_risk.layers.temporal_population_estimate_layer import TemporalPopulationEstimateLayer
 
 
 def make_bounds_polygon(*args: Iterable[float]) -> sg.Polygon:
@@ -71,12 +71,14 @@ class PlotServer:
 
         self._time_idx = 0
 
-        from seedpod_ground_risk.layers.residential_layer import ResidentialLayer
         from seedpod_ground_risk.layers.roads_layer import RoadsLayer
         self._generated_data_layers = {}
         self.data_layer_order = []
-        self.data_layers = [ResidentialLayer('Residential Population', buffer_dist=30),
-                            RoadsLayer('Road Traffic Population/Hour')]
+        self.data_layers = [
+            TemporalPopulationEstimateLayer('Temporal Pop. Est'),
+            # ResidentialLayer('Residential Population', buffer_dist=30),
+            RoadsLayer('Road Traffic Population/Hour')
+        ]
 
         self.annotation_layers = []
 
