@@ -33,13 +33,11 @@ class ResidentialLayer(OSMTagLayer):
         from copy import deepcopy
 
         bounds = bounds_polygon.bounds
-
-        self.clear_cache()
-        self.query_osm_polygons(bounds_polygon)
+        polys_df = self.query_osm_polygons(bounds_polygon)
         bounded_census_wards = self._census_wards.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
 
         # Find landuse polygons intersecting/within census wards and merge left
-        census_df = gpd.overlay(self._landuse_polygons,
+        census_df = gpd.overlay(polys_df,
                                 bounded_census_wards,
                                 how='intersection')
         # Estimate the population of landuse polygons from the density of the census ward they are within
