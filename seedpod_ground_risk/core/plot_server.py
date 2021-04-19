@@ -47,7 +47,8 @@ class PlotServer:
                  raster_resolution: float = 40,
                  plot_size: Tuple[int, int] = (760, 735),
                  progress_callback: Optional[Callable[[str], None]] = None,
-                 update_callback: Optional[Callable[[str], None]] = None):
+                 update_callback: Optional[Callable[[str], None]] = None,
+                 progress_bar_callback: Optional[Callable[[int], None]] = None):
         """
         Initialise a Plot Server
 
@@ -59,6 +60,7 @@ class PlotServer:
         :param Tuple[int, int] plot_size: the plot size in (width, height) order
         :param progress_callback: an optional callable that takes a string updating progress
         :param update_callback: an optional callable that is called before an plot is rendered
+        :param progress_bar_callback: an optional callback that takes an integer updating the progress bar
         """
         self.tools = ['crosshair'] if tools is None else tools
         self.active_tools = ['wheel_zoom'] if active_tools is None else active_tools
@@ -85,6 +87,7 @@ class PlotServer:
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
         self._update_callback = update_callback if update_callback is not None else lambda *args: None
+        self._progress_bar_callback = progress_bar_callback if progress_bar_callback is not None else lambda *args: None
 
         self._x_range, self._y_range = [-1.45, -1.35], [50.85, 50.95]
 
@@ -114,6 +117,7 @@ class PlotServer:
             await multi([pool.submit(layer.preload_data) for layer in chain(self.data_layers, self.annotation_layers)])
             self._preload_complete = True
             self._progress_callback('Preload complete. First generation will take a minute longer')
+            self._progress_bar_callback(0)
 
     def start(self) -> NoReturn:
         """
@@ -157,6 +161,8 @@ class PlotServer:
             doc.clear()
             self._reproject_ranges()
         hvPlot = self.compose_overlay_plot(self._x_range, self._y_range)
+        if self._preload_complete:
+            self._progress_bar_callback(100)
         fig = hv.render(hvPlot, backend='bokeh')
         fig.output_backend = 'webgl'
 
@@ -212,6 +218,7 @@ class PlotServer:
                     t0 = time()
                     self.generate_layers(bounds_poly, raster_shape)
                     self._progress_callback("Rendering new map...")
+                    self._progress_bar_callback(10)
                     plot = Overlay([res[0] for res in self._generated_data_layers.values()])
                     print("Generated all layers in ", time() - t0)
                     if self.annotation_layers:
@@ -239,6 +246,7 @@ class PlotServer:
                         plot = Overlay([self._base_tiles, plot, annotation_overlay]).collate()
                     else:
                         plot = Overlay([self._base_tiles, plot]).collate()
+                    self._progress_bar_callback(50)
 
                 else:
                     self._progress_callback('Area too large to render!')
@@ -265,7 +273,6 @@ class PlotServer:
             traceback.print_exc()
             print(e)
             plot = self._base_tiles
-
         return plot.opts(width=self.plot_size[0], height=self.plot_size[1],
                          tools=self.tools, active_tools=self.active_tools)
 
