@@ -312,20 +312,8 @@ class PlotServer:
                        resolution: float) -> Union[
         Tuple[str, Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]], Tuple[str, None]]:
 
-        import shapely.ops as so
-
-        from_cache = False
-        layer_bounds_poly = bounds_poly
-        if bounds_poly.within(layer.cached_area):
-            # Requested bounds are fully inside the area that has been generated already
-            from_cache = True
-        elif bounds_poly.intersects(layer.cached_area):
-            # Some of the requested bounds are outside the generated area
-            # Get only the area that needs to be generated
-            layer_bounds_poly = bounds_poly.difference(layer.cached_area)
-        layer.cached_area = so.unary_union([layer.cached_area, bounds_poly])
         try:
-            result = layer.key, layer.generate(layer_bounds_poly, raster_shape, from_cache=from_cache, hour=hour,
+            result = layer.key, layer.generate(bounds_poly, raster_shape, from_cache=False, hour=hour,
                                                resolution=resolution)
             return result
         except Exception as e:
