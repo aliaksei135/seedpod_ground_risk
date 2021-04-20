@@ -108,15 +108,19 @@ class RoadsLayer(DataLayer):
         roads_gdf = self._interpolate_traffic_counts(bounds_polygon)
         roads_gdf['population_per_hour'] = roads_gdf['population_per_hour'] * relative_variation
         roads_gdf['population'] = roads_gdf['population_per_hour'] / 3600
-        roads_gdf['density'] = roads_gdf['population'] / roads_gdf.geometry.area
+        roads_gdf['density'] = roads_gdf['population'] / (roads_gdf.geometry.area * 1e-6)  # km^2
+        ln_mask = roads_gdf['density'] > 0
+        roads_gdf.loc[ln_mask, 'ln_density'] = np.log(roads_gdf.loc[ln_mask, 'density'])
+        roads_gdf['ln_density'].fillna(0, inplace=True)
         roads_gdf = roads_gdf.set_crs('EPSG:27700').to_crs('EPSG:4326')
 
         points = gv.Polygons(roads_gdf,
-                             kdims=['Longitude', 'Latitude'], vdims=['population_per_hour', 'density']).opts(
+                             kdims=['Longitude', 'Latitude'],
+                             vdims=['population_per_hour', 'ln_density', 'density']).opts(
             # colorbar=True,
             cmap=colorcet.CET_L18,
-            color='population_per_hour',
-            line_color='population_per_hour')
+            color='ln_density',
+            line_color='ln_density')
         bounds = bounds_polygon.bounds
         raster = rasterize(points, aggregator=ds.mean('density'), width=raster_shape[0], height=raster_shape[1],
                            x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
