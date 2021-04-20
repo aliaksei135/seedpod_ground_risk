@@ -44,12 +44,15 @@ class ResidentialLayer(OSMTagLayer):
         # EPSG:4326 is *not* an equal area projection so would give gibberish areas
         # Project geometries to an equidistant/equal areq projection
         census_df['population'] = census_df['density'] * census_df['geometry'].to_crs('EPSG:3395').area
+        census_df['ln_density'] = np.log(census_df['density'])
 
         # Construct the GeoViews Polygons
-        gv_polys = gv.Polygons(census_df, kdims=['Longitude', 'Latitude'], vdims=['name', 'population', 'density']) \
-            .opts(color='population',
+        gv_polys = gv.Polygons(census_df, kdims=['Longitude', 'Latitude'],
+                               vdims=['population', 'ln_density', 'density']) \
+            .opts(color='ln_density',
                   cmap=colorcet.CET_L18, alpha=0.8,
-                  colorbar=True, colorbar_opts={'title': 'Population'}, show_legend=False, line_color='population')
+                  colorbar=True, colorbar_opts={'title': 'Log Population Density [ln(people/km^2)]'}, show_legend=False,
+                  line_color='ln_density')
 
         if self.buffer_dist > 0:
             buffered_df = deepcopy(census_df)
@@ -83,9 +86,9 @@ class ResidentialLayer(OSMTagLayer):
         census_wards_df = census_wards_df.to_crs('EPSG:4326')
         # Import census ward densities
         density_df = pd.read_csv(os.sep.join(('static_data', 'density.csv')), header=0)
-        # Scale from hectares to m^2
-        density_df['area'] = density_df['area'] * 10000
-        density_df['density'] = density_df['density'] / 10000
+        # Scale from hectares to km^2
+        density_df['area'] = density_df['area'] * 0.01
+        density_df['density'] = density_df['density'] / 0.01
 
         # These share a common UID, so merge together on it and store
         self._census_wards = census_wards_df.merge(density_df, on='code')

@@ -51,7 +51,7 @@ class TemporalPopulationEstimateLayer(BlockableDataLayer):
         # Estimate the population of landuse polygons from the density of the census ward they are within
         # EPSG:4326 is *not* an equal area projection so would give gibberish areas
         # Project geometries to an equidistant/equal areq projection
-        census_reproj_areas = census_df['geometry'].to_crs('EPSG:3395').area
+        census_reproj_areas = census_df['geometry'].to_crs('EPSG:3395').area * 1e-6  # km^2
         census_df['population'] = census_df['density'] * census_reproj_areas
         total_population = census_df['population'].sum()
 
@@ -69,25 +69,29 @@ class TemporalPopulationEstimateLayer(BlockableDataLayer):
                 # Residential areas are handled separately as they depend upon census data
                 # Otherwise, they would become uniform density, when we have census data providing us (unscaled) densities
                 if idx == 0:
-                    group_gdf = residential_df = deepcopy(census_df)
+                    group_gdf = deepcopy(census_df)
                     group_gdf['population'] = group_gdf['population'] * group_proportion
-                    areas = group_gdf.to_crs(epsg=3395).geometry.area
-                    group_gdf['density'] = group_gdf['population'] / areas
+                    group_gdf['density'] = group_gdf['population'] / census_reproj_areas
+                    group_gdf['ln_density'] = np.log(group_gdf['density'])
                 else:
                     group_gdfs = [query_osm_polygons(tag, bounds_polygon) for tag in nhaps_group_tags[idx]]
                     group_gdf = gpd.GeoDataFrame(pd.concat(group_gdfs, ignore_index=True), crs='EPSG:4326')
-                    areas = group_gdf.to_crs(epsg=3395).geometry.area
+                    areas = group_gdf.to_crs(epsg=3395).geometry.area * 1e-6  # km^2
                     group_density = group_population / areas.sum()
                     group_gdf['density'] = group_density
+                    group_gdf['ln_density'] = np.log(group_gdf['density'])
                     group_gdf['population'] = group_density * areas
                 nhaps_category_gdfs.append(group_gdf)
 
             nhaps_category_gdf = gpd.GeoDataFrame(pd.concat(nhaps_category_gdfs, ignore_index=True), crs='EPSG:4326')
             # Construct the GeoViews Polygons
-            gv_polys = gv.Polygons(nhaps_category_gdf, kdims=['Longitude', 'Latitude'], vdims=['population', 'density']) \
-                .opts(color='population',
+            gv_polys = gv.Polygons(nhaps_category_gdf, kdims=['Longitude', 'Latitude'],
+                                   vdims=['population', 'ln_density', 'density']) \
+                .opts(color='ln_density',
                       cmap=colorcet.CET_L18, alpha=0.6,
-                      colorbar=True, colorbar_opts={'title': 'Population'}, show_legend=False, line_color='population')
+                      colorbar=True, colorbar_opts={'title': 'Log Population Density [ln(people/km^2)]'},
+                      show_legend=False,
+                      line_color='ln_density')
 
             if self.buffer_dist > 0:
                 buffered_df = deepcopy(nhaps_category_gdf)
@@ -104,11 +108,15 @@ class TemporalPopulationEstimateLayer(BlockableDataLayer):
                                    x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
             df = nhaps_category_gdf
         else:
+            census_df['ln_density'] = np.log(census_df['density'])
             # Construct the GeoViews Polygons
-            gv_polys = gv.Polygons(census_df, kdims=['Longitude', 'Latitude'], vdims=['name', 'population', 'density']) \
-                .opts(color='population',
+            gv_polys = gv.Polygons(census_df, kdims=['Longitude', 'Latitude'],
+                                   vdims=['population', 'ln_density', 'density']) \
+                .opts(color='ln_density',
                       cmap=colorcet.CET_L18, alpha=0.8,
-                      colorbar=True, colorbar_opts={'title': 'Population'}, show_legend=False, line_color='population')
+                      colorbar=True, colorbar_opts={'title': 'Log Population Density [ln(people/km^2)]'},
+                      show_legend=False,
+                      line_color='ln_density')
 
             if self.buffer_dist > 0:
                 buffered_df = deepcopy(census_df)
@@ -148,9 +156,9 @@ class TemporalPopulationEstimateLayer(BlockableDataLayer):
         census_wards_df = census_wards_df.to_crs('EPSG:4326')
         # Import census ward densities
         density_df = pd.read_csv(os.sep.join(('static_data', 'density.csv')), header=0)
-        # Scale from hectares to m^2
-        density_df['area'] = density_df['area'] * 10000
-        density_df['density'] = density_df['density'] / 10000
+        # Scale from hectares to km^2
+        density_df['area'] = density_df['area'] * 0.01
+        density_df['density'] = density_df['density'] / 0.01
 
         # These share a common UID, so merge together on it and store
         self._census_wards = census_wards_df.merge(density_df, on='code')
