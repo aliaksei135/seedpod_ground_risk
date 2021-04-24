@@ -74,23 +74,20 @@ class GridAStar(Algorithm):
             gx, gy = goal[1], goal[0]
             if get_path_sum(nx, ny, gx, gy, grid) == 0:
                 return goal
+            start_node_index = path.index(node)
+            next_node_index = start_node_index + 1
 
-            path_idx = path.index(node) + 1
-            test_node = init_node = path[path_idx]
-            running_path_sum = get_path_sum(nx, ny, test_node[1], test_node[0], grid)
-            while test_node != goal:
-                px, py = test_node[1], test_node[0]
-                test_node = path[path_idx + 1]
-                tx, ty = test_node[1], test_node[0]
-                running_path_sum += get_path_sum(px, py, tx, ty, grid)
-
-                path_sum = get_path_sum(nx, ny, tx, ty, grid)
-
-                if path_sum <= running_path_sum:
-                    return test_node
-                else:
-                    path_idx = path_idx + 1
-            return init_node
+            for test_node_index in reversed(range(len(path))):
+                # Ensure still looking forward from start node
+                if test_node_index > next_node_index:
+                    tx, ty = path[test_node_index][1], path[test_node_index][1]
+                    path_x = [p[1] for p in path[start_node_index:test_node_index]]
+                    path_y = [p[0] for p in path[start_node_index:test_node_index]]
+                    existing_path_sum = grid[path_y, path_x].sum()
+                    test_path_sum = get_path_sum(nx, ny, tx, ty, grid)
+                    if test_path_sum <= existing_path_sum:
+                        return path[test_node_index]
+            return path[next_node_index]
 
         simplfied_path = []
         next_node = path[0]
