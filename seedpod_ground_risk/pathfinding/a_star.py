@@ -86,7 +86,7 @@ class GridAStar(Algorithm):
 
                 path_sum = get_path_sum(nx, ny, tx, ty, grid)
 
-                if path_sum < running_path_sum:
+                if path_sum <= running_path_sum:
                     return test_node
                 else:
                     path_idx = path_idx + 1
