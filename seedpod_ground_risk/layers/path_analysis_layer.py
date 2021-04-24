@@ -135,23 +135,28 @@ class PathAnalysisLayer(AnnotationLayer):
         pathwise_fatality_maxs = np.array([r[1] for r in res], dtype=np.longdouble)
         pathwise_strike_maxs = np.array([r[2] for r in res], dtype=np.longdouble)
 
-        # import matplotlib.pyplot as mpl
-        # fig, ax = mpl.subplots(1, 1)
-        # path_dist = self.dataframe.to_crs('EPSG:27700').iloc[0].geometry.length
-        # ax.set_yscale('log')
-        # ax.set_ylim(bottom=1e-16, top=1e-4)
-        # x = np.linspace(0, path_dist, len(pathwise_fatality_maxs))
-        # ax.axhline(y=np.median(pathwise_fatality_maxs), c='y',
-        #            label='Fatality Median')  # This seems to be as stable as fsum
-        # ax.plot(x, pathwise_fatality_maxs[::-1], c='r', label='Fatality Risk')
-        # ax.axhline(y=np.median(pathwise_strike_maxs), c='g',
-        #            label='Strike Median')  # This seems to be as stable as fsum
-        # ax.plot(x, pathwise_strike_maxs[::-1], c='b', label='Strike Risk')
-        # ax.legend()
-        # ax.set_ylabel('Risk [$h^{-1}$]')
-        # ax.set_xlabel('Path Distance [m]')
-        # ax.set_title('Casualty Risk along path')
-        # fig.show()
+        import matplotlib.pyplot as mpl
+        import tempfile
+        import subprocess
+        fig, ax = mpl.subplots(1, 1)
+        path_dist = self.dataframe.to_crs('EPSG:27700').iloc[0].geometry.length
+        ax.set_yscale('log')
+        ax.set_ylim(bottom=1e-18)
+        x = np.linspace(0, path_dist, len(pathwise_fatality_maxs))
+        ax.axhline(y=np.median(pathwise_fatality_maxs), c='y',
+                   label='Fatality Median')  # This seems to be as stable as fsum
+        ax.plot(x, pathwise_fatality_maxs[::-1], c='r', label='Fatality Risk')
+        ax.axhline(y=np.median(pathwise_strike_maxs), c='g',
+                   label='Strike Median')  # This seems to be as stable as fsum
+        ax.plot(x, pathwise_strike_maxs[::-1], c='b', label='Strike Risk')
+        ax.legend()
+        ax.set_ylabel('Risk [$h^{-1}$]')
+        ax.set_xlabel('Path Distance [m]')
+        ax.set_title('Casualty Risk along path')
+
+        tmppath = tempfile.mkstemp()[1] + '.png'
+        fig.savefig(tmppath)
+        subprocess.run("explorer " + tmppath)
 
         risk_map = np.sum(fatality_pdfs, axis=0).reshape(raster_shape) * self.event_prob
 
