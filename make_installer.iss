@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "SEEDPOD Ground Risk"
-#define MyAppVersion "0.11.0"
+#define MyAppVersion "0.11.1"
 #define MyAppPublisher "CASCADE UAV"
 #define MyAppURL "https://cascadeuav.com/seedpod/"
 #define MyAppExeName "SEEDPOD Ground Risk.exe"
