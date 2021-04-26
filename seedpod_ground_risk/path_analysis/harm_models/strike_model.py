@@ -24,12 +24,12 @@ class StrikeModel(HarmModel):
 
     def __init__(self, pop_density, pixel_area, uas_width) -> None:
         """
-        :param pop_density: population density value or np.array
-        :param pixel_area: area of a single pixel in the raster grid
+        :param pop_density: population density value or np.array in people/km^2
+        :param pixel_area: area of a single pixel in the raster grid in m^2
         :param uas_width: characteristic dimension of the UAS
         """
         super().__init__()
-        self.pop_density = pop_density
+        self.pop_density = pop_density * 1e-6  # back to people/m^2
         self.pix_area = pixel_area
         self.uas_width = uas_width
 
