@@ -7,6 +7,7 @@ from tests.layers.test_layer_base import BaseLayerTestCase
 class UnbufferedRoadsLayerTestCase(BaseLayerTestCase):
 
     def setUp(self) -> None:
+        self.plot_title = 'Full Roads Population Transiting Density'
         self.layer = RoadsLayer('test')
         super().setUp()
 
@@ -14,6 +15,7 @@ class UnbufferedRoadsLayerTestCase(BaseLayerTestCase):
 class BufferedRoadsLayerTestCase(BaseLayerTestCase):
 
     def setUp(self) -> None:
+        self.plot_title = 'Full Roads Population Transiting Density'
         self.layer = RoadsLayer('test', buffer_dist=10)
         super().setUp()
 

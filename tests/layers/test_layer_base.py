@@ -44,7 +44,7 @@ class BaseLayerTestCase(unittest.TestCase):
 
         fig, ax = mpl.subplots(1, 1)
         m = ax.matshow(np.flipud(raster))
-        ax.set_title(self.layer.__class__.__name__)
+        ax.set_title(self.plot_title)
         fig.colorbar(m, label='Population Density [people/km$^2$]')
         fig.show()
 
