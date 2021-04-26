@@ -16,7 +16,7 @@ class BaseLayerTestCase(unittest.TestCase):
         )
         self.layer.preload_data()
         self.test_bounds = make_bounds_polygon((-1.5, -1.3), (50.85, 50.95))
-        self.raster_shape = (400, 400)
+        self.raster_shape = (1500, 1500)
 
     def test_raster_bounds(self):
         # Do not test base class!
@@ -40,12 +40,12 @@ class BaseLayerTestCase(unittest.TestCase):
         import matplotlib.pyplot as mpl
         import numpy as np
 
-        _, raster, _ = self.layer.generate(self.test_bounds, self.raster_shape)
+        _, raster, _ = self.layer.generate(self.test_bounds, self.raster_shape, hour=13)
 
         fig, ax = mpl.subplots(1, 1)
         m = ax.matshow(np.flipud(raster))
         ax.set_title(self.layer.__class__.__name__)
-        fig.colorbar(m, label='Population Density [people/m$^2$]')
+        fig.colorbar(m, label='Population Density [people/km$^2$]')
         fig.show()
 
 
