@@ -15,7 +15,8 @@ nhaps_category_groupings = [
 nhaps_group_tags = [
     ['landuse=residential'],
     ['landuse=industrial', 'landuse=commercial'],
-    ['building=school', 'building=college', 'building=university', 'building=public'],
+    ['building=school', 'building=college', 'building=university', 'building=public', 'building=government',
+     'building=civic', 'building=hospital'],
     ['landuse=retail']
 ]
 
