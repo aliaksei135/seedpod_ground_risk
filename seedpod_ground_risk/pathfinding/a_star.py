@@ -81,11 +81,11 @@ class GridAStar(Algorithm):
                 # Ensure still looking forward from start node
                 if test_node_index > next_node_index:
                     tx, ty = path[test_node_index][1], path[test_node_index][1]
-                    path_x = [p[1] for p in path[start_node_index:test_node_index]]
-                    path_y = [p[0] for p in path[start_node_index:test_node_index]]
-                    existing_path_sum = grid[path_y, path_x].sum()
+                    # path_x = [p[1] for p in path[start_node_index:test_node_index]]
+                    # path_y = [p[0] for p in path[start_node_index:test_node_index]]
+                    # existing_path_sum = grid[path_y, path_x].sum()
                     test_path_sum = get_path_sum(nx, ny, tx, ty, grid)
-                    if test_path_sum <= existing_path_sum:
+                    if test_path_sum == 0:  # existing_path_sum:
                         return path[test_node_index]
             return path[next_node_index]
 

@@ -78,7 +78,6 @@ class PlotServer:
         self.data_layer_order = []
         self.data_layers = [
             TemporalPopulationEstimateLayer('Temporal Pop. Est'),
-            # ResidentialLayer('Residential Population', buffer_dist=30),
             RoadsLayer('Road Traffic Population/Hour')
         ]
 
@@ -219,7 +218,6 @@ class PlotServer:
                     t0 = time()
                     self._progress_bar_callback(10)
                     self.generate_layers(bounds_poly, raster_shape)
-                    self._progress_callback("Rendering new map...")
                     self._progress_bar_callback(50)
                     plot = Overlay([res[0] for res in self._generated_data_layers.values()])
                     print("Generated all layers in ", time() - t0)
@@ -239,8 +237,8 @@ class PlotServer:
                         raster_grid = np.flipud(raster_grid)
                         raster_indices['Latitude'] = np.flip(raster_indices['Latitude'])
 
-                        print('Annotating Layers...')
-                        res = jl.Parallel(n_jobs=1, verbose=1, prefer='threads')(
+                        self._progress_callback('Annotating Layers...')
+                        res = jl.Parallel(n_jobs=1, verbose=1, backend='threading')(
                             jl.delayed(layer.annotate)(raw_datas, (raster_indices, raster_grid)) for layer in
                             self.annotation_layers)
 
@@ -266,6 +264,7 @@ class PlotServer:
                         d.update(dataTag=layer._osm_tag)
                     layers.append(d)
 
+                self._progress_callback("Rendering new map...")
                 self._update_callback(list(chain(self.data_layers, self.annotation_layers)))
 
         except Exception as e:
