@@ -200,8 +200,6 @@ class PlotServer:
         :param tuple y_range: (min, max) latitude range in EPSG:4326 coordinates
         :returns: overlay plot of stored layers
         """
-        from itertools import chain
-
         try:
             if not self._preload_complete:
                 # If layers aren't preloaded yet just return the map tiles
@@ -222,18 +220,14 @@ class PlotServer:
                     plot = Overlay([res[0] for res in self._generated_data_layers.values()])
                     print("Generated all layers in ", time() - t0)
                     if self.annotation_layers:
-                        import matplotlib.pyplot as mpl
                         plot = Overlay([res[0] for res in self._generated_data_layers.values()])
                         raw_datas = [res[2] for res in self._generated_data_layers.values()]
                         raster_indices = dict(Longitude=np.linspace(x_range[0], x_range[1], num=raster_shape[0]),
                                               Latitude=np.linspace(y_range[0], y_range[1], num=raster_shape[1]))
-                        raster_grid = np.zeros((raster_shape[1], raster_shape[0]), dtype=np.float64)
-                        for res in self._generated_data_layers.values():
-                            layer_raster_grid = res[1]
-                            if layer_raster_grid is not None:
-                                nans = np.isnan(layer_raster_grid)
-                                layer_raster_grid[nans] = 0
-                                raster_grid += layer_raster_grid
+                        raster_grid = np.sum(
+                            [self._remove_raster_nans(res[1]) for res in self._generated_data_layers.values() if
+                             res[1] is not None],
+                            axis=0)
                         raster_grid = np.flipud(raster_grid)
                         raster_indices['Latitude'] = np.flip(raster_indices['Latitude'])
 
@@ -242,8 +236,8 @@ class PlotServer:
                             jl.delayed(layer.annotate)(raw_datas, (raster_indices, raster_grid)) for layer in
                             self.annotation_layers)
 
-                        annotation_overlay = Overlay([annot for annot in res if annot is not None])
-                        plot = Overlay([self._base_tiles, plot, annotation_overlay]).collate()
+                        plot = Overlay(
+                            [self._base_tiles, plot, *[annot for annot in res if annot is not None]]).collate()
                     else:
                         plot = Overlay([self._base_tiles, plot]).collate()
                     self._progress_bar_callback(90)
@@ -255,17 +249,8 @@ class PlotServer:
                     else:
                         plot = Overlay([self._base_tiles, *list(self._generated_data_layers.values())])
 
-                layers = []
-                for layer in chain(self.data_layers, self.annotation_layers):
-                    d = {'key': layer.key}
-                    if hasattr(layer, '_colour'):
-                        d.update(colour=layer._colour)
-                    if hasattr(layer, '_osm_tag'):
-                        d.update(dataTag=layer._osm_tag)
-                    layers.append(d)
-
-                self._progress_callback("Rendering new map...")
-                self._update_callback(list(chain(self.data_layers, self.annotation_layers)))
+            self._update_layer_list()
+            self._progress_callback("Rendering new map...")
 
         except Exception as e:
             # Catch-all to prevent plot blanking out and/or crashing app
@@ -274,8 +259,21 @@ class PlotServer:
             traceback.print_exc()
             print(e)
             plot = self._base_tiles
+
         return plot.opts(width=self.plot_size[0], height=self.plot_size[1],
                          tools=self.tools, active_tools=self.active_tools)
+
+    def _update_layer_list(self):
+        from itertools import chain
+        layers = []
+        for layer in chain(self.data_layers, self.annotation_layers):
+            d = {'key': layer.key}
+            if hasattr(layer, '_colour'):
+                d.update(colour=layer._colour)
+            if hasattr(layer, '_osm_tag'):
+                d.update(dataTag=layer._osm_tag)
+            layers.append(d)
+        self._update_callback(list(chain(self.data_layers, self.annotation_layers)))
 
     def generate_layers(self, bounds_poly: sg.Polygon, raster_shape: Tuple[int, int]) -> NoReturn:
         """
@@ -371,3 +369,8 @@ class PlotServer:
         raster_width = int(abs(max_x - min_x) // raster_resolution_m)
         raster_height = int(abs(max_y - min_y) // raster_resolution_m)
         return raster_width, raster_height
+
+    def _remove_raster_nans(self, raster):
+        nans = np.isnan(raster)
+        raster[nans] = 0
+        return raster
