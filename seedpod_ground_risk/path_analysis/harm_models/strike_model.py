@@ -1,8 +1,9 @@
 import numpy as np
+from numba import njit, double
+from numba.experimental import jitclass
 
-from seedpod_ground_risk.path_analysis.harm_models.harm_model import HarmModel
 
-
+@njit
 def get_lethal_area(theta: float, uas_width: float):
     """
     Calculate lethal area of UAS impact from impact angle
@@ -20,19 +21,27 @@ def get_lethal_area(theta: float, uas_width: float):
     return ((2 * (r_person + r_uas) * h_person) / np.tan(theta)) + (np.pi * (r_uas + r_person) ** 2)
 
 
-class StrikeModel(HarmModel):
+@jitclass([
+    ('premult_mat', double[:, :])
+])
+class StrikeModel:
 
-    def __init__(self, pop_density, pixel_area, uas_width) -> None:
+    def __init__(self, pop_density: np.ndarray, pixel_area: float, uas_width: float, impact_angle: float) -> None:
         """
         :param pop_density: population density value or np.array in people/km^2
         :param pixel_area: area of a single pixel in the raster grid in m^2
         :param uas_width: characteristic dimension of the UAS
         """
-        super().__init__()
-        self.pop_density = pop_density * 1e-6  # back to people/m^2
-        self.pix_area = pixel_area
-        self.uas_width = uas_width
+        # super().__init__()
+        pop_density = pop_density * 1e-6  # back to people/m^2
+        pix_area = pixel_area
+        uas_width = uas_width
 
-    def transform(self, val, impact_angle=np.deg2rad(30)):
+        self.premult_mat = pop_density * get_lethal_area(impact_angle, uas_width=uas_width) / pix_area
+
+    def transform(self, val):
+        # Ignore NaN and Inf multiplication errors for blocked areas
+        # with np.errstate(invalid='ignore'):
         # Product of vars divided by pixel area to scale lethal area to proportion of pixel area
-        return val * self.pop_density * get_lethal_area(impact_angle, uas_width=self.uas_width) / self.pix_area
+        # return val * self.pop_density * get_lethal_area(impact_angle, uas_width=self.uas_width) / self.pix_area
+        return val * self.premult_mat

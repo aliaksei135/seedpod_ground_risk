@@ -23,7 +23,7 @@ class StrikeModelTestCase(unittest.TestCase):
     def test_max_range(self):
         max_grid = np.full(self.test_shape, 1)
 
-        sm = StrikeModel(max_grid, self.pix_area, 2)
+        sm = StrikeModel(max_grid, self.pix_area, 2, np.deg2rad(30))
         out = sm.transform(max_grid)
 
         self.assertLessEqual(out.max(), 1)
@@ -32,7 +32,7 @@ class StrikeModelTestCase(unittest.TestCase):
     def test_min_range(self):
         min_grid = np.full(self.test_shape, 0)
 
-        sm = StrikeModel(min_grid, self.pix_area, 2)
+        sm = StrikeModel(min_grid, self.pix_area, 2, np.deg2rad(30))
         out = sm.transform(min_grid)
 
         self.assertLessEqual(out.max(), 1)
@@ -41,8 +41,8 @@ class StrikeModelTestCase(unittest.TestCase):
     def test_array_inputs(self):
         angles = np.random.random(self.test_shape) * 2
         pop_density = np.random.random(self.test_shape) * 6
-        sm = StrikeModel(pop_density, self.pix_area, 2)
-        out = sm.transform(self.test_pdf, impact_angle=angles)
+        sm = StrikeModel(pop_density, self.pix_area, 2, angles)
+        out = sm.transform(self.test_pdf)
         self.assertTupleEqual(self.test_shape, out.shape)
 
 
