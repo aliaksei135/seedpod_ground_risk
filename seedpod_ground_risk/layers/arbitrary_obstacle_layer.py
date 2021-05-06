@@ -30,8 +30,9 @@ class ArbitraryObstacleLayer(BlockableDataLayer):
         bounds = bounds_polygon.bounds
 
         bounded_df = self.dataframe.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
+        bounded_df['z'] = np.inf
 
-        polys = gv.Polygons(bounded_df).opts(style={'alpha': 0.8, 'color': self._colour})
+        polys = gv.Polygons(bounded_df, vdims=['z']).opts(style={'alpha': 0.8, 'color': self._colour})
         raster = rasterize(polys, width=raster_shape[0], height=raster_shape[1],
                            x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
         raster_grid = np.copy(list(raster.data.data_vars.items())[0][1].data.astype(np.float))
