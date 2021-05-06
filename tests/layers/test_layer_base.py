@@ -15,8 +15,10 @@ class BaseLayerTestCase(unittest.TestCase):
                 '..', '..'))
         )
         self.layer.preload_data()
-        self.test_bounds = make_bounds_polygon((-1.5, -1.3), (50.85, 50.95))
-        self.raster_shape = (1500, 1500)
+        self.test_bounds = make_bounds_polygon((-1.5, -1.3), (50.87, 51))
+        self.raster_shape = (500, 500)
+        if self.hour is None:
+            self.hour = 13
 
     def test_raster_bounds(self):
         # Do not test base class!
@@ -40,9 +42,12 @@ class BaseLayerTestCase(unittest.TestCase):
         import matplotlib.pyplot as mpl
         import numpy as np
 
-        _, raster, _ = self.layer.generate(self.test_bounds, self.raster_shape, hour=13)
+        _, raster, _ = self.layer.generate(self.test_bounds, self.raster_shape, hour=self.hour)
 
         fig, ax = mpl.subplots(1, 1)
+        ax.tick_params(left=False, right=False,
+                       bottom=False, top=False,
+                       labelleft=False, labelbottom=False)
         m = ax.matshow(np.flipud(raster))
         ax.set_title(self.plot_title)
         fig.colorbar(m, label='Population Density [people/km$^2$]')

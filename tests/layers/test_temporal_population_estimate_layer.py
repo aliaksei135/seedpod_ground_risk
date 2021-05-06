@@ -7,7 +7,8 @@ from tests.layers.test_layer_base import BaseLayerTestCase
 class UnbufferedTemporalPopulationEstimateLayerTestCase(BaseLayerTestCase):
 
     def setUp(self) -> None:
-        self.plot_title = 'Spatiotemporal Population Density, t=13'
+        self.hour = 8
+        self.plot_title = f'Spatiotemporal Population Density, t={self.hour}'
         self.layer = TemporalPopulationEstimateLayer('test')
         super().setUp()
 
