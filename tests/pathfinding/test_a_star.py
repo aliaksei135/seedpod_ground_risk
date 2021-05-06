@@ -1,7 +1,5 @@
 import unittest
 
-from pathos.multiprocessing import ProcessPool
-
 from seedpod_ground_risk.pathfinding.a_star import *
 from seedpod_ground_risk.pathfinding.heuristic import *
 from seedpod_ground_risk.pathfinding.rjps_a_star import *
@@ -119,17 +117,17 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
                                                     risk_to_dist_ratio=1))
         path = algo.find_path(self.large_diag_environment,
                               (10, 10),
-                              (392, 392))
+                              (490, 490))
         self.assertIsNotNone(path, 'Failed to find possible path')
 
     def test_repeatability(self):
         import matplotlib.pyplot as mpl
         import numpy as np
 
-        start, end = (10, 10), (350, 250)
+        start, end = (450, 50), (100, 450)
         repeats = 2
         equal_paths = []
-        rdrs = np.linspace(-1, 1, 10)
+        rdrs = np.linspace(100, 10000, 10)
         risk_sums = []
 
         def make_path(start, end, rdr):
@@ -137,36 +135,36 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
                                                         risk_to_dist_ratio=rdr))
             return algo.find_path(self.large_diag_environment, start, end)
 
-        def run_params(rdr):
-            paths = [make_path(start, end, rdr) for _ in range(repeats)]
-            equal_paths.append(all([p == paths[0] for p in paths]))
-            if not paths[0]:
-                return [rdr, np.inf]
-            risk_sum = sum([self.large_diag_environment.grid[n[0], n[1]] for n in paths[0]])
-            return [rdr, risk_sum]
-
-        pool = ProcessPool(nodes=8)
-        params = np.array(rdrs)
-        risk_sums = pool.map(run_params, params)
-        pool.close()
-
-        # for rdr in rdrs:
+        # def run_params(rdr):
         #     paths = [make_path(start, end, rdr) for _ in range(repeats)]
         #     equal_paths.append(all([p == paths[0] for p in paths]))
         #     if not paths[0]:
-        #         risk_sums.append([rdr, np.inf])
-        #         continue
-        #     risk_sum = sum([n.n for n in paths[0]])
-        #     risk_sums.append([rdr, risk_sum])
+        #         return [rdr, np.inf]
+        #     risk_sum = sum([self.large_diag_environment.grid[n[0], n[1]] for n in paths[0]])
+        #     return [rdr, risk_sum]
         #
-        #     fig = mpl.figure()
-        #     ax = fig.add_subplot(111)
-        #     for path in paths:
-        #         ax.plot([n.x for n in path], [n.y for n in path], color='red')
-        #     im = ax.imshow(self.large_no_diag_environment.grid)
-        #     fig.colorbar(im, ax=ax, label='Population')
-        #     ax.set_title(f'RiskA* with RDR={rdr:.4g} \n Risk sum={risk_sum:.4g}')
-        #     fig.show()
+        # pool = ProcessPool(nodes=8)
+        # params = np.array(rdrs)
+        # risk_sums = pool.map(run_params, params)
+        # pool.close()
+
+        for rdr in rdrs:
+            paths = [make_path(start, end, rdr) for _ in range(repeats)]
+            equal_paths.append(all([p == paths[0] for p in paths]))
+            if not paths[0]:
+                risk_sums.append([rdr, np.inf])
+                continue
+            risk_sum = sum([self.large_diag_environment.grid[n[0], n[1]] for n in paths[0]])
+            risk_sums.append([rdr, risk_sum])
+
+            fig = mpl.figure()
+            ax = fig.add_subplot(111)
+            for path in paths:
+                ax.plot([n[1] for n in path], [n[0] for n in path], color='red')
+            im = ax.imshow(self.large_no_diag_environment.grid)
+            fig.colorbar(im, ax=ax, label='Population')
+            ax.set_title(f'RiskA* with RDR={rdr:.4g} \n Risk sum={risk_sum:.4g}')
+            fig.show()
 
         risk_sums = np.array(risk_sums)
 
