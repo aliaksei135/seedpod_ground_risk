@@ -1,10 +1,11 @@
+import os
 import unittest
 from itertools import chain
 
 import casex
 import numpy as np
 import scipy.stats as ss
-from numba import njit, prange, float64
+from numba import njit, prange, float64, cuda
 
 from seedpod_ground_risk.core.plot_server import PlotServer, make_bounds_polygon
 from seedpod_ground_risk.path_analysis.descent_models.ballistic_model import BallisticModel
@@ -28,6 +29,24 @@ def offset_window_row(arr, shape, offset):
             yield arr[start_y:end_y, start_x:end_x]
             # app(arr[start_y:end_y, start_x:end_x])
         # yield row_windows  # Dont return np array here, as it gets copied to contiguous memory and OOMs
+
+
+# ~10sec for 567,630 elements
+@cuda.jit(fastmath=True)
+def wrap_pipeline_cuda(shape, padded_pdf, pcy, pcx, sm_premult, out):
+    nr = shape[0]
+    nc = shape[1]
+    # Unique position of this thread in grid
+    x, y = cuda.grid(2)
+
+    # Array bounds check
+    if x < nc and y < nr:
+        arr = padded_pdf[(pcy - y):(pcy - y + nr), (pcx - x):(pcx - x + nc)]
+        acc = 0
+        for r in range(nr):
+            for c in range(nc):
+                acc += arr[r, c] * sm_premult[r, c]
+        out[y, x] = acc
 
 
 # ~140sec for 567,630 elements
@@ -86,7 +105,7 @@ class FullRiskMapTestCase(unittest.TestCase):
 
         self._setup_aircraft()
 
-        import os
+        os.environ['CUDA_HOME'] = 'C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v11.3'
         os.chdir(
             os.sep.join((
                 os.path.dirname(os.path.realpath(__file__)),
@@ -162,7 +181,16 @@ class FullRiskMapTestCase(unittest.TestCase):
         impact_ke = velocity_to_kinetic_energy(ac_mass, v_i)
 
         # Leaving parallelisation to Numba seems to be faster
-        res = wrap_all_pipeline(self.raster_shape, padded_pdf, padded_centre_y, padded_centre_x, sm.premult_mat)
+        # res = wrap_all_pipeline(self.raster_shape, padded_pdf, padded_centre_y, padded_centre_x, sm.premult_mat)
+
+        res = np.zeros(self.raster_shape, dtype=float)
+        threads_per_block = (32, 32)  # 1024 max per block
+        blocks_per_grid = (
+            int(np.ceil(self.raster_shape[1] / threads_per_block[1])),
+            int(np.ceil(self.raster_shape[0] / threads_per_block[0]))
+        )
+        wrap_pipeline_cuda[blocks_per_grid, threads_per_block](self.raster_shape, padded_pdf, padded_centre_y,
+                                                               padded_centre_x, sm.premult_mat, res)
 
         # Alternative joblib parallelisation
         # res = jl.Parallel(n_jobs=-1, prefer='threads', verbose=1)(
