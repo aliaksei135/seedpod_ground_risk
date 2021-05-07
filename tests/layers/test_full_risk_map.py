@@ -2,7 +2,6 @@ import unittest
 from itertools import chain
 
 import casex
-import geopandas as gpd
 import numpy as np
 import scipy.stats as ss
 from numba import njit, prange, float64
@@ -12,7 +11,7 @@ from seedpod_ground_risk.path_analysis.descent_models.ballistic_model import Bal
 from seedpod_ground_risk.path_analysis.descent_models.glide_model import GlideDescentModel
 from seedpod_ground_risk.path_analysis.harm_models.fatality_model import FatalityModel
 from seedpod_ground_risk.path_analysis.harm_models.strike_model import StrikeModel
-from seedpod_ground_risk.path_analysis.utils import velocity_to_kinetic_energy, bearing_to_angle, snap_coords_to_grid
+from seedpod_ground_risk.path_analysis.utils import velocity_to_kinetic_energy, bearing_to_angle
 
 
 def offset_window_row(arr, shape, offset):
@@ -82,6 +81,7 @@ class FullRiskMapTestCase(unittest.TestCase):
         super().setUp()
 
         self.hour = 13
+        self.serialise = False
         self.test_bounds = make_bounds_polygon((-1.5, -1.3), (50.87, 51))
 
         self._setup_aircraft()
@@ -109,7 +109,7 @@ class FullRiskMapTestCase(unittest.TestCase):
         self.raster_shape = self.raster_grid.shape
         del ps
 
-        self.path_coords = list(gpd.read_file('path.geojson').iloc[0].geometry.coords)
+        # self.path_coords = list(gpd.read_file('path.geojson').iloc[0].geometry.coords)
 
     def test_full_risk_map(self):
         import matplotlib.pyplot as mpl
@@ -170,7 +170,7 @@ class FullRiskMapTestCase(unittest.TestCase):
         #     for c in range(self.raster_shape[0]))
 
         strike_pdf = np.vstack(res)
-        snapped_points = [snap_coords_to_grid(self.raster_indices, *coords) for coords in self.path_coords]
+        # snapped_points = [snap_coords_to_grid(self.raster_indices, *coords) for coords in self.path_coords]
 
         import matplotlib.pyplot as mpl
         fig1, ax1 = mpl.subplots(1, 1)
@@ -182,8 +182,8 @@ class FullRiskMapTestCase(unittest.TestCase):
         fig1.colorbar(m1, label='Population Density [people/km$^2$]')
         fig1.show()
 
-        # strike_pdf = sm.transform(impact_pdf, impact_angle=a_i)
-        np.savetxt(f'strike_map_t{self.hour}', strike_pdf, delimiter=',')
+        if self.serialise:
+            np.savetxt(f'strike_map_t{self.hour}', strike_pdf, delimiter=',')
 
         fig2, ax2 = mpl.subplots(1, 1)
         ax2.tick_params(left=False, right=False,
@@ -195,7 +195,8 @@ class FullRiskMapTestCase(unittest.TestCase):
         fig2.show()
 
         fatality_pdf = fm.transform(strike_pdf, impact_ke=impact_ke)
-        np.savetxt(f'fatality_map_t{self.hour}', fatality_pdf, delimiter=',')
+        if self.serialise:
+            np.savetxt(f'fatality_map_t{self.hour}', fatality_pdf, delimiter=',')
 
         fig3, ax3 = mpl.subplots(1, 1)
         ax3.tick_params(left=False, right=False,
