@@ -1,6 +1,6 @@
 import unittest
 
-from seedpod_ground_risk.core.plot_server import make_bounds_polygon
+from seedpod_ground_risk.core.utils import make_bounds_polygon
 
 
 class BaseLayerTestCase(unittest.TestCase):

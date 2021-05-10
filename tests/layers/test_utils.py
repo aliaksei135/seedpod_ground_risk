@@ -2,7 +2,7 @@ import unittest
 
 import shapely.geometry as sg
 
-from seedpod_ground_risk.core.plot_server import make_bounds_polygon
+from seedpod_ground_risk.core.utils import make_bounds_polygon
 
 
 class UtilsTestCase(unittest.TestCase):
