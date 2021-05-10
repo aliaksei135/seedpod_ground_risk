@@ -13,7 +13,7 @@ from seedpod_ground_risk.layers.temporal_population_estimate_layer import Tempor
 from seedpod_ground_risk.path_analysis.descent_models.ballistic_model import BallisticModel
 from seedpod_ground_risk.path_analysis.descent_models.glide_model import GlideDescentModel
 from seedpod_ground_risk.path_analysis.harm_models.strike_model import StrikeModel
-from seedpod_ground_risk.path_analysis.utils import bearing_to_angle
+from seedpod_ground_risk.path_analysis.utils import bearing_to_angle, velocity_to_kinetic_energy
 
 
 # ~10sec for 567,630 elements
@@ -111,20 +111,38 @@ class StrikeRiskLayer(BlockableDataLayer):
     def preload_data(self):
         [layer.preload_data() for layer in self._layers]
 
-    def generate(self, bounds_polygon, raster_shape, from_cache: bool = False, resolution=30, hour: int = 8, **kwargs):
-        generated_layers = [
-            layer.generate(bounds_polygon, raster_shape, from_cache=from_cache, hour=hour, resolution=resolution,
-                           **kwargs) for layer in self._layers]
+    def generate(self, bounds_polygon, raster_shape, resolution=30, hour: int = 8, **kwargs):
+        risk_map, _ = self.make_strike_map(bounds_polygon, hour, raster_shape, resolution)
 
+        bounds = bounds_polygon.bounds
+        flipped_bounds = (bounds[1], bounds[0], bounds[3], bounds[2])
+        risk_raster = gv.Image(risk_map, vdims=['strike_risk'], bounds=flipped_bounds).options(
+            alpha=0.7,
+            colorbar=True, colorbar_opts={'title': 'Person Strike Risk [$h^{-1}$]'},
+            cmap='viridis',
+            tools=['hover'],
+            clipping_colors={
+                'min': (0, 0, 0, 0)})
+        import rasterio
+        from rasterio import transform
+        trans = transform.from_bounds(*flipped_bounds, *raster_shape)
+        rds = rasterio.open(f'strike_risk_{hour}00h.tif', 'w', driver='GTiff', count=1, dtype=rasterio.float64,
+                            crs='EPSG:4326', transform=trans, compress='lzw',
+                            width=raster_shape[0], height=raster_shape[1])
+        rds.write(risk_map, 1)
+        rds.close()
+
+        return risk_raster, risk_map, None
+
+    def make_strike_map(self, bounds_polygon, hour, raster_shape, resolution):
+        generated_layers = [
+            layer.generate(bounds_polygon, raster_shape, hour=hour, resolution=resolution) for layer in self._layers]
         raster_grid = np.flipud(np.sum(
             [remove_raster_nans(res[1]) for res in generated_layers if
              res[1] is not None],
             axis=0))
-        raster_shape = raster_grid.shape
-
         x, y = np.mgrid[0:raster_shape[0], 0:raster_shape[1]]
         eval_grid = np.vstack((x.ravel(), y.ravel())).T
-
         samples = 5000
         # Conjure up our distributions for various things
         alt = ss.norm(self.alt, 5).rvs(samples)
@@ -133,7 +151,6 @@ class StrikeRiskLayer(BlockableDataLayer):
         wind_dirs = bearing_to_angle(ss.norm(self.wind_dir, np.deg2rad(5)).rvs(samples))
         wind_vel_y = wind_vels * np.sin(wind_dirs)
         wind_vel_x = wind_vels * np.cos(wind_dirs)
-
         (bm_mean, bm_cov), v_ib, a_ib = self.bm.transform(alt, vel,
                                                           ss.uniform(0, 360).rvs(samples),
                                                           wind_vel_y, wind_vel_x,
@@ -145,18 +162,15 @@ class StrikeRiskLayer(BlockableDataLayer):
         sm_b = StrikeModel(raster_grid, resolution ** 2, self.aircraft.width, a_ib)
         sm_g = StrikeModel(raster_grid, resolution ** 2, self.aircraft.width, a_ig)
         premult = sm_b.premult_mat + sm_g.premult_mat
-
         offset_y, offset_x = raster_shape[0] // 2, raster_shape[1] // 2
         bm_pdf = ss.multivariate_normal(bm_mean + np.array([offset_y, offset_x]), bm_cov).pdf(eval_grid)
         gm_pdf = ss.multivariate_normal(gm_mean + np.array([offset_y, offset_x]), gm_cov).pdf(eval_grid)
         pdf = bm_pdf + gm_pdf
         pdf = pdf.reshape(raster_shape)
-
         padded_pdf = np.zeros(((raster_shape[0] * 3) + 1, (raster_shape[1] * 3) + 1))
         padded_pdf[raster_shape[0]:raster_shape[0] * 2, raster_shape[1]:raster_shape[1] * 2] = pdf
         padded_pdf = padded_pdf * self.event_prob
         padded_centre_y, padded_centre_x = raster_shape[0] + offset_y, raster_shape[1] + offset_x
-
         # Check if CUDA toolkit available through env var otherwise fallback to CPU bound numba version
         if not os.getenv('CUDA_HOME'):
             print('CUDA NOT found, falling back to Numba JITed CPU code')
@@ -174,26 +188,10 @@ class StrikeRiskLayer(BlockableDataLayer):
             print('CUDA found, using config <<<' + str(blocks_per_grid) + ',' + str(threads_per_block) + '>>>')
             wrap_pipeline_cuda[blocks_per_grid, threads_per_block](raster_shape, padded_pdf, padded_centre_y,
                                                                    padded_centre_x, premult, risk_map)
+        ac_mass = self.aircraft.mass
+        impact_kes = (velocity_to_kinetic_energy(ac_mass, v_ib), velocity_to_kinetic_energy(ac_mass, v_ig))
 
-        bounds = bounds_polygon.bounds
-        flipped_bounds = (bounds[1], bounds[0], bounds[3], bounds[2])
-        risk_raster = gv.Image(risk_map, vdims=['strike_risk'], bounds=flipped_bounds).options(
-            alpha=0.7,
-            colorbar=True, colorbar_opts={'title': 'Person Strike Risk [h^-1]'},
-            cmap='viridis',
-            tools=['hover'],
-            clipping_colors={
-                'min': (0, 0, 0, 0)})
-        import rasterio
-        from rasterio import transform
-        trans = transform.from_bounds(*flipped_bounds, *raster_shape)
-        rds = rasterio.open(f'strike_risk_{hour}00h.tif', 'w', driver='GTiff', count=1, dtype=rasterio.float64,
-                            crs='EPSG:4326', transform=trans, compress='lzw',
-                            width=raster_shape[0], height=raster_shape[1])
-        rds.write(risk_map, 1)
-        rds.close()
-
-        return risk_raster, risk_map, None
+        return risk_map, impact_kes
 
     def clear_cache(self):
         pass
