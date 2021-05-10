@@ -10,8 +10,8 @@ from holoviews.element import Geometry
 from seedpod_ground_risk.core.utils import make_bounds_polygon, remove_raster_nans
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.layers.data_layer import DataLayer
+from seedpod_ground_risk.layers.fatality_risk_layer import FatalityRiskLayer
 from seedpod_ground_risk.layers.layer import Layer
-from seedpod_ground_risk.layers.strike_risk_layer import StrikeRiskLayer
 
 
 class PlotServer:
@@ -59,7 +59,7 @@ class PlotServer:
         self.data_layers = [
             # TemporalPopulationEstimateLayer('Temporal Pop. Est'),
             # RoadsLayer('Road Traffic Population/Hour')
-            StrikeRiskLayer('Strike Risk')
+            FatalityRiskLayer('Fatality Risk')
         ]
 
         self.annotation_layers = []
