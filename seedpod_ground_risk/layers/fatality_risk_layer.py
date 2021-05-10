@@ -1,3 +1,5 @@
+import os
+
 import geoviews as gv
 import numpy as np
 
@@ -11,6 +13,7 @@ class FatalityRiskLayer(BlockableDataLayer):
     def __init__(self, key, colour: str = None, blocking=False, buffer_dist=0, **kwargs):
         super().__init__(key, colour, blocking, buffer_dist)
         self._strike_layer = StrikeRiskLayer(f'{key}_strike_', buffer_dist=buffer_dist, **kwargs)
+        delattr(self, '_colour')
 
     def preload_data(self):
         self._strike_layer.preload_data()
@@ -25,7 +28,7 @@ class FatalityRiskLayer(BlockableDataLayer):
         flipped_bounds = (bounds[1], bounds[0], bounds[3], bounds[2])
         risk_raster = gv.Image(risk_map, vdims=['strike_risk'], bounds=flipped_bounds).options(
             alpha=0.7,
-            colorbar=True, colorbar_opts={'title': 'Person Fatality Risk [$h^{-1}$]'},
+            colorbar=True, colorbar_opts={'title': 'Person Fatality Risk [h^-1]'},
             cmap='viridis',
             tools=['hover'],
             clipping_colors={
@@ -33,9 +36,13 @@ class FatalityRiskLayer(BlockableDataLayer):
         import rasterio
         from rasterio import transform
         trans = transform.from_bounds(*flipped_bounds, *raster_shape)
-        rds = rasterio.open(f'fatality_risk_{hour}00h.tif', 'w', driver='GTiff', count=1, dtype=rasterio.float64,
-                            crs='EPSG:4326', transform=trans, compress='lzw',
-                            width=raster_shape[0], height=raster_shape[1])
+        p = os.path.expanduser(f'~/GroundRiskMaps')
+        if not os.path.exists(p):
+            os.mkdir(p)
+        rds = rasterio.open(
+            os.path.expanduser(p + f'/fatality_risk_{hour}h_ac{hash(self._strike_layer.aircraft)}.tif'),
+            'w', driver='GTiff', count=1, dtype=rasterio.float64, crs='EPSG:4326', transform=trans, compress='lzw',
+            width=raster_shape[0], height=raster_shape[1])
         rds.write(risk_map, 1)
         rds.close()
 

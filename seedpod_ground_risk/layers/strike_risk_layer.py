@@ -126,9 +126,12 @@ class StrikeRiskLayer(BlockableDataLayer):
         import rasterio
         from rasterio import transform
         trans = transform.from_bounds(*flipped_bounds, *raster_shape)
-        rds = rasterio.open(f'strike_risk_{hour}00h.tif', 'w', driver='GTiff', count=1, dtype=rasterio.float64,
-                            crs='EPSG:4326', transform=trans, compress='lzw',
-                            width=raster_shape[0], height=raster_shape[1])
+        p = os.path.expanduser(f'~/GroundRiskMaps')
+        if not os.path.exists(p):
+            os.mkdir(p)
+        rds = rasterio.open(p + f'/strike_risk_{hour}h_ac{hash(self.aircraft)}.tif',
+                            'w', driver='GTiff', count=1, dtype=rasterio.float64, crs='EPSG:4326', transform=trans,
+                            compress='lzw', width=raster_shape[0], height=raster_shape[1])
         rds.write(risk_map, 1)
         rds.close()
 
