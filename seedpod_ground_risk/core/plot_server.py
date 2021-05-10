@@ -1,4 +1,4 @@
-from typing import Dict, Union, Tuple, Iterable, Any, Callable, NoReturn, Optional, List, Sequence
+from typing import Dict, Union, Tuple, Iterable, Callable, NoReturn, Optional, List, Sequence
 
 import geopandas as gpd
 import joblib as jl
@@ -7,30 +7,11 @@ import shapely.geometry as sg
 from holoviews import Overlay, Element
 from holoviews.element import Geometry
 
+from seedpod_ground_risk.core.utils import make_bounds_polygon, remove_raster_nans
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.layers.data_layer import DataLayer
 from seedpod_ground_risk.layers.layer import Layer
-from seedpod_ground_risk.layers.temporal_population_estimate_layer import TemporalPopulationEstimateLayer
-
-
-def make_bounds_polygon(*args: Iterable[float]) -> sg.Polygon:
-    if len(args) == 2:
-        return sg.box(args[1][0], args[0][0], args[1][1], args[0][1])
-    elif len(args) == 4:
-        return sg.box(*args)
-
-
-def is_null(values: Any) -> bool:
-    from numpy import isnan
-
-    try:
-        for value in values:
-            if value is None or isnan(value):
-                return True
-    except TypeError:
-        if values is None or isnan(values):
-            return True
-    return False
+from seedpod_ground_risk.layers.strike_risk_layer import StrikeRiskLayer
 
 
 class PlotServer:
@@ -44,7 +25,7 @@ class PlotServer:
     def __init__(self, tiles: str = 'Wikipedia', tools: Optional[Iterable[str]] = None,
                  active_tools: Optional[Iterable[str]] = None,
                  cmap: str = 'CET_L18',
-                 raster_resolution: float = 40,
+                 raster_resolution: float = 60,
                  plot_size: Tuple[int, int] = (760, 735),
                  progress_callback: Optional[Callable[[str], None]] = None,
                  update_callback: Optional[Callable[[str], None]] = None,
@@ -73,12 +54,12 @@ class PlotServer:
 
         self._time_idx = 0
 
-        from seedpod_ground_risk.layers.roads_layer import RoadsLayer
         self._generated_data_layers = {}
         self.data_layer_order = []
         self.data_layers = [
-            TemporalPopulationEstimateLayer('Temporal Pop. Est'),
-            RoadsLayer('Road Traffic Population/Hour')
+            # TemporalPopulationEstimateLayer('Temporal Pop. Est'),
+            # RoadsLayer('Road Traffic Population/Hour')
+            StrikeRiskLayer('Strike Risk')
         ]
 
         self.annotation_layers = []
@@ -210,7 +191,7 @@ class PlotServer:
                 bounds_poly = make_bounds_polygon(x_range, y_range)
                 raster_shape = self._get_raster_dimensions(bounds_poly, self.raster_resolution_m)
                 # Ensure bounds are small enough to render without OOM or heat death of universe
-                if bounds_poly.area < 0.2:
+                if (raster_shape[0] * raster_shape[1]) < 7e5:
                     from time import time
 
                     t0 = time()
@@ -225,7 +206,7 @@ class PlotServer:
                         raster_indices = dict(Longitude=np.linspace(x_range[0], x_range[1], num=raster_shape[0]),
                                               Latitude=np.linspace(y_range[0], y_range[1], num=raster_shape[1]))
                         raster_grid = np.sum(
-                            [self._remove_raster_nans(res[1]) for res in self._generated_data_layers.values() if
+                            [remove_raster_nans(res[1]) for res in self._generated_data_layers.values() if
                              res[1] is not None],
                             axis=0)
                         raster_grid = np.flipud(raster_grid)
@@ -369,8 +350,3 @@ class PlotServer:
         raster_width = int(abs(max_x - min_x) // raster_resolution_m)
         raster_height = int(abs(max_y - min_y) // raster_resolution_m)
         return raster_width, raster_height
-
-    def _remove_raster_nans(self, raster):
-        nans = np.isnan(raster)
-        raster[nans] = 0
-        return raster
