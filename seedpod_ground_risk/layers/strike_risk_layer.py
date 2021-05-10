@@ -118,7 +118,7 @@ class StrikeRiskLayer(BlockableDataLayer):
         flipped_bounds = (bounds[1], bounds[0], bounds[3], bounds[2])
         risk_raster = gv.Image(risk_map, vdims=['strike_risk'], bounds=flipped_bounds).options(
             alpha=0.7,
-            colorbar=True, colorbar_opts={'title': 'Person Strike Risk [$h^{-1}$]'},
+            colorbar=True, colorbar_opts={'title': 'Person Strike Risk [h^-1]'},
             cmap='viridis',
             tools=['hover'],
             clipping_colors={
