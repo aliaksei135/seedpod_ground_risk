@@ -5,9 +5,10 @@ from itertools import chain
 import casex
 import numpy as np
 import scipy.stats as ss
-from numba import njit, prange, float64, cuda
 
-from seedpod_ground_risk.core.plot_server import PlotServer, make_bounds_polygon
+from seedpod_ground_risk.core.plot_server import PlotServer
+from seedpod_ground_risk.core.utils import make_bounds_polygon, remove_raster_nans
+from seedpod_ground_risk.layers.strike_risk_layer import wrap_pipeline_cuda, wrap_all_pipeline
 from seedpod_ground_risk.path_analysis.descent_models.ballistic_model import BallisticModel
 from seedpod_ground_risk.path_analysis.descent_models.glide_model import GlideDescentModel
 from seedpod_ground_risk.path_analysis.harm_models.fatality_model import FatalityModel
@@ -29,66 +30,6 @@ def offset_window_row(arr, shape, offset):
             yield arr[start_y:end_y, start_x:end_x]
             # app(arr[start_y:end_y, start_x:end_x])
         # yield row_windows  # Dont return np array here, as it gets copied to contiguous memory and OOMs
-
-
-# ~10sec for 567,630 elements
-@cuda.jit(fastmath=True)
-def wrap_pipeline_cuda(shape, padded_pdf, pcy, pcx, sm_premult, out):
-    nr = shape[0]
-    nc = shape[1]
-    # Unique position of this thread in grid
-    x, y = cuda.grid(2)
-
-    # Array bounds check
-    if x < nc and y < nr:
-        arr = padded_pdf[(pcy - y):(pcy - y + nr), (pcx - x):(pcx - x + nc)]
-        acc = 0
-        for r in range(nr):
-            for c in range(nc):
-                acc += arr[r, c] * sm_premult[r, c]
-        out[y, x] = acc
-
-
-# ~140sec for 567,630 elements
-@njit(cache=True, nogil=True, fastmath=True, parallel=True)
-def wrap_all_pipeline(shape, padded_pdf, pcy, pcx, sm_premult):
-    nr = shape[0]
-    nc = shape[1]
-
-    # Numba seems not to be able to stick a type onto `shape`
-    out = np.zeros((nr, nc), dtype=float64)
-
-    for r in prange(nr):
-        start_y = pcy - r
-        end_y = start_y + nr
-        for c in prange(nc):
-            out[r, c] = np.sum(sm_premult * padded_pdf[start_y:end_y, (pcx - c):(pcx - c + nc)])
-    return out
-
-
-# ~570sec for 567,630 elements
-@njit(cache=True, nogil=True, fastmath=True)
-def wrap_row_pipeline(row, shape, padded_pdf, padded_centre, sm):
-    pcy, pcx = padded_centre
-    start_y = pcy - row
-    end_y = start_y + shape[0]
-    # Get func references
-    sm_transform = sm.transform
-
-    # return [
-    #     np.einsum('ij->',
-    #               sm_transform(
-    #                   padded_pdf[start_y:end_y, (pcx - cx):(pcx - cx + shape[1])],
-    #               )
-    #               , optimize='optimal') for cx in np.arange(shape[1])
-    # ]
-    return [
-        np.sum(
-            sm_transform(
-                padded_pdf[start_y:end_y, (pcx - cx):(pcx - cx + shape[1])],
-            )
-        ) for cx in range(shape[1])
-    ]
 
 
 class FullRiskMapTestCase(unittest.TestCase):
@@ -122,11 +63,8 @@ class FullRiskMapTestCase(unittest.TestCase):
 
         [layer.preload_data() for layer in chain(ps.data_layers, ps.annotation_layers)]
         ps.generate_layers(self.test_bounds, self.raster_shape)
-        self.raster_indices = dict(
-            Longitude=np.linspace(self.test_bound_coords[0], self.test_bound_coords[2], num=self.raster_shape[0]),
-            Latitude=np.linspace(self.test_bound_coords[1], self.test_bound_coords[3], num=self.raster_shape[1]))
         self.raster_grid = np.flipud(np.sum(
-            [ps._remove_raster_nans(res[1]) for res in ps._generated_data_layers.values() if
+            [remove_raster_nans(res[1]) for res in ps._generated_data_layers.values() if
              res[1] is not None],
             axis=0))
         self.raster_shape = self.raster_grid.shape
