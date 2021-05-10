@@ -101,11 +101,14 @@ class FullRiskMapTestCase(unittest.TestCase):
 
         self.hour = 13
         self.serialise = False
-        self.test_bounds = make_bounds_polygon((-1.5, -1.3), (50.87, 51))
+        self.test_bound_coords = [-1.5, 50.87, -1.3, 51]
+        # self.test_bound_coords = [-1.55, 50.745, -1.3, 51]
+        self.resolution = 30
+        self.test_bounds = make_bounds_polygon((self.test_bound_coords[0], self.test_bound_coords[2]),
+                                               (self.test_bound_coords[1], self.test_bound_coords[3]))
 
         self._setup_aircraft()
 
-        os.environ['CUDA_HOME'] = 'C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v11.3'
         os.chdir(
             os.sep.join((
                 os.path.dirname(os.path.realpath(__file__)),
@@ -114,13 +117,14 @@ class FullRiskMapTestCase(unittest.TestCase):
 
         ps = PlotServer()
         ps.set_time(self.hour)
-        self.raster_shape = ps._get_raster_dimensions(self.test_bounds, 30)
+        self.raster_shape = ps._get_raster_dimensions(self.test_bounds, self.resolution)
         # ps.data_layers += [ArbitraryObstacleLayer('test', 'static_data/FRZs.json')]
 
         [layer.preload_data() for layer in chain(ps.data_layers, ps.annotation_layers)]
         ps.generate_layers(self.test_bounds, self.raster_shape)
-        self.raster_indices = dict(Longitude=np.linspace(-1.5, -1.3, num=self.raster_shape[0]),
-                                   Latitude=np.linspace(51, 50.87, num=self.raster_shape[1]))
+        self.raster_indices = dict(
+            Longitude=np.linspace(self.test_bound_coords[0], self.test_bound_coords[2], num=self.raster_shape[0]),
+            Latitude=np.linspace(self.test_bound_coords[1], self.test_bound_coords[3], num=self.raster_shape[1]))
         self.raster_grid = np.flipud(np.sum(
             [ps._remove_raster_nans(res[1]) for res in ps._generated_data_layers.values() if
              res[1] is not None],
@@ -143,7 +147,7 @@ class FullRiskMapTestCase(unittest.TestCase):
 
         bm = BallisticModel(self.aircraft)
         gm = GlideDescentModel(self.aircraft)
-        fm = FatalityModel(0.5, 1e6, 34)
+        fm = FatalityModel(0.3, 1e6, 34)
         ac_mass = self.aircraft.mass
 
         x, y = np.mgrid[0:self.raster_shape[0], 0:self.raster_shape[1]]
@@ -158,15 +162,17 @@ class FullRiskMapTestCase(unittest.TestCase):
         wind_vel_y = wind_vels * np.sin(wind_dirs)
         wind_vel_x = wind_vels * np.cos(wind_dirs)
 
-        (bm_mean, bm_cov), v_i, a_i = bm.transform(alt, vel,
-                                                   ss.uniform(0, 360).rvs(samples),
-                                                   wind_vel_y, wind_vel_x,
-                                                   0, 0)
-        (gm_mean, gm_cov), v_i, a_i = gm.transform(alt, vel,
-                                                   ss.uniform(0, 360).rvs(samples),
-                                                   wind_vel_y, wind_vel_x,
-                                                   0, 0)
-        sm = StrikeModel(self.raster_grid, 30 * 30, self.aircraft.width, a_i)
+        (bm_mean, bm_cov), v_ib, a_ib = bm.transform(alt, vel,
+                                                     ss.uniform(0, 360).rvs(samples),
+                                                     wind_vel_y, wind_vel_x,
+                                                     0, 0)
+        (gm_mean, gm_cov), v_ig, a_ig = gm.transform(alt, vel,
+                                                     ss.uniform(0, 360).rvs(samples),
+                                                     wind_vel_y, wind_vel_x,
+                                                     0, 0)
+        sm_b = StrikeModel(self.raster_grid, self.resolution ** 2, self.aircraft.width, a_ib)
+        sm_g = StrikeModel(self.raster_grid, self.resolution ** 2, self.aircraft.width, a_ig)
+        premult = sm_b.premult_mat + sm_g.premult_mat
 
         offset_y, offset_x = self.raster_shape[0] // 2, self.raster_shape[1] // 2
         bm_pdf = ss.multivariate_normal(bm_mean + np.array([offset_y, offset_x]), bm_cov).pdf(eval_grid)
@@ -178,19 +184,26 @@ class FullRiskMapTestCase(unittest.TestCase):
         padded_pdf[self.raster_shape[0]:self.raster_shape[0] * 2, self.raster_shape[1]:self.raster_shape[1] * 2] = pdf
         padded_pdf = padded_pdf * self.event_prob
         padded_centre_y, padded_centre_x = self.raster_shape[0] + offset_y, self.raster_shape[1] + offset_x
-        impact_ke = velocity_to_kinetic_energy(ac_mass, v_i)
+        impact_ke_b = velocity_to_kinetic_energy(ac_mass, v_ib)
+        impact_ke_g = velocity_to_kinetic_energy(ac_mass, v_ig)
 
-        # Leaving parallelisation to Numba seems to be faster
-        # res = wrap_all_pipeline(self.raster_shape, padded_pdf, padded_centre_y, padded_centre_x, sm.premult_mat)
+        # Check if CUDA toolkit available through env var otherwise fallback to CPU bound numba version
+        if not os.getenv('CUDA_HOME'):
+            print('CUDA NOT found, falling back to Numba JITed CPU code')
+            # Leaving parallelisation to Numba seems to be faster
+            res = wrap_all_pipeline(self.raster_shape, padded_pdf, padded_centre_y, padded_centre_x, premult)
 
-        res = np.zeros(self.raster_shape, dtype=float)
-        threads_per_block = (32, 32)  # 1024 max per block
-        blocks_per_grid = (
-            int(np.ceil(self.raster_shape[1] / threads_per_block[1])),
-            int(np.ceil(self.raster_shape[0] / threads_per_block[0]))
-        )
-        wrap_pipeline_cuda[blocks_per_grid, threads_per_block](self.raster_shape, padded_pdf, padded_centre_y,
-                                                               padded_centre_x, sm.premult_mat, res)
+        else:
+
+            res = np.zeros(self.raster_shape, dtype=float)
+            threads_per_block = (32, 32)  # 1024 max per block
+            blocks_per_grid = (
+                int(np.ceil(self.raster_shape[1] / threads_per_block[1])),
+                int(np.ceil(self.raster_shape[0] / threads_per_block[0]))
+            )
+            print('CUDA found, using config <<<' + str(blocks_per_grid) + ',' + str(threads_per_block) + '>>>')
+            wrap_pipeline_cuda[blocks_per_grid, threads_per_block](self.raster_shape, padded_pdf, padded_centre_y,
+                                                                   padded_centre_x, premult, res)
 
         # Alternative joblib parallelisation
         # res = jl.Parallel(n_jobs=-1, prefer='threads', verbose=1)(
@@ -222,7 +235,7 @@ class FullRiskMapTestCase(unittest.TestCase):
         ax2.set_title(f'Strike Risk Map at t={self.hour}')
         fig2.show()
 
-        fatality_pdf = fm.transform(strike_pdf, impact_ke=impact_ke)
+        fatality_pdf = fm.transform(strike_pdf, impact_ke=impact_ke_g) + fm.transform(strike_pdf, impact_ke=impact_ke_b)
         if self.serialise:
             np.savetxt(f'fatality_map_t{self.hour}', fatality_pdf, delimiter=',')
 
@@ -235,10 +248,19 @@ class FullRiskMapTestCase(unittest.TestCase):
         ax3.set_title(f'Fatality Risk Map at t={self.hour}')
         fig3.show()
 
+        import rasterio
+        from rasterio import transform
+        trans = transform.from_bounds(*self.test_bound_coords, *self.raster_shape)
+        rds = rasterio.open(f'fatality_risk_{self.hour}00h.tif', 'w', driver='GTiff', count=1, dtype=rasterio.float64,
+                            crs='EPSG:4326', transform=trans, compress='lzw',
+                            width=self.raster_shape[0], height=self.raster_shape[1])
+        rds.write(fatality_pdf, 1)
+        rds.close()
+
     def _setup_aircraft(self, ac_width: float = 2, ac_length: float = 1.5,
                         ac_mass: float = 2, ac_glide_ratio: float = 12, ac_glide_speed: float = 15,
                         ac_glide_drag_coeff: float = 0.1, ac_ballistic_drag_coeff: float = 0.8,
-                        ac_ballistic_frontal_area: float = 0.1, ac_failure_prob: float = 5e-3, alt: float = 120,
+                        ac_ballistic_frontal_area: float = 0.1, ac_failure_prob: float = 5e-3, alt: float = 50,
                         vel: float = 18,
                         wind_vel: float = 5, wind_dir: float = 45):
         self.aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, ac_width, ac_length, ac_mass)

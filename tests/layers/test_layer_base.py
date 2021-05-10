@@ -17,7 +17,7 @@ class BaseLayerTestCase(unittest.TestCase):
         self.layer.preload_data()
         self.test_bounds = make_bounds_polygon((-1.5, -1.3), (50.87, 51))
         self.raster_shape = (500, 500)
-        if self.hour is None:
+        if not hasattr(self, 'hour'):
             self.hour = 13
 
     def test_raster_bounds(self):
