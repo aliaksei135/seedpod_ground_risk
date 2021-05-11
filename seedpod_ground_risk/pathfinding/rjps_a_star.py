@@ -1,14 +1,16 @@
 from heapq import *
-from typing import List, Union, Tuple
+from typing import List, Union
 
 import numpy as np
 
-from seedpod_ground_risk.pathfinding.a_star import JumpPointSearchAStar
-from seedpod_ground_risk.pathfinding.environment import GridEnvironment
+from seedpod_ground_risk.pathfinding.a_star import JumpPointSearchAStar, _reconstruct_path
+from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
 from seedpod_ground_risk.pathfinding.heuristic import Heuristic, RiskHeuristic
 
 global max_y, max_x
 
+
+## Implementation is broken ##
 
 def is_passable(grid, y, x):
     if y > max_y or x > max_x or y < 0 or x < 0:
@@ -73,6 +75,7 @@ def jump(grid: np.ndarray, cy: int, cx: int, dy: int, dx: int, gy: int, gx: int,
 class RiskJumpPointSearchAStar(JumpPointSearchAStar):
 
     def __init__(self, heuristic: Heuristic, jump_gap=0, jump_limit=200):
+        raise NotImplementedError("Risk JPS A* no longer works")
         if not isinstance(heuristic, RiskHeuristic):
             raise ValueError('Risk based A* can only use Risk based heuristics')
         if not heuristic.environment.diagonals:
@@ -82,8 +85,8 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
         self.jump_limit = jump_limit
         self.heuristic_env_hash = hash(heuristic.environment)
 
-    def find_path(self, environment: GridEnvironment, start: Tuple[int, int], end: Tuple[int, int]) -> Union[
-        List[Tuple[int, int]], None]:
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[
+        List[Node], None]:
         if not environment.diagonals:
             raise ValueError('JPS relies on a grid environment with diagonals')
         if self.heuristic_env_hash != hash(environment):
@@ -100,35 +103,22 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
             return [start]
 
         # Use heapq;the thread safety provided by ProrityQueue is not needed, as we only exec on a single thread
-        open = []
-        closed = {start: None}
-        costs = np.full(environment.grid.shape, np.inf)
-        costs[start[0], start[1]] = 0
-        # if __debug__:
-        #     debug_heuristic_cost = np.full(environment.grid.shape, np.inf)
+        open = [start]
+        start.f = start.g = start.h = 0
+        open_cost = {start: start.f}
+        closed = set()
 
         for neighbour in environment.get_neighbours(start):
-            h = self.heuristic(neighbour, end)
-            heappush(open, (h, neighbour))
+            heappush(open, neighbour)
             closed[neighbour] = start
-            costs[neighbour[0], neighbour[1]] = self.heuristic(start, neighbour)
-            # if __debug__:
-            #     debug_heuristic_cost[neighbour[0], neighbour[1]] = h
+            neighbour = self.heuristic(start, neighbour)
 
         while open:
 
-            node = heappop(open)[1]
+            node = heappop(open)
+
             if node == end:
-                # if __debug__:
-                #     import matplotlib.pyplot as mpl
-                #     mpl.matshow(costs)
-                #     mpl.title('R JPS+ A* g cost (start to node)')
-                #     mpl.colorbar()
-                #     mpl.matshow(debug_heuristic_cost)
-                #     mpl.title('R JPS+ A* h cost (node to goal')
-                #     mpl.colorbar()
-                #     mpl.show()
-                return self._reconstruct_path(end, closed, environment.grid)
+                return _reconstruct_path(end, grid)
 
             parent = closed[node]
             py, px = parent[0], parent[1]
@@ -150,19 +140,8 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
                 cost = current_cost + self.heuristic(node, successor)
                 if costs[y, x] > cost:
                     costs[y, x] = cost
-                    h = self.heuristic(successor, end)
+                    h = self.heuristic(successor.position, end.position)
                     heappush(open, (cost + h, successor))
                     closed[successor] = node
-                    # if __debug__:
-                    #     debug_heuristic_cost[y, x] = h
 
-        # if __debug__:
-        #     import matplotlib.pyplot as mpl
-        #     mpl.matshow(costs)
-        #     mpl.title('R JPS+ A* g cost (start to node)')
-        #     mpl.colorbar()
-        #     mpl.matshow(debug_heuristic_cost)
-        #     mpl.title('R JPS+ A* h cost (node to goal')
-        #     mpl.colorbar()
-        #     mpl.show()
         return None

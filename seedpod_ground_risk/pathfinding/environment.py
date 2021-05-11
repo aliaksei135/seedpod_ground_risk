@@ -1,6 +1,26 @@
 import numpy as np
 
 
+class Node:
+
+    def __init__(self, position, parent=None):
+        self.position = position
+        self.parent = parent
+
+        self.f = np.inf
+        self.g = np.inf
+        self.h = np.inf
+
+    def __eq__(self, other):
+        return other.position == self.position
+
+    def __lt__(self, other):
+        return self.f < other.f
+
+    def __hash__(self):
+        return hash(self.position)
+
+
 class GridEnvironment:
 
     def __init__(self, grid: np.array, diagonals=False):
@@ -15,9 +35,10 @@ class GridEnvironment:
         return ((node[0] - goal[0]) ** 2 + (node[1] - goal[1]) ** 2) ** 0.5
 
     def get_neighbours(self, node):
-        if not self.graph:
-            self.graph = self._generate_graph()
-        return self.graph[node]
+        # if not self.graph:
+        #     self.graph = self._generate_graph()
+        # return self.graph[node]
+        return self._find_neighbours(node.position)
 
     def _generate_graph(self):
 
@@ -25,7 +46,7 @@ class GridEnvironment:
 
         for idx, orig_val in np.ndenumerate(self.grid):
             neighbours = self._find_neighbours(idx)
-            graph[(idx[0], idx[1])] = neighbours
+            graph[Node((idx[0], idx[1]))] = neighbours
 
         return graph
 
@@ -38,7 +59,7 @@ class GridEnvironment:
             val = self.grid[y, x]
             nonlocal neighbours
             if val >= 0:
-                neighbours.add((y, x))
+                neighbours.add(Node((y, x)))
 
         if idx[1] - 1 >= 0:
             has_left = True
