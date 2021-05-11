@@ -1,109 +1,71 @@
 from heapq import *
-from typing import List, Dict, Union, Tuple
+from typing import List, Union, Tuple
 
 import numpy as np
 
 from seedpod_ground_risk.pathfinding import bresenham
 from seedpod_ground_risk.pathfinding.algorithm import Algorithm
-from seedpod_ground_risk.pathfinding.environment import GridEnvironment
+from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
 from seedpod_ground_risk.pathfinding.heuristic import Heuristic, ManhattanHeuristic, RiskHeuristic
+
+
+def _reconstruct_path(end: Node, grid: np.ndarray) -> List[Node]:
+    reverse_path = []
+    reverse_path_append = reverse_path.append
+    reverse_path_append(end)
+    node = end
+    while node is not None:
+        reverse_path_append(node)
+        node = node.parent
+    path = list(reversed(reverse_path))
+
+    def get_path_sum(nx, ny, tx, ty, grid):
+        line = bresenham.make_line(nx, ny, tx, ty)
+        line_points = grid[line[:, 0], line[:, 1]]
+        # If the new line crosses any blocked areas the cost is inf
+        if -1 in line_points:
+            return np.inf
+        else:
+            return line_points.sum()
+
+    def jump_path(node: Node, path, grid, goal: Node):
+        ny, nx = node.position
+        gy, gx = goal.position
+        if get_path_sum(nx, ny, gx, gy, grid) == 0:
+            return goal
+        start_node_index = path.index(node)
+        next_node_index = start_node_index + 1
+
+        for test_node_index in reversed(range(len(path))):
+            # Ensure still looking forward from start node
+            if test_node_index > next_node_index:
+                ty, tx = path[test_node_index].position
+                path_x = [p.position[1] for p in path[start_node_index:test_node_index]]
+                path_y = [p.position[0] for p in path[start_node_index:test_node_index]]
+                existing_path_sum = grid[path_y, path_x].sum()
+                test_path_sum = get_path_sum(nx, ny, tx, ty, grid)
+                if test_path_sum <= existing_path_sum:
+                    return path[test_node_index]
+        return path[next_node_index]
+
+    simplfied_path = []
+    next_node = path[0]
+    simplfied_path.append(next_node)
+    while next_node != end:
+        jump_node = jump_path(next_node, path, grid, end)
+        simplfied_path.append(jump_node)
+        next_node = jump_node
+
+    return simplfied_path
 
 
 class GridAStar(Algorithm):
     def __init__(self, heuristic: Heuristic = ManhattanHeuristic()):
         self.heuristic = heuristic.h
 
-    def find_path(self, environment: GridEnvironment, start: Tuple[int, int], end: Tuple[int, int]) -> Union[
-        List[Tuple[int, int]], None]:
-        # Use heapq;the thread safety provided by ProrityQueue is not needed, as we only exec on a single thread
-        open = []
-        heappush(open, (0, start))
-        closed = {start: None}
-        costs = np.full(environment.grid.shape, np.inf)
-        costs[start[0], start[1]] = 0
-
-        while open:
-            node = heappop(open)[1]
-            if node == end:
-                import matplotlib.pyplot as mpl
-                mpl.matshow(costs)
-                mpl.show()
-                return self._reconstruct_path(end, closed, environment.grid)
-
-            current_cost = costs[node[0], node[1]]
-            for neighbour in environment.get_neighbours(node):
-                x, y = neighbour[1], neighbour[0]
-                cost = current_cost + environment.f_cost(node, neighbour)
-                if costs[y, x] > cost:
-                    costs[y, x] = cost
-                    heappush(open, (cost + self.heuristic(neighbour, end), neighbour))
-                    closed[neighbour] = node
-        return None
-
-    def _reconstruct_path(self, end: Tuple[int, int], closed_list: Dict[Tuple[int, int], Tuple[int, int]],
-                          grid: np.ndarray) -> List[Tuple[int, int]]:
-        reverse_path = []
-        reverse_path_append = reverse_path.append
-        reverse_path_append(end)
-        node = closed_list[end]
-        while node is not None:
-            reverse_path_append(node)
-            node = closed_list[node]
-        path = list(reversed(reverse_path))
-
-        # import matplotlib.pyplot as mpl
-        # mpl.matshow(grid, cmap='jet')
-        # mpl.colorbar()
-        # mpl.plot([n[1] for n in path], [n[0] for n in path], color='red')
-        # mpl.title(f'Full Path, length={len(path)}')
-        # mpl.show()
-
-        # return path
-
-        def get_path_sum(nx, ny, tx, ty, grid):
-            line = bresenham.make_line(nx, ny, tx, ty)
-            line_points = grid[line[:, 0], line[:, 1]]
-            # If the new line crosses any blocked areas the cost is inf
-            if -1 in line_points:
-                return np.inf
-            else:
-                return line_points.sum()
-
-        def jump_path(node: Tuple[int, int], path, grid, goal: Tuple[int, int]):
-            nx, ny = node[1], node[0]
-            gx, gy = goal[1], goal[0]
-            if get_path_sum(nx, ny, gx, gy, grid) == 0:
-                return goal
-            start_node_index = path.index(node)
-            next_node_index = start_node_index + 1
-
-            for test_node_index in reversed(range(len(path))):
-                # Ensure still looking forward from start node
-                if test_node_index > next_node_index:
-                    tx, ty = path[test_node_index][1], path[test_node_index][1]
-                    # path_x = [p[1] for p in path[start_node_index:test_node_index]]
-                    # path_y = [p[0] for p in path[start_node_index:test_node_index]]
-                    # existing_path_sum = grid[path_y, path_x].sum()
-                    test_path_sum = get_path_sum(nx, ny, tx, ty, grid)
-                    if test_path_sum == 0:  # existing_path_sum:
-                        return path[test_node_index]
-            return path[next_node_index]
-
-        simplfied_path = []
-        next_node = path[0]
-        simplfied_path.append(next_node)
-        while next_node != end:
-            jump_node = jump_path(next_node, path, grid, end)
-            simplfied_path.append(jump_node)
-            next_node = jump_node
-
-        # mpl.matshow(grid, cmap='jet')
-        # mpl.colorbar()
-        # mpl.plot([n[1] for n in simplfied_path], [n[0] for n in simplfied_path], color='red')
-        # mpl.title(f'Simplified Path, length={len(simplfied_path)}')
-        # mpl.show()
-
-        return simplfied_path
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[
+        List[Node], None]:
+        pass
 
 
 class RiskGridAStar(GridAStar):
@@ -113,104 +75,86 @@ class RiskGridAStar(GridAStar):
             raise TypeError('Risk based A* can only use Risk based heuristics')
         super().__init__(heuristic)
 
-    def find_path(self, environment: GridEnvironment, start: Tuple[int, int], end: Tuple[int, int]) -> Union[
-        List[Tuple[int, int]], None]:
-        # Use heapq;the thread safety provided by ProrityQueue is not needed, as we only exec on a single thread
-        open = [(0, start)]
-        # heappush(open, (0, start))
-        closed = {start: None}
-        costs = np.full(environment.grid.shape, np.inf)
-        costs[start[0], start[1]] = 0
-        # if __debug__:
-        #     debug_heuristic_cost = np.full(environment.grid.shape, np.inf)
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[List[Node], None]:
+        grid = environment.grid
+
+        # Use heapq;the thread safety provided by PriorityQueue is not needed, as we only exec on a single thread
+        open = [start]
+        start.f = start.g = start.h = 0
+        open_cost = {start: start.f}
+        closed = set()
 
         while open:
-            node = heappop(open)[1]
+            node = heappop(open)
+            open_cost.pop(node)
+            if node in closed:
+                continue
+            closed.add(node)
             if node == end:
-                # if __debug__:
-                #     import matplotlib.pyplot as mpl
-                #     mpl.matshow(costs)
-                #     mpl.title('R A* g cost (start to node)')
-                #     mpl.colorbar()
-                #     # mpl.matshow(debug_heuristic_cost)
-                #     # mpl.title('R A* h cost (node to goal)')
-                #     # mpl.colorbar()
-                #     mpl.show()
-                return self._reconstruct_path(end, closed, environment.grid)
+                return _reconstruct_path(node, grid)
 
-            current_cost = costs[node[0], node[1]]
+            current_cost = node.f
             for neighbour in environment.get_neighbours(node):
-                x, y = neighbour[1], neighbour[0]
-                cost = current_cost + self.heuristic(node, neighbour)
-                if costs[y, x] > cost:
-                    costs[y, x] = cost
-                    h = self.heuristic(neighbour, end)
-                    heappush(open, (cost + h, neighbour))
-                    closed[neighbour] = node
-                    # if __debug__:
-                    #     debug_heuristic_cost[y, x] = h
-
-        # import matplotlib.pyplot as mpl
-        # mpl.matshow(costs)
-        # mpl.title('R A* g cost (start to node)')
-        # mpl.colorbar()
-        # mpl.matshow(debug_heuristic_cost)
-        # mpl.title('R A* h cost (node to goal)')
-        # mpl.colorbar()
-        # mpl.show()
+                cost = current_cost + grid[neighbour.position]
+                if cost < neighbour.g:
+                    neighbour.g = cost
+                    h = self.heuristic(neighbour.position, end.position)
+                    neighbour.h = h
+                    neighbour.f = cost + h
+                    neighbour.parent = node
+                    if neighbour not in open_cost or neighbour.f < open_cost[neighbour]:
+                        heappush(open, neighbour)
+                        open_cost[neighbour] = neighbour.f
 
         return None
 
 
 class JumpPointSearchAStar(GridAStar):
 
-    def find_path(self, environment: GridEnvironment, start: Tuple[int, int], end: Tuple[int, int]) -> Union[
-        List[Tuple[int, int]], None]:
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[
+        List[Node], None]:
         if not environment.diagonals:
             raise ValueError('JPS relies on a grid environment with diagonals')
 
         self.environment = environment
+        grid = environment.grid
         self._max_y, self._max_x = self.environment.grid.shape[0] - 1, self.environment.grid.shape[1] - 1
         self.goal = end
 
         # Use heapq;the thread safety provided by ProrityQueue is not needed, as we only exec on a single thread
-        open = []
-        heappush(open, (0, start))
-        closed = {start: None}
-        costs = np.full(environment.grid.shape, np.inf)
-        costs[start[0], start[1]] = 0
-        # if __debug__:
-        #     debug_heuristic_cost = np.full(environment.grid.shape, np.inf)
+        open = [start]
+        start.f = start.g = start.h = 0
+        open_cost = {start: start.f}
+        closed = set()
 
         while open:
-            node = heappop(open)[1]
+            node = heappop(open)
+            open_cost.pop(node)
+            if node in closed:
+                continue
+            closed.add(node)
             if node == end:
-                # if __debug__:
-                #     import matplotlib.pyplot as mpl
-                #     mpl.matshow(costs)
-                #     mpl.matshow(debug_heuristic_cost)
-                #     mpl.show()
-                return self._reconstruct_path(end, closed, environment.grid)
+                return _reconstruct_path(end, grid)
 
-            cy, cx = node[0], node[1]
-            current_cost = costs[cy, cx]
+            current_cost = node.f
+            cy, cx = node.position
             successors = []
             for neighbour in environment.get_neighbours(node):
-                dx, dy = neighbour[1] - cx, neighbour[0] - cy
-                jumpPoint = self._jump(cy, cx, dy, dx)
-                if jumpPoint:
-                    successors.append(jumpPoint)
+                dx, dy = neighbour.position[1] - cx, neighbour.position[0] - cy
+                jump_point = self._jump(cy, cx, dy, dx)
+                if jump_point:
+                    successors.append(Node(jump_point))
 
             for successor in successors:
-                x, y = successor[1], successor[0]
-                cost = current_cost + environment.f_cost(node, successor)
-                if costs[y, x] > cost:
-                    costs[y, x] = cost
-                    h = self.heuristic(successor, end)
-                    heappush(open, (cost + h, successor))
-                    closed[successor] = node
-                    # if __debug__:
-                    #     debug_heuristic_cost[y, x] = h
+                cost = current_cost + grid[successor.position]
+                if cost < successor.g:
+                    successor.g = cost
+                    h = self.heuristic(successor.position, end.position)
+                    successor.h = h
+                    successor.f = h + cost
+                    if successor not in open_cost or successor.f < open_cost[successor]:
+                        heappush(open, successor)
+                        open_cost[successor] = successor.f
         return None
 
     def _jump(self, cy: int, cx: int, dy: int, dx: int) -> Tuple[int, int]:

@@ -55,7 +55,7 @@ class ManhattanRiskHeuristic(RiskHeuristic):
         dist = abs((node[1] - goal[1])) + abs((node[0] - goal[0]))
         line = bresenham.make_line(node[1], node[0], goal[1], goal[0])
         integral_val = self.environment.grid[line[:, 0], line[:, 1]].sum()
-
+        # return self.k * integral_val * dist * self.resolution
         if integral_val > 1:
             return self.k * np.log10(integral_val) + dist
         else:
