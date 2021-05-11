@@ -134,7 +134,7 @@ class TemporalPopulationEstimateLayer(BlockableDataLayer):
                                    x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
             df = census_df
 
-        raster_grid = np.copy(list(raster.data.data_vars.items())[0][1].data.astype(np.float))
+        raster_grid = np.copy(list(raster.data.data_vars.items())[0][1].data.astype(float))
 
         return gv_polys, raster_grid, gpd.GeoDataFrame(df)
 
