@@ -9,6 +9,7 @@ import scipy.stats as ss
 from seedpod_ground_risk.core.plot_server import PlotServer
 from seedpod_ground_risk.core.utils import make_bounds_polygon, remove_raster_nans
 from seedpod_ground_risk.layers.strike_risk_layer import wrap_pipeline_cuda, wrap_all_pipeline
+from seedpod_ground_risk.layers.temporal_population_estimate_layer import TemporalPopulationEstimateLayer
 from seedpod_ground_risk.path_analysis.descent_models.ballistic_model import BallisticModel
 from seedpod_ground_risk.path_analysis.descent_models.glide_model import GlideDescentModel
 from seedpod_ground_risk.path_analysis.harm_models.fatality_model import FatalityModel
@@ -42,9 +43,9 @@ class FullRiskMapTestCase(unittest.TestCase):
 
         self.hour = 13
         self.serialise = False
-        self.test_bound_coords = [-1.5, 50.87, -1.3, 51]
+        self.test_bound_coords = [-1.6, 50.87, -1.3, 51]
         # self.test_bound_coords = [-1.55, 50.745, -1.3, 51]
-        self.resolution = 30
+        self.resolution = 60
         self.test_bounds = make_bounds_polygon((self.test_bound_coords[0], self.test_bound_coords[2]),
                                                (self.test_bound_coords[1], self.test_bound_coords[3]))
 
@@ -59,7 +60,7 @@ class FullRiskMapTestCase(unittest.TestCase):
         ps = PlotServer()
         ps.set_time(self.hour)
         self.raster_shape = ps._get_raster_dimensions(self.test_bounds, self.resolution)
-        # ps.data_layers += [ArbitraryObstacleLayer('test', 'static_data/FRZs.json')]
+        ps.data_layers = [TemporalPopulationEstimateLayer('tpe')]
 
         [layer.preload_data() for layer in chain(ps.data_layers, ps.annotation_layers)]
         ps.generate_layers(self.test_bounds, self.raster_shape)
@@ -148,7 +149,7 @@ class FullRiskMapTestCase(unittest.TestCase):
         #     jl.delayed(wrap_row_pipeline)(c, self.raster_shape, padded_pdf, (padded_centre_y, padded_centre_x), sm)
         #     for c in range(self.raster_shape[0]))
 
-        strike_pdf = np.vstack(res)
+        strike_pdf = res
         # snapped_points = [snap_coords_to_grid(self.raster_indices, *coords) for coords in self.path_coords]
 
         import matplotlib.pyplot as mpl
