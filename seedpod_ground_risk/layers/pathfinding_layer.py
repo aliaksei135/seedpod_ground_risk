@@ -2,24 +2,25 @@ from time import time
 from typing import NoReturn, List, Tuple, Dict
 
 import geopandas as gpd
+import geoviews as gv
 import numpy as np
 import shapely.geometry as sg
 from holoviews.element import Geometry
 
-from seedpod_ground_risk.layers.path_analysis_layer import PathAnalysisLayer
+from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid
 from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
 from seedpod_ground_risk.pathfinding.algorithm import Algorithm
-from seedpod_ground_risk.pathfinding.environment import GridEnvironment
-from seedpod_ground_risk.pathfinding.heuristic import ManhattanRiskHeuristic, Heuristic
+from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
+from seedpod_ground_risk.pathfinding.heuristic import Heuristic, ManhattanRiskHeuristic
 
 
-class PathfindingLayer(PathAnalysisLayer):
+class PathfindingLayer(AnnotationLayer):
 
     def __init__(self, key, start_lat: float = 0, start_lon: float = 0, end_lat: float = 0, end_lon: float = 0,
                  algo: Algorithm = RiskGridAStar, heuristic: Heuristic = ManhattanRiskHeuristic,
-                 rdr: float = 0.5, **kwargs):
-        super().__init__(key, '', **kwargs)
+                 rdr: float = 0.2, **kwargs):
+        super().__init__(key)
         self.start_coords = (start_lat, start_lon)
         self.end_coords = (end_lat, end_lon)
         self.algo = algo
@@ -32,7 +33,7 @@ class PathfindingLayer(PathAnalysisLayer):
     def annotate(self, data: List[gpd.GeoDataFrame], raster_data: Tuple[Dict[str, np.array], np.array],
                  resolution=20, **kwargs) -> Geometry:
 
-        raster_grid = raster_data[1] * resolution ** 2
+        raster_grid = np.flipud(raster_data[1])
 
         start_x, start_y = snap_coords_to_grid(raster_data[0], self.start_coords[1], self.start_coords[0])
         end_x, end_y = snap_coords_to_grid(raster_data[0], self.end_coords[1], self.end_coords[0])
@@ -47,7 +48,7 @@ class PathfindingLayer(PathAnalysisLayer):
         env = GridEnvironment(raster_grid, diagonals=False)
         algo = self.algo(heuristic=self.heuristic(env, risk_to_dist_ratio=self.rdr))
         t0 = time()
-        path = algo.find_path(env, (start_y, start_x), (end_y, end_x))
+        path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)))
         if path is None:
             print("Path not found")
             return None
@@ -64,15 +65,13 @@ class PathfindingLayer(PathAnalysisLayer):
 
         snapped_path = []
         for node in path:
-            lat = raster_data[0]['Latitude'][node[0]]
-            lon = raster_data[0]['Longitude'][node[1]]
+            lat = raster_data[0]['Latitude'][node.position[0]]
+            lon = raster_data[0]['Longitude'][node.position[1]]
             snapped_path.append((lon, lat))
 
         snapped_path = sg.LineString(snapped_path)
         self.dataframe = gpd.GeoDataFrame({'geometry': [snapped_path]}).set_crs('EPSG:4326')
-        self.endpoint = self.dataframe.iloc[0].geometry.coords[-1]
-
-        return super(PathfindingLayer, self).annotate(data, raster_data, **kwargs)
+        return gv.Contours(self.dataframe).opts(line_width=4, line_color='magenta')
 
     def clear_cache(self) -> NoReturn:
         pass
