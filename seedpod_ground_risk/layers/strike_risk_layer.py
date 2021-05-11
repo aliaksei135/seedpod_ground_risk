@@ -84,7 +84,7 @@ class StrikeRiskLayer(BlockableDataLayer):
                  ac_glide_drag_coeff: float = 0.1, ac_ballistic_drag_coeff: float = 0.8,
                  ac_ballistic_frontal_area: float = 0.2, ac_failure_prob: float = 5e-3, alt: float = 120,
                  vel: float = 18,
-                 wind_vel: float = 5, wind_dir: float = 45):
+                 wind_vel: float = 5, wind_dir: float = 90):
         super().__init__(key, colour, blocking, buffer_dist)
         delattr(self, '_colour')
 
@@ -144,6 +144,7 @@ class StrikeRiskLayer(BlockableDataLayer):
             [remove_raster_nans(res[1]) for res in generated_layers if
              res[1] is not None],
             axis=0))
+        raster_shape = raster_grid.shape
         x, y = np.mgrid[0:raster_shape[0], 0:raster_shape[1]]
         eval_grid = np.vstack((x.ravel(), y.ravel())).T
         samples = 5000
