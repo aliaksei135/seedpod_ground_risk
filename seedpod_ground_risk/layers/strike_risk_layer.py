@@ -101,7 +101,10 @@ class StrikeRiskLayer(BlockableDataLayer):
         self.alt = alt
         self.vel = vel
         self.wind_vel = wind_vel
-        self.wind_dir = np.deg2rad((wind_dir - 90) % 360)
+        # !! This is the direction the wind is COMING FROM !! #
+        self.wind_dir = np.deg2rad(
+            (((wind_dir - 180) % 360) - 90) % 360
+        )
 
         self.event_prob = ac_failure_prob
 
