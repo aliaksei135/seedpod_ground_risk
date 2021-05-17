@@ -5,7 +5,6 @@ from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
 from seedpod_ground_risk.layers.residential_layer import ResidentialLayer
 from seedpod_ground_risk.layers.roads_layer import RoadsLayer
 from seedpod_ground_risk.pathfinding.a_star import *
-from seedpod_ground_risk.pathfinding.rjps_a_star import *
 
 LAYER_OBJECTS = {
     'Select a Layer': None,
@@ -19,10 +18,10 @@ LAYER_OBJECTS = {
 
 ALGORITHM_OBJECTS = {
     'Select Pathfinding Algorithm': None,
-    'Grid A*': GridAStar,
+    # 'Grid A*': GridAStar,
     'Risk Grid A*': RiskGridAStar,
-    'Jump Point Search+ A*': JumpPointSearchAStar,
-    'Risk Jump Point Search+ A*': RiskJumpPointSearchAStar
+    # 'Jump Point Search+ A*': JumpPointSearchAStar,
+    # 'Risk Jump Point Search+ A*': RiskJumpPointSearchAStar
 }
 
 # Dictionary of available layers and their available options with validation regex or bool
