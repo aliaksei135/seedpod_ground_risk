@@ -6,7 +6,7 @@ import numpy as np
 from seedpod_ground_risk.pathfinding import bresenham
 from seedpod_ground_risk.pathfinding.algorithm import Algorithm
 from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
-from seedpod_ground_risk.pathfinding.heuristic import Heuristic, ManhattanHeuristic, RiskHeuristic
+from seedpod_ground_risk.pathfinding.heuristic import Heuristic, ManhattanHeuristic
 
 
 def _reconstruct_path(end: Node, grid: np.ndarray) -> List[Node]:
@@ -124,11 +124,6 @@ class RiskAStar(Algorithm):
 
 class RiskGridAStar(GridAStar):
 
-    def __init__(self, heuristic: Heuristic = ManhattanHeuristic()):
-        if not isinstance(heuristic, RiskHeuristic):
-            raise TypeError('Risk based A* can only use Risk based heuristics')
-        super().__init__(heuristic)
-
     def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[List[Node], None]:
         grid = environment.grid
 
@@ -140,7 +135,8 @@ class RiskGridAStar(GridAStar):
 
         while open:
             node = heappop(open)
-            open_cost.pop(node)
+            if node in open_cost:
+                open_cost.pop(node)
             if node in closed:
                 continue
             closed.add(node)
@@ -152,7 +148,7 @@ class RiskGridAStar(GridAStar):
                 cost = current_cost + grid[neighbour.position]
                 if cost < neighbour.g:
                     neighbour.g = cost
-                    h = self.heuristic(neighbour.position, end.position)
+                    h = abs((node.position[0] - end.position[0])) + abs((node.position[1] - end.position[1]))
                     neighbour.h = h
                     neighbour.f = cost + h
                     neighbour.parent = node
