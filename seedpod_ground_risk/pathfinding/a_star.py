@@ -19,6 +19,8 @@ def _reconstruct_path(end: Node, grid: np.ndarray) -> List[Node]:
         node = node.parent
     path = list(reversed(reverse_path))
 
+    # return path
+
     def get_path_sum(nx, ny, tx, ty, grid):
         line = bresenham.make_line(nx, ny, tx, ty)
         line_points = grid[line[:, 0], line[:, 1]]
@@ -66,6 +68,58 @@ class GridAStar(Algorithm):
     def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[
         List[Node], None]:
         pass
+
+
+# Canonical algorithm from literature
+class RiskAStar(Algorithm):
+
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node, k=0.9) -> Union[List[Node], None]:
+        grid = environment.grid
+        min_dist = 2 ** 0.5
+        goal_val = grid[end.position]
+
+        # Use heapq;the thread safety provided by PriorityQueue is not needed, as we only exec on a single thread
+        open = [start]
+        start.f = start.g = start.h = 0
+        open_cost = {start: start.f}
+        closed = set()
+
+        while open:
+            node = heappop(open)
+            if node in open_cost:
+                open_cost.pop(node)
+            if node in closed:
+                continue
+            closed.add(node)
+            if node == end:
+                return _reconstruct_path(node, grid)
+
+            current_cost = node.f
+            node_val = grid[node.position]
+            for neighbour in environment.get_neighbours(node):
+                cost = current_cost \
+                       + (((grid[neighbour.position] + node_val) / 2)
+                          * (((node.position[1] - neighbour.position[1]) ** 2 + (
+                                node.position[0] - neighbour.position[0]) ** 2) ** 0.5))
+                if cost < neighbour.g:
+                    neighbour.g = cost
+
+                    dist = ((node.position[1] - end.position[1]) ** 2 + (
+                            node.position[0] - end.position[0]) ** 2) ** 0.5
+                    line = bresenham.make_line(node.position[1], node.position[0], end.position[1], end.position[0])
+                    min_val = grid[line[:, 0], line[:, 1]].min()
+                    node_val = grid[node.position]
+                    h = k * ((((node_val + goal_val) / 2) * min_dist) + ((dist - min_dist) * min_val))
+
+                    # h = self.heuristic(neighbour.position, end.position)
+                    neighbour.h = h
+                    neighbour.f = cost + h
+                    neighbour.parent = node
+                    if neighbour not in open_cost or neighbour.f < open_cost[neighbour]:
+                        heappush(open, neighbour)
+                        open_cost[neighbour] = neighbour.f
+
+        return None
 
 
 class RiskGridAStar(GridAStar):
