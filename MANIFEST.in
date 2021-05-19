@@ -1,0 +1,3 @@
+include static_data/*
+include extern/*
+recursive-include tests *.csv
