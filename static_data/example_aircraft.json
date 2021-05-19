@@ -1,0 +1,16 @@
+{
+  "basic": {
+    "width": 2,
+    "length": 1.5,
+    "mass": 7
+  },
+  "ballistic": {
+    "drag_coeff": 0.8,
+    "frontal_area": 0.2
+  },
+  "gliding": {
+    "drag_coeff": 0.1,
+    "airspeed": 20,
+    "glide_ratio": 14
+  }
+}
