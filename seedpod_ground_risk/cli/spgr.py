@@ -1,22 +1,26 @@
 import os
-from itertools import chain
 
 import casex
 import click
+import geopandas as gpd
 import numpy as np
+import pyproj
 import rasterio
 import scipy.stats as ss
+import shapely.geometry as sg
 from rasterio import transform
 
-from seedpod_ground_risk.core.plot_server import PlotServer
-from seedpod_ground_risk.core.utils import make_bounds_polygon, remove_raster_nans
+from seedpod_ground_risk.core.utils import make_bounds_polygon, remove_raster_nans, reproj_bounds
 from seedpod_ground_risk.layers.strike_risk_layer import wrap_all_pipeline, wrap_pipeline_cuda
 from seedpod_ground_risk.layers.temporal_population_estimate_layer import TemporalPopulationEstimateLayer
 from seedpod_ground_risk.path_analysis.descent_models.ballistic_model import BallisticModel
 from seedpod_ground_risk.path_analysis.descent_models.glide_model import GlideDescentModel
 from seedpod_ground_risk.path_analysis.harm_models.fatality_model import FatalityModel
 from seedpod_ground_risk.path_analysis.harm_models.strike_model import StrikeModel
-from seedpod_ground_risk.path_analysis.utils import bearing_to_angle, velocity_to_kinetic_energy
+from seedpod_ground_risk.path_analysis.utils import bearing_to_angle, velocity_to_kinetic_energy, snap_coords_to_grid
+from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
+from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
+from seedpod_ground_risk.pathfinding.moo_ga import GeneticAlgorithm
 
 
 ###############################
@@ -194,18 +198,16 @@ def _make_strike_grid(aircraft, airspeed, altitude, failure_prob, pop_grid, reso
 
 
 def _make_pop_grid(bounds, hour, resolution):
-    ps = PlotServer()
-    ps.set_time(hour)
-    raster_shape = ps._get_raster_dimensions(bounds, resolution)
-    ps.data_layers = [TemporalPopulationEstimateLayer('tpe')]
+    proj = pyproj.Transformer.from_crs(pyproj.CRS.from_epsg('4326'),
+                                       pyproj.CRS.from_epsg('3857'),
+                                       always_xy=True)
 
-    [layer.preload_data() for layer in chain(ps.data_layers, ps.annotation_layers)]
-    ps.generate_layers(bounds, raster_shape)
-    raster_grid = np.flipud(np.sum(
-        [remove_raster_nans(res[1]) for res in ps._generated_data_layers.values() if
-         res[1] is not None],
-        axis=0))
-    return raster_grid
+    raster_shape = reproj_bounds(bounds, proj, resolution)
+    layer = TemporalPopulationEstimateLayer('tpe')
+    layer.preload_data()
+    _, raster_grid, _ = layer.generate(bounds, raster_shape, hour=hour, resolution=resolution)
+
+    return remove_raster_nans(raster_grid)
 
 
 def _setup_default_aircraft(ac_width: float = 2, ac_length: float = 1.5,
