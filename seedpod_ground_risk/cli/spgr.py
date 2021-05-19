@@ -163,6 +163,96 @@ map.add_command(fatality)
 # map
 ############################
 
+############################
+# path
+
+@click.group()
+def path():
+    """
+    Generate paths minimising risk measures
+    """
+    pass
+
+
+@click.command(context_settings=dict(
+    ignore_unknown_options=True,
+))
+@click.argument('min_lat', type=click.FLOAT, )
+@click.argument('max_lat', type=click.FLOAT, )
+@click.argument('min_lon', type=click.FLOAT, )
+@click.argument('max_lon', type=click.FLOAT, )
+@click.argument('start_lat', type=click.FLOAT, )
+@click.argument('start_lon', type=click.FLOAT, )
+@click.argument('end_lat', type=click.FLOAT, )
+@click.argument('end_lon', type=click.FLOAT, )
+@click.option('--aircraft', default=None, type=click.File(lazy=True),
+              help='Aircraft config file. Uses built in defaults if not specified.')
+@click.option('--failure_prob', default=5e-3, type=click.FLOAT, help='Probability of aircraft failure per flight hour.')
+@click.option('--output-path', default='', type=click.Path(exists=True, writable=True),
+              help='Output file path for geoTiff file')
+@click.option('--resolution', default=40, type=click.INT, help='Resolution in metres of each pixel in the raster')
+@click.option('--hour', default=13, type=click.INT, help='Hour of the week to generate map for. Must be 0<=h<=168')
+@click.option('--altitude', default=120, type=click.FLOAT, help='Aircraft Altitude in metres')
+@click.option('--airspeed', default=20, type=click.FLOAT, help='Aircraft Airspeed in m/s')
+@click.option('--wind-direction', default=90, type=click.INT,
+              help='The wind bearing. This is the direction the wind is coming from.')
+@click.option('--wind_speed', default=5, type=click.FLOAT, help='Wind speed at the flight altitude in m/s')
+@click.option('--algo', default='ra*', type=click.STRING,
+              help='Pathfinding algorithm to use. Current options are ["ra*", "ga"]')
+@click.argument('algorithm_args', nargs=-1, type=click.UNPROCESSED)
+def make(min_lat, max_lat, min_lon, max_lon,
+         start_lat, start_lon, end_lat, end_lon,
+         aircraft, failure_prob, output_path, resolution, hour, altitude,
+         airspeed, wind_direction, wind_speed,
+         algo, algo_args):
+    """
+    Path minimising the fatality risk posed.
+
+    Generate a path minimising the fatality risk posed by a specified aircraft in the specified
+    bounds. The path is output as a GeoJSON file in the form of a LineString of EPSG:4326 coordinates in (lon, lat) order
+    from start to end.
+
+    If an aircraft config json file is not specified, a default aircraft with reasonable parameters is used.
+
+    All coordinates should be in decimal degrees and form a non degenerate polygon.
+
+    """
+    bounds = make_bounds_polygon((min_lon, min_lat), (max_lon, max_lat))
+    pop_grid = _make_pop_grid(bounds, hour, resolution)
+    if not aircraft:
+        aircraft = _setup_default_aircraft()
+    else:
+        aircraft = _import_aircraft(aircraft)
+    strike_grid, v_is = _make_strike_grid(aircraft, airspeed, altitude, failure_prob, pop_grid, resolution,
+                                          wind_direction, wind_speed)
+    res = _make_fatality_grid(aircraft, strike_grid, v_is)
+
+    raster_shape = res.shape
+    raster_indices = dict(Longitude=np.linspace(min_lon, max_lon, num=raster_shape[0]),
+                          Latitude=np.linspace(min_lat, max_lat, num=raster_shape[1]))
+    start_x, start_y = snap_coords_to_grid(raster_indices, start_lat, start_lon)
+    end_x, end_y = snap_coords_to_grid(raster_indices, end_lat, end_lon)
+
+    env = GridEnvironment(res, diagonals=False)
+    if algo == 'ra*':
+        algo = RiskGridAStar(**algo_args)
+    elif algo == 'ga':
+        raise NotImplementedError("GA CLI not implemented yet")
+        algo = GeneticAlgorithm([], **algo_args)
+    path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)))
+
+    snapped_path = []
+    for node in path:
+        lat = raster_indices['Latitude'][node.position[0]]
+        lon = raster_indices['Longitude'][node.position[1]]
+        snapped_path.append((lon, lat))
+    snapped_path = sg.LineString(snapped_path)
+    dataframe = gpd.GeoDataFrame({'geometry': [snapped_path]}).set_crs('EPSG:4326')
+    dataframe.to_file(os.path.join(output_path, f'path.geojson'), driver='GeoJSON')
+
+
+# path
+############################
 
 def _make_fatality_grid(aircraft, strike_grid, v_is):
     fm = FatalityModel(0.3, 1e6, 34)
