@@ -7,7 +7,7 @@ import shapely.geometry as sg
 from holoviews import Overlay, Element
 from holoviews.element import Geometry
 
-from seedpod_ground_risk.core.utils import make_bounds_polygon, remove_raster_nans
+from seedpod_ground_risk.core.utils import make_bounds_polygon, remove_raster_nans, reproj_bounds
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.layers.data_layer import DataLayer
 from seedpod_ground_risk.layers.fatality_risk_layer import FatalityRiskLayer
@@ -343,10 +343,4 @@ class PlotServer:
             self._epsg4326_to_epsg3857_proj = pyproj.Transformer.from_crs(pyproj.CRS.from_epsg('4326'),
                                                                           pyproj.CRS.from_epsg('3857'),
                                                                           always_xy=True)
-        bounds = bounds_poly.bounds
-
-        min_x, min_y = self._epsg4326_to_epsg3857_proj.transform(bounds[1], bounds[0])
-        max_x, max_y = self._epsg4326_to_epsg3857_proj.transform(bounds[3], bounds[2])
-        raster_width = int(abs(max_x - min_x) // raster_resolution_m)
-        raster_height = int(abs(max_y - min_y) // raster_resolution_m)
-        return raster_width, raster_height
+        return reproj_bounds(bounds_poly, self._epsg4326_to_epsg3857_proj, raster_resolution_m)

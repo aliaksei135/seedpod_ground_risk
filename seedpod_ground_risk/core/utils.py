@@ -31,6 +31,15 @@ def remove_raster_nans(raster):
     return raster
 
 
+def reproj_bounds(bounds_poly, proj, raster_resolution_m):
+    bounds = bounds_poly.bounds
+    min_x, min_y = proj.transform(bounds[1], bounds[0])
+    max_x, max_y = proj.transform(bounds[3], bounds[2])
+    raster_width = int(abs(max_x - min_x) // raster_resolution_m)
+    raster_height = int(abs(max_y - min_y) // raster_resolution_m)
+    return raster_width, raster_height
+
+
 # https://github.com/ilastik/lazyflow/blob/master/lazyflow/utility/blockwise_view.py
 def block_split(arr, blockshape):
     blockshape = tuple(blockshape)
