@@ -25,10 +25,11 @@ from seedpod_ground_risk.pathfinding.moo_ga import GeneticAlgorithm
 
 ###############################
 # map
-
-
 @click.group()
 def map():
+    """
+    Generate various raster maps
+    """
     pass
 
 
@@ -42,6 +43,14 @@ def map():
 @click.option('--resolution', default=40, type=click.INT, help='Resolution in metres of each pixel in the raster')
 @click.option('--hour', default=13, type=click.INT, help='Hour of the week to generate map for. Must be 0<=h<=168')
 def pop_density(min_lat, max_lat, min_lon, max_lon, output_path, resolution, hour):
+    """
+    Temporal Population Density map
+
+    Generate a geotiff raster file of the population density in the specified bounds.
+
+    All coordinates should be in decimal degrees and form a non degenerate polygon.
+
+    """
     bounds = make_bounds_polygon((min_lon, min_lat), (max_lon, max_lat))
     raster_grid = _make_pop_grid(bounds, hour, resolution)
 
@@ -71,6 +80,17 @@ map.add_command(pop_density)
 @click.option('--wind_speed', default=5, type=click.FLOAT, help='Wind speed at the flight altitude in m/s')
 def strike(min_lat, max_lat, min_lon, max_lon, aircraft, failure_prob, output_path, resolution, hour, altitude,
            airspeed, wind_direction, wind_speed):
+    """
+    Strike Risk map
+
+    Generate a geotiff raster file of the probability of striking a person with a specified aircraft in the specified
+    bounds.
+
+    If an aircraft config json file is not specified, a default aircraft with reasonable parameters is used.
+
+    All coordinates should be in decimal degrees and form a non degenerate polygon.
+
+    """
     bounds = make_bounds_polygon((min_lon, min_lat), (max_lon, max_lat))
     pop_grid = _make_pop_grid(bounds, hour, resolution)
 
@@ -108,6 +128,17 @@ map.add_command(strike)
 @click.option('--wind_speed', default=5, type=click.FLOAT, help='Wind speed at the flight altitude in m/s')
 def fatality(min_lat, max_lat, min_lon, max_lon, aircraft, failure_prob, output_path, resolution, hour, altitude,
              airspeed, wind_direction, wind_speed):
+    """
+    Fatality Risk map
+
+    Generate a geotiff raster file of the probability of ground fatality with a specified aircraft in the specified
+    bounds.
+
+    If an aircraft config json file is not specified, a default aircraft with reasonable parameters is used.
+
+    All coordinates should be in decimal degrees and form a non degenerate polygon.
+
+    """
     bounds = make_bounds_polygon((min_lon, min_lat), (max_lon, max_lat))
     pop_grid = _make_pop_grid(bounds, hour, resolution)
 
@@ -236,3 +267,7 @@ def _write_geotiff(max_lat, max_lon, min_lat, min_lon, out_name, output_path, re
                         width=raster_shape[0], height=raster_shape[1])
     rds.write(res, 1)
     rds.close()
+
+
+if __name__ == '__main__':
+    map()
