@@ -211,7 +211,7 @@ main.add_command(path)
 @click.option('--wind_speed', default=5, type=click.FLOAT, help='Wind speed at the flight altitude in m/s')
 @click.option('--algo', default='ra*', type=click.STRING,
               help='Pathfinding algorithm to use. Current options are ["ra*", "ga"]')
-@click.argument('algorithm_args', nargs=-1, type=click.UNPROCESSED)
+@click.argument('algo_args', nargs=-1, type=click.UNPROCESSED)
 def make(min_lat, max_lat, min_lon, max_lon,
          start_lat, start_lon, end_lat, end_lon,
          aircraft, failure_prob, output_path, resolution, hour, altitude,
