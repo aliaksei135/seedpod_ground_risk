@@ -23,6 +23,11 @@ from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
 from seedpod_ground_risk.pathfinding.moo_ga import GeneticAlgorithm
 
 
+@click.group()
+def main():
+    pass
+
+
 ###############################
 # map
 @click.group()
@@ -31,6 +36,9 @@ def map():
     Generate various raster maps
     """
     pass
+
+
+main.add_command(map)
 
 
 @click.command()
@@ -172,6 +180,9 @@ def path():
     Generate paths minimising risk measures
     """
     pass
+
+
+main.add_command(path)
 
 
 @click.command(context_settings=dict(
@@ -360,4 +371,4 @@ def _write_geotiff(max_lat, max_lon, min_lat, min_lon, out_name, output_path, re
 
 
 if __name__ == '__main__':
-    map()
+    main()
