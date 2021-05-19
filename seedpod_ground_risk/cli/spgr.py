@@ -1,3 +1,4 @@
+import json
 import os
 
 import casex
@@ -343,7 +344,7 @@ def _make_pop_grid(bounds, hour, resolution):
 
 
 def _setup_default_aircraft(ac_width: float = 2, ac_length: float = 1.5,
-                            ac_mass: float = 2, ac_glide_ratio: float = 12, ac_glide_speed: float = 15,
+                            ac_mass: float = 7, ac_glide_ratio: float = 12, ac_glide_speed: float = 15,
                             ac_glide_drag_coeff: float = 0.1, ac_ballistic_drag_coeff: float = 0.8,
                             ac_ballistic_frontal_area: float = 0.1):
     aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, ac_width, ac_length, ac_mass)
@@ -356,7 +357,19 @@ def _setup_default_aircraft(ac_width: float = 2, ac_length: float = 1.5,
 
 
 def _import_aircraft(aircraft):
-    pass
+    params = json.load(aircraft)
+    basic_params = params['basic']
+    ballistic_params = params['ballistic']
+    gliding_params = params['glide']
+
+    aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, basic_params['width'], basic_params['length'],
+                                   basic_params['mass'])
+    aircraft.set_ballistic_drag_coefficient(ballistic_params['drag_coeff'])
+    aircraft.set_ballistic_frontal_area(ballistic_params['frontal_area'])
+    aircraft.set_glide_speed_ratio(gliding_params['airspeed'], gliding_params['glide_ratio'])
+    aircraft.set_glide_drag_coefficient(gliding_params['drag_coeff'])
+
+    return aircraft
 
 
 def _write_geotiff(max_lat, max_lon, min_lat, min_lon, out_name, output_path, res):
