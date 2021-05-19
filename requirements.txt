@@ -1,7 +1,9 @@
+# . # Set in setup.py
+
 altgraph==0.17
 attrs==20.3.0
 bokeh==2.3.1
-Cartopy @ https://download.lfd.uci.edu/pythonlibs/z4tqcw5k/Cartopy-0.18.0-cp38-cp38-win_amd64.whl
+Cartopy @ file:///../extern/Cartopy-0.19.0.post1-cp38-cp38-win_amd64.whl
 certifi==2020.12.5
 chardet==4.0.0
 click==7.1.2
@@ -18,16 +20,15 @@ datashape==0.5.2
 defusedxml==0.7.1
 dill==0.3.3
 distributed==2021.4.0
-fastparquet @ https://download.lfd.uci.edu/pythonlibs/z4tqcw5k/fastparquet-0.4.1-cp38-cp38-win_amd64.whl
-Fiona @ https://download.lfd.uci.edu/pythonlibs/z4tqcw5k/Fiona-1.8.18-cp38-cp38-win_amd64.whl
+fastparquet @ file:///../extern/fastparquet-0.6.3-cp38-cp38-win_amd64.whl
+Fiona @ file:///../extern/Fiona-1.8.19-cp38-cp38-win_amd64.whl
 fsspec==2021.4.0
 future==0.18.2
-GDAL @ https://download.lfd.uci.edu/pythonlibs/z4tqcw5k/GDAL-3.1.4-cp38-cp38-win_amd64.whl
+GDAL @ file:///../extern/GDAL-3.2.3-cp38-cp38-win_amd64.whl
 geopandas==0.9.0
 geoviews==1.9.1
 HeapDict==1.0.1
 holoviews==1.14.3
-idna==3.1
 import-profiler==0.0.3
 Jinja2==2.11.3
 kiwisolver==1.3.1
@@ -61,7 +62,7 @@ Pygments==2.8.1
 pyinstaller @ https://github.com/pyinstaller/pyinstaller/tarball/develop
 pyinstaller-hooks-contrib==2021.1
 pyparsing==2.4.7
-pyproj @ https://download.lfd.uci.edu/pythonlibs/z4tqcw5k/pyproj-3.0.0.post1-cp38-cp38-win_amd64.whl
+pyproj @ file:///../extern/pyproj-3.0.1-cp38-cp38-win_amd64.whl
 pyshp==2.1.3
 PySide2==5.15.2
 python-dateutil==2.8.1
@@ -72,7 +73,7 @@ PyYAML==5.4.1
 requests==2.25.1
 retrying==1.3.3
 rich==10.1.0
-Rtree @ https://download.lfd.uci.edu/pythonlibs/z4tqcw5k/Rtree-0.9.5-cp38-cp38-win_amd64.whl
+Rtree @ file:///../extern/Rtree-0.9.7-cp38-cp38-win_amd64.whl
 scipy==1.6.2
 Shapely==1.7.1
 shiboken2==5.15.2
