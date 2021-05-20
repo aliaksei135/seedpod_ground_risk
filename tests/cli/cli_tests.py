@@ -33,16 +33,25 @@ class CLITestCase(unittest.TestCase):
 
     def test_map_pop_density(self):
         res = self.runner.invoke(spgr.pop_density, self.bounds_args + self.path_args)
+        if res.exit_code != 0:
+            print(res.exception)
+            print(res.exc_info)
         self.assertEqual(res.exit_code, 0)
         self.assertTrue(test_file_exists(os.path.join(self.tmp_path, 'pop_density*')))
 
     def test_map_strike(self):
         res = self.runner.invoke(spgr.strike, self.bounds_args + self.path_args)
+        if res.exit_code != 0:
+            print(res.exception)
+            print(res.exc_info)
         self.assertEqual(res.exit_code, 0)
         self.assertTrue(test_file_exists(os.path.join(self.tmp_path, 'strike*')))
 
     def test_map_fatality(self):
         res = self.runner.invoke(spgr.fatality, self.bounds_args + self.path_args)
+        if res.exit_code != 0:
+            print(res.exception)
+            print(res.exc_info)
         self.assertEqual(res.exit_code, 0)
         self.assertTrue(test_file_exists(os.path.join(self.tmp_path, 'fatality*')))
 
@@ -50,6 +59,9 @@ class CLITestCase(unittest.TestCase):
         path_args = ' 50.72 -1.48 50.88 -1.32 '
 
         res = self.runner.invoke(spgr.make, self.bounds_args + path_args + self.path_args)
+        if res.exit_code != 0:
+            print(res.exception)
+            print(res.exc_info)
         self.assertEqual(res.exit_code, 0)
         self.assertTrue(test_file_exists(os.path.join(self.tmp_path, 'path*')))
 
