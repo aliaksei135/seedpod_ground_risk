@@ -265,8 +265,8 @@ def make(min_lat, max_lat, min_lon, max_lon,
 
     snapped_path = []
     for node in path:
-        lat = raster_indices['Latitude'][node.position[0]]
-        lon = raster_indices['Longitude'][node.position[1]]
+        lat = raster_indices['Latitude'][node.position[1]]
+        lon = raster_indices['Longitude'][node.position[0]]
         snapped_path.append((lon, lat))
     snapped_path = sg.LineString(snapped_path)
     dataframe = gpd.GeoDataFrame({'geometry': [snapped_path]}).set_crs('EPSG:4326')
