@@ -49,7 +49,7 @@ main.add_command(map)
 @click.argument('max_lat', type=click.FLOAT, )
 @click.argument('min_lon', type=click.FLOAT, )
 @click.argument('max_lon', type=click.FLOAT, )
-@click.option('--output-path', default='', type=click.Path(exists=True, writable=True),
+@click.option('--output-path', default='.', type=click.Path(exists=True, writable=True),
               help='Output file path for geoTiff file')
 @click.option('--resolution', default=40, type=click.INT, help='Resolution in metres of each pixel in the raster')
 @click.option('--hour', default=13, type=click.INT, help='Hour of the week to generate map for. Must be 0<=h<=168')
@@ -82,7 +82,7 @@ map.add_command(pop_density)
 @click.option('--aircraft', default=None, type=click.File(lazy=True),
               help='Aircraft config file. Uses built in defaults if not specified.')
 @click.option('--failure_prob', default=5e-3, type=click.FLOAT, help='Probability of aircraft failure per flight hour.')
-@click.option('--output-path', default='', type=click.Path(exists=True, writable=True),
+@click.option('--output-path', default='.', type=click.Path(exists=True, writable=True),
               help='Output file path for geoTiff file')
 @click.option('--resolution', default=40, type=click.INT, help='Resolution in metres of each pixel in the raster')
 @click.option('--hour', default=13, type=click.INT, help='Hour of the week to generate map for. Must be 0<=h<=168')
@@ -132,7 +132,7 @@ map.add_command(strike)
 @click.option('--aircraft', default=None, type=click.File(lazy=True),
               help='Aircraft config file. Uses built in defaults if not specified.')
 @click.option('--failure_prob', default=5e-3, type=click.FLOAT, help='Probability of aircraft failure per flight hour.')
-@click.option('--output-path', default='', type=click.Path(exists=True, writable=True),
+@click.option('--output-path', default='.', type=click.Path(exists=True, writable=True),
               help='Output file path for geoTiff file')
 @click.option('--resolution', default=40, type=click.INT, help='Resolution in metres of each pixel in the raster')
 @click.option('--hour', default=13, type=click.INT, help='Hour of the week to generate map for. Must be 0<=h<=168')
@@ -206,7 +206,7 @@ main.add_command(path)
 @click.option('--aircraft', default=None, type=click.File(lazy=True),
               help='Aircraft config file. Uses built in defaults if not specified.')
 @click.option('--failure_prob', default=5e-3, type=click.FLOAT, help='Probability of aircraft failure per flight hour.')
-@click.option('--output-path', default='', type=click.Path(exists=True, writable=True),
+@click.option('--output-path', default='.', type=click.Path(exists=True, writable=True),
               help='Output file path for geoTiff file')
 @click.option('--resolution', default=40, type=click.INT, help='Resolution in metres of each pixel in the raster')
 @click.option('--hour', default=13, type=click.INT, help='Hour of the week to generate map for. Must be 0<=h<=168')
