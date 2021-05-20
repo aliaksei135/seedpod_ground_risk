@@ -42,7 +42,9 @@ def map():
 main.add_command(map)
 
 
-@click.command()
+@click.command(context_settings=dict(
+    ignore_unknown_options=True,
+))
 @click.argument('min_lat', type=click.FLOAT, )
 @click.argument('max_lat', type=click.FLOAT, )
 @click.argument('min_lon', type=click.FLOAT, )
@@ -60,7 +62,7 @@ def pop_density(min_lat, max_lat, min_lon, max_lon, output_path, resolution, hou
     All coordinates should be in decimal degrees and form a non degenerate polygon.
 
     """
-    bounds = make_bounds_polygon((min_lon, min_lat), (max_lon, max_lat))
+    bounds = make_bounds_polygon((min_lon, max_lon), (min_lat, max_lat))
     raster_grid = _make_pop_grid(bounds, hour, resolution)
 
     out_name = f'pop_density_{hour}h.tif'
@@ -70,7 +72,9 @@ def pop_density(min_lat, max_lat, min_lon, max_lon, output_path, resolution, hou
 map.add_command(pop_density)
 
 
-@click.command()
+@click.command(context_settings=dict(
+    ignore_unknown_options=True,
+))
 @click.argument('min_lat', type=click.FLOAT, )
 @click.argument('max_lat', type=click.FLOAT, )
 @click.argument('min_lon', type=click.FLOAT, )
@@ -100,7 +104,7 @@ def strike(min_lat, max_lat, min_lon, max_lon, aircraft, failure_prob, output_pa
     All coordinates should be in decimal degrees and form a non degenerate polygon.
 
     """
-    bounds = make_bounds_polygon((min_lon, min_lat), (max_lon, max_lat))
+    bounds = make_bounds_polygon((min_lon, max_lon), (min_lat, max_lat))
     pop_grid = _make_pop_grid(bounds, hour, resolution)
 
     if not aircraft:
@@ -118,7 +122,9 @@ def strike(min_lat, max_lat, min_lon, max_lon, aircraft, failure_prob, output_pa
 map.add_command(strike)
 
 
-@click.command()
+@click.command(context_settings=dict(
+    ignore_unknown_options=True,
+))
 @click.argument('min_lat', type=click.FLOAT, )
 @click.argument('max_lat', type=click.FLOAT, )
 @click.argument('min_lon', type=click.FLOAT, )
@@ -148,7 +154,7 @@ def fatality(min_lat, max_lat, min_lon, max_lon, aircraft, failure_prob, output_
     All coordinates should be in decimal degrees and form a non degenerate polygon.
 
     """
-    bounds = make_bounds_polygon((min_lon, min_lat), (max_lon, max_lat))
+    bounds = make_bounds_polygon((min_lon, max_lon), (min_lat, max_lat))
     pop_grid = _make_pop_grid(bounds, hour, resolution)
 
     if not aircraft:
@@ -229,7 +235,7 @@ def make(min_lat, max_lat, min_lon, max_lon,
     All coordinates should be in decimal degrees and form a non degenerate polygon.
 
     """
-    bounds = make_bounds_polygon((min_lon, min_lat), (max_lon, max_lat))
+    bounds = make_bounds_polygon((min_lon, max_lon), (min_lat, max_lat))
     pop_grid = _make_pop_grid(bounds, hour, resolution)
     if not aircraft:
         aircraft = _setup_default_aircraft()
@@ -374,7 +380,7 @@ def _import_aircraft(aircraft):
 
 def _write_geotiff(max_lat, max_lon, min_lat, min_lon, out_name, output_path, res):
     raster_shape = res.shape
-    trans = transform.from_bounds((min_lon, min_lat), (max_lon, max_lat), *raster_shape)
+    trans = transform.from_bounds(min_lon, min_lat, max_lon, max_lat, *raster_shape)
     rds = rasterio.open(os.path.join(output_path, out_name),
                         'w', driver='GTiff', count=1, dtype=rasterio.float64,
                         crs='EPSG:4326', transform=trans, compress='lzw',
