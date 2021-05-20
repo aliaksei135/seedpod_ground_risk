@@ -248,16 +248,20 @@ def make(min_lat, max_lat, min_lon, max_lon,
     raster_shape = res.shape
     raster_indices = dict(Longitude=np.linspace(min_lon, max_lon, num=raster_shape[0]),
                           Latitude=np.linspace(min_lat, max_lat, num=raster_shape[1]))
-    start_x, start_y = snap_coords_to_grid(raster_indices, start_lat, start_lon)
-    end_x, end_y = snap_coords_to_grid(raster_indices, end_lat, end_lon)
+    start_x, start_y = snap_coords_to_grid(raster_indices, start_lon, start_lat)
+    end_x, end_y = snap_coords_to_grid(raster_indices, end_lon, end_lat)
 
     env = GridEnvironment(res, diagonals=False)
     if algo == 'ra*':
-        algo = RiskGridAStar(**algo_args)
+        algo = RiskGridAStar()
     elif algo == 'ga':
         raise NotImplementedError("GA CLI not implemented yet")
         algo = GeneticAlgorithm([], **algo_args)
-    path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)))
+    path = algo.find_path(env, Node((start_x, start_y)), Node((end_x, end_y)))
+
+    if not path:
+        print('Path not found')
+        return 1
 
     snapped_path = []
     for node in path:
@@ -346,7 +350,7 @@ def _make_pop_grid(bounds, hour, resolution):
     layer.preload_data()
     _, raster_grid, _ = layer.generate(bounds, raster_shape, hour=hour, resolution=resolution)
 
-    return remove_raster_nans(raster_grid)
+    return np.flipud(remove_raster_nans(raster_grid))
 
 
 def _setup_default_aircraft(ac_width: float = 2, ac_length: float = 1.5,
