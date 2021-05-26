@@ -92,3 +92,37 @@ def make_pop_grid(bounds, hour, resolution):
     _, raster_grid, _ = layer.generate(bounds, raster_shape, hour=hour, resolution=resolution)
 
     return np.flipud(remove_raster_nans(raster_grid))
+
+
+def make_path(cost_grid, bounds_poly, start_latlon, end_latlon, algo='ra*'):
+    from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid
+    from seedpod_ground_risk.pathfinding.environment import GridEnvironment
+    from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
+
+    raster_shape = cost_grid.shape
+    min_lat, min_lon, max_lon, max_lat = bounds_poly.bounds
+    start_lat, start_lon = start_latlon
+    end_lat, end_lon = end_latlon
+    raster_indices = dict(Longitude=np.linspace(min_lon, max_lon, num=raster_shape[0]),
+                          Latitude=np.linspace(min_lat, max_lat, num=raster_shape[1]))
+    start_x, start_y = snap_coords_to_grid(raster_indices, start_lon, start_lat)
+    end_x, end_y = snap_coords_to_grid(raster_indices, end_lon, end_lat)
+
+    env = GridEnvironment(cost_grid, diagonals=False)
+    if algo == 'ra*':
+        algo = RiskGridAStar()
+    elif algo == 'ga':
+        raise NotImplementedError("GA CLI not implemented yet")
+        algo = GeneticAlgorithm([], **algo_args)
+    path = algo.find_path(env, Node((start_x, start_y)), Node((end_x, end_y)))
+
+    if not path:
+        print('Path not found')
+        return None
+
+    snapped_path = []
+    for node in path:
+        lat = raster_indices['Latitude'][node.position[1]]
+        lon = raster_indices['Longitude'][node.position[0]]
+        snapped_path.append((lon, lat))
+    return sg.LineString(snapped_path)
