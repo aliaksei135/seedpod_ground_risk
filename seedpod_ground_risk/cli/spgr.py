@@ -215,9 +215,8 @@ def make(min_lat, max_lat, min_lon, max_lon,
     All coordinates should be in decimal degrees and form a non degenerate polygon.
 
     """
-    from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
-    from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
-    from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid
+    import geopandas as gpd
+    import os
 
     bounds = make_bounds_polygon((min_lon, max_lon), (min_lat, max_lat))
     pop_grid = make_pop_grid(bounds, hour, resolution)
@@ -229,32 +228,12 @@ def make(min_lat, max_lat, min_lon, max_lon,
                                          wind_direction, wind_speed)
     res = make_fatality_grid(aircraft, strike_grid, v_is)
 
-    raster_shape = res.shape
-    raster_indices = dict(Longitude=np.linspace(min_lon, max_lon, num=raster_shape[0]),
-                          Latitude=np.linspace(min_lat, max_lat, num=raster_shape[1]))
-    start_x, start_y = snap_coords_to_grid(raster_indices, start_lon, start_lat)
-    end_x, end_y = snap_coords_to_grid(raster_indices, end_lon, end_lat)
-
-    env = GridEnvironment(res, diagonals=False)
-    if algo == 'ra*':
-        algo = RiskGridAStar()
-    elif algo == 'ga':
-        raise NotImplementedError("GA CLI not implemented yet")
-        algo = GeneticAlgorithm([], **algo_args)
-    path = algo.find_path(env, Node((start_x, start_y)), Node((end_x, end_y)))
-
-    if not path:
-        print('Path not found')
-        return 1
-
-    snapped_path = []
-    for node in path:
-        lat = raster_indices['Latitude'][node.position[1]]
-        lon = raster_indices['Longitude'][node.position[0]]
-        snapped_path.append((lon, lat))
-    snapped_path = sg.LineString(snapped_path)
-    dataframe = gpd.GeoDataFrame({'geometry': [snapped_path]}).set_crs('EPSG:4326')
-    dataframe.to_file(os.path.join(output_path, f'path.geojson'), driver='GeoJSON')
+    snapped_path = make_path(res, bounds, (start_lat, start_lon), (end_lat, end_lon), algo=algo)
+    if snapped_path:
+        dataframe = gpd.GeoDataFrame({'geometry': [snapped_path]}).set_crs('EPSG:4326')
+        dataframe.to_file(os.path.join(output_path, f'path.geojson'), driver='GeoJSON')
+    else:
+        print('Path could not be found')
 
 
 # path
