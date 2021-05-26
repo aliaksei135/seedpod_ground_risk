@@ -1,27 +1,7 @@
-import json
-import os
-
-import casex
 import click
-import geopandas as gpd
 import numpy as np
-import pyproj
-import rasterio
-import scipy.stats as ss
-import shapely.geometry as sg
-from rasterio import transform
 
 from seedpod_ground_risk.core.utils import make_bounds_polygon, remove_raster_nans, reproj_bounds
-from seedpod_ground_risk.layers.strike_risk_layer import wrap_all_pipeline, wrap_pipeline_cuda
-from seedpod_ground_risk.layers.temporal_population_estimate_layer import TemporalPopulationEstimateLayer
-from seedpod_ground_risk.path_analysis.descent_models.ballistic_model import BallisticModel
-from seedpod_ground_risk.path_analysis.descent_models.glide_model import GlideDescentModel
-from seedpod_ground_risk.path_analysis.harm_models.fatality_model import FatalityModel
-from seedpod_ground_risk.path_analysis.harm_models.strike_model import StrikeModel
-from seedpod_ground_risk.path_analysis.utils import bearing_to_angle, velocity_to_kinetic_energy, snap_coords_to_grid
-from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
-from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
-from seedpod_ground_risk.pathfinding.moo_ga import GeneticAlgorithm
 
 
 @click.group()
@@ -235,6 +215,10 @@ def make(min_lat, max_lat, min_lon, max_lon,
     All coordinates should be in decimal degrees and form a non degenerate polygon.
 
     """
+    from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
+    from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
+    from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid
+
     bounds = make_bounds_polygon((min_lon, max_lon), (min_lat, max_lat))
     pop_grid = _make_pop_grid(bounds, hour, resolution)
     if not aircraft:
@@ -277,6 +261,9 @@ def make(min_lat, max_lat, min_lon, max_lon,
 ############################
 
 def _make_fatality_grid(aircraft, strike_grid, v_is):
+    from seedpod_ground_risk.path_analysis.harm_models.fatality_model import FatalityModel
+    from seedpod_ground_risk.path_analysis.utils import velocity_to_kinetic_energy
+
     fm = FatalityModel(0.3, 1e6, 34)
     ac_mass = aircraft.mass
     impact_ke_b = velocity_to_kinetic_energy(ac_mass, v_is[0])
@@ -286,6 +273,14 @@ def _make_fatality_grid(aircraft, strike_grid, v_is):
 
 
 def _make_strike_grid(aircraft, airspeed, altitude, failure_prob, pop_grid, resolution, wind_direction, wind_speed):
+    from seedpod_ground_risk.path_analysis.descent_models.ballistic_model import BallisticModel
+    from seedpod_ground_risk.path_analysis.descent_models.glide_model import GlideDescentModel
+    from seedpod_ground_risk.path_analysis.harm_models.strike_model import StrikeModel
+    from seedpod_ground_risk.layers.strike_risk_layer import wrap_all_pipeline, wrap_pipeline_cuda
+    from seedpod_ground_risk.path_analysis.utils import bearing_to_angle
+    import scipy.stats as ss
+    import os
+
     bm = BallisticModel(aircraft)
     gm = GlideDescentModel(aircraft)
     raster_shape = pop_grid.shape
@@ -341,6 +336,9 @@ def _make_strike_grid(aircraft, airspeed, altitude, failure_prob, pop_grid, reso
 
 
 def _make_pop_grid(bounds, hour, resolution):
+    from seedpod_ground_risk.layers.temporal_population_estimate_layer import TemporalPopulationEstimateLayer
+    import pyproj
+
     proj = pyproj.Transformer.from_crs(pyproj.CRS.from_epsg('4326'),
                                        pyproj.CRS.from_epsg('3857'),
                                        always_xy=True)
@@ -357,6 +355,7 @@ def _setup_default_aircraft(ac_width: float = 2, ac_length: float = 1.5,
                             ac_mass: float = 7, ac_glide_ratio: float = 12, ac_glide_speed: float = 15,
                             ac_glide_drag_coeff: float = 0.1, ac_ballistic_drag_coeff: float = 0.8,
                             ac_ballistic_frontal_area: float = 0.1):
+    import casex
     aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, ac_width, ac_length, ac_mass)
     aircraft.set_ballistic_drag_coefficient(ac_ballistic_drag_coeff)
     aircraft.set_ballistic_frontal_area(ac_ballistic_frontal_area)
@@ -367,6 +366,9 @@ def _setup_default_aircraft(ac_width: float = 2, ac_length: float = 1.5,
 
 
 def _import_aircraft(aircraft):
+    import json
+    import casex
+
     params = json.load(aircraft)
     basic_params = params['basic']
     ballistic_params = params['ballistic']
@@ -383,8 +385,10 @@ def _import_aircraft(aircraft):
 
 
 def _write_geotiff(max_lat, max_lon, min_lat, min_lon, out_name, output_path, res):
+    import rasterio
+    import os
     raster_shape = res.shape
-    trans = transform.from_bounds(min_lon, min_lat, max_lon, max_lat, *raster_shape)
+    trans = rasterio.transform.from_bounds(min_lon, min_lat, max_lon, max_lat, *raster_shape)
     rds = rasterio.open(os.path.join(output_path, out_name),
                         'w', driver='GTiff', count=1, dtype=rasterio.float64,
                         crs='EPSG:4326', transform=trans, compress='lzw',
