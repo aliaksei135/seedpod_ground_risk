@@ -94,13 +94,13 @@ def make_pop_grid(bounds, hour, resolution):
     return np.flipud(remove_raster_nans(raster_grid))
 
 
-def make_path(cost_grid, bounds_poly, start_latlon, end_latlon, algo='ra*'):
+def make_path(cost_grid, bounds_poly, start_latlon, end_latlon, algo='ra*', **kwargs):
     from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid
-    from seedpod_ground_risk.pathfinding.environment import GridEnvironment
-    from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
+    from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
+    import shapely.geometry as sg
 
     raster_shape = cost_grid.shape
-    min_lat, min_lon, max_lon, max_lat = bounds_poly.bounds
+    min_lat, min_lon, max_lat, max_lon = bounds_poly.bounds
     start_lat, start_lon = start_latlon
     end_lat, end_lon = end_latlon
     raster_indices = dict(Longitude=np.linspace(min_lon, max_lon, num=raster_shape[0]),
@@ -109,12 +109,28 @@ def make_path(cost_grid, bounds_poly, start_latlon, end_latlon, algo='ra*'):
     end_x, end_y = snap_coords_to_grid(raster_indices, end_lon, end_lat)
 
     env = GridEnvironment(cost_grid, diagonals=False)
-    if algo == 'ra*':
+    if algo == 'ra*2':
+        from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar, RiskAStar
         algo = RiskGridAStar()
+    elif algo == 'ra*':
+        from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar, RiskAStar
+        algo = RiskAStar()
     elif algo == 'ga':
-        raise NotImplementedError("GA CLI not implemented yet")
-        algo = GeneticAlgorithm([], **algo_args)
-    path = algo.find_path(env, Node((start_x, start_y)), Node((end_x, end_y)))
+        from functools import partial
+        from seedpod_ground_risk.pathfinding.moo_ga import fitness_min_risk
+        from seedpod_ground_risk.pathfinding.moo_ga import fitness_min_manhattan_length
+        from seedpod_ground_risk.pathfinding.moo_ga import GeneticAlgorithm
+        max_dist = np.sqrt((cost_grid.shape[0] ** 2) + (cost_grid.shape[1] ** 2))
+        fitness_funcs = [
+            partial(fitness_min_risk, cost_grid, cost_grid.max()),
+            partial(fitness_min_manhattan_length, max_dist)
+        ]
+        fitness_weights = [
+            1e11,
+            1
+        ]
+        algo = GeneticAlgorithm(fitness_funcs, fitness_weights)
+    path = algo.find_path(env, Node((start_x, start_y)), Node((end_x, end_y)), **kwargs)
 
     if not path:
         print('Path not found')
