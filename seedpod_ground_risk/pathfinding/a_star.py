@@ -2,8 +2,8 @@ from heapq import *
 from typing import List, Union, Tuple
 
 import numpy as np
+from skimage.draw import line as skline
 
-from seedpod_ground_risk.pathfinding import bresenham
 from seedpod_ground_risk.pathfinding.algorithm import Algorithm
 from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
 from seedpod_ground_risk.pathfinding.heuristic import Heuristic, ManhattanHeuristic
@@ -16,6 +16,11 @@ def _reconstruct_path(end: Node, grid: np.ndarray, smooth=True) -> List[Node]:
     node = end
     while node is not None:
         reverse_path_append(node)
+        if node.parent is None:
+            break
+        if node == node.parent:
+            reverse_path_append(node.parent)
+            break
         node = node.parent
     path = list(reversed(reverse_path))
 
@@ -23,8 +28,8 @@ def _reconstruct_path(end: Node, grid: np.ndarray, smooth=True) -> List[Node]:
         return path
 
     def get_path_sum(nx, ny, tx, ty, grid):
-        line = bresenham.make_line(nx, ny, tx, ty)
-        line_points = grid[line[:, 0], line[:, 1]]
+        line = skline(nx, ny, tx, ty)
+        line_points = grid[line[0], line[1]]
         # If the new line crosses any blocked areas the cost is inf
         if -1 in line_points:
             return np.inf
@@ -108,8 +113,8 @@ class RiskAStar(Algorithm):
 
                     dist = ((node.position[1] - end.position[1]) ** 2 + (
                             node.position[0] - end.position[0]) ** 2) ** 0.5
-                    line = bresenham.make_line(node.position[1], node.position[0], end.position[1], end.position[0])
-                    min_val = grid[line[:, 0], line[:, 1]].min()
+                    line = skline(node.position[1], node.position[0], end.position[1], end.position[0])
+                    min_val = grid[line[0], line[1]].min()
                     node_val = grid[node.position]
                     h = k * ((((node_val + goal_val) / 2) * min_dist) + ((dist - min_dist) * min_val))
 
