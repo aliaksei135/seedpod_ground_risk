@@ -61,7 +61,7 @@ class GridEnvironment:
         def eval_node(y, x):
             val = self.grid[y, x]
             nonlocal neighbours
-            if val >= 0:
+            if val >= 0 and np.isfinite(val):
                 neighbours.add(Node((y, x)))
 
         if idx[1] - 1 > 0:

@@ -124,9 +124,14 @@ def make_path(cost_grid, bounds_poly, start_latlon, end_latlon, algo='rt*', path
     start_lat, start_lon = start_latlon
     end_lat, end_lon = end_latlon
     raster_indices = dict(Longitude=np.linspace(min_lon, max_lon, num=raster_shape[0]),
-                          Latitude=np.linspace(min_lat, max_lat, num=raster_shape[1]))
+                          Latitude=np.linspace(max_lat, min_lat, num=raster_shape[1]))
     start_x, start_y = snap_coords_to_grid(raster_indices, start_lon, start_lat)
     end_x, end_y = snap_coords_to_grid(raster_indices, end_lon, end_lat)
+
+    if cost_grid[start_y, start_x] < 0:
+        raise ValueError('Start node in blocked area, path impossible')
+    elif cost_grid[end_y, end_x] < 0:
+        raise ValueError('End node in blocked area, path impossible')
 
     env = GridEnvironment(cost_grid, diagonals=False)
     if algo == 'ra*2':
