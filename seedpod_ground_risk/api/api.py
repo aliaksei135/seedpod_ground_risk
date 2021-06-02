@@ -1,4 +1,5 @@
 import numpy as np
+from skimage.draw import line
 
 from seedpod_ground_risk.core.utils import remove_raster_nans, reproj_bounds
 
@@ -94,7 +95,7 @@ def make_pop_grid(bounds, hour, resolution):
     return np.flipud(remove_raster_nans(raster_grid))
 
 
-def make_path(cost_grid, bounds_poly, start_latlon, end_latlon, algo='ra*', **kwargs):
+def make_path(cost_grid, bounds_poly, start_latlon, end_latlon, algo='rt*', pathwise_cost=False, **kwargs):
     from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid
     from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
     import shapely.geometry as sg
@@ -110,11 +111,14 @@ def make_path(cost_grid, bounds_poly, start_latlon, end_latlon, algo='ra*', **kw
 
     env = GridEnvironment(cost_grid, diagonals=False)
     if algo == 'ra*2':
-        from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar, RiskAStar
+        from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
         algo = RiskGridAStar()
     elif algo == 'ra*':
-        from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar, RiskAStar
+        from seedpod_ground_risk.pathfinding.a_star import RiskAStar
         algo = RiskAStar()
+    elif algo == 'rt*':
+        from seedpod_ground_risk.pathfinding.theta_star import RiskThetaStar
+        algo = RiskThetaStar()
     elif algo == 'ga':
         from functools import partial
         from seedpod_ground_risk.pathfinding.moo_ga import fitness_min_risk
@@ -130,7 +134,7 @@ def make_path(cost_grid, bounds_poly, start_latlon, end_latlon, algo='ra*', **kw
             1
         ]
         algo = GeneticAlgorithm(fitness_funcs, fitness_weights)
-    path = algo.find_path(env, Node((start_x, start_y)), Node((end_x, end_y)), **kwargs)
+    path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)), **kwargs)
 
     if not path:
         print('Path not found')
@@ -138,7 +142,18 @@ def make_path(cost_grid, bounds_poly, start_latlon, end_latlon, algo='ra*', **kw
 
     snapped_path = []
     for node in path:
-        lat = raster_indices['Latitude'][node.position[1]]
-        lon = raster_indices['Longitude'][node.position[0]]
+        lat = raster_indices['Latitude'][min(node.position[0], raster_shape[1] - 1)]
+        lon = raster_indices['Longitude'][min(node.position[1], raster_shape[0] - 1)]
         snapped_path.append((lon, lat))
-    return sg.LineString(snapped_path)
+    lla_path = sg.LineString(snapped_path)
+
+    if pathwise_cost:
+        path_cost = []
+        for idx in range(len(path[:-1])):
+            n0 = path[idx].position
+            n1 = path[idx + 1].position
+            l = line(n0[0], n0[1], n1[0], n1[1])
+            path_cost.append(cost_grid[l[0], l[1]])
+        return lla_path, path, path_cost
+    else:
+        return lla_path
