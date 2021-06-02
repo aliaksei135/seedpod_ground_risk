@@ -178,6 +178,6 @@ def make_path(cost_grid, bounds_poly, start_latlon, end_latlon, algo='rt*', path
             n1 = path[idx + 1].position
             l = line(n0[0], n0[1], n1[0], n1[1])
             path_cost.append(cost_grid[l[0], l[1]])
-        return lla_path, path, path_cost
+        return lla_path, path, np.hstack(path_cost)
     else:
         return lla_path
