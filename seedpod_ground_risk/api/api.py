@@ -95,6 +95,25 @@ def make_pop_grid(bounds, hour, resolution):
     return np.flipud(remove_raster_nans(raster_grid))
 
 
+def add_obstacles(bounds, obstacles, raster_shape):
+    import geoviews as gv
+    from holoviews.operation.datashader import rasterize
+    import geopandas as gpd
+
+    if type(obstacles) is gpd.GeoDataFrame:
+        df = obstacles
+    else:
+        df = gpd.GeoDataFrame({'geometry': obstacles}).set_crs('EPSG:4326')
+    bounded_df = df.cx[bounds[1]:bounds[3], bounds[0]:bounds[2]]
+    bounded_df['z'] = np.inf
+
+    polys = gv.Polygons(bounded_df, vdims=['z'])
+    raster = rasterize(polys, width=raster_shape[1], height=raster_shape[0],
+                       x_range=(bounds[1], bounds[3]), y_range=(bounds[0], bounds[2]), dynamic=False)
+    raster_grid = np.flipud(np.copy(list(raster.data.data_vars.items())[0][1].data.astype(np.float)))
+    return remove_raster_nans(raster_grid)
+
+
 def make_path(cost_grid, bounds_poly, start_latlon, end_latlon, algo='rt*', pathwise_cost=False, **kwargs):
     from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid
     from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
