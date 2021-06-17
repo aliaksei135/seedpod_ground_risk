@@ -80,11 +80,11 @@ def wrap_row_pipeline(row, shape, padded_pdf, padded_centre, sm):
 class StrikeRiskLayer(BlockableDataLayer):
     def __init__(self, key, colour: str = None, blocking=False, buffer_dist=0, ac_width: float = 2,
                  ac_length: float = 2,
-                 ac_mass: float = 2, ac_glide_ratio: float = 12, ac_glide_speed: float = 15,
+                 ac_mass: float = 15, ac_glide_ratio: float = 12, ac_glide_speed: float = 15,
                  ac_glide_drag_coeff: float = 0.1, ac_ballistic_drag_coeff: float = 0.8,
-                 ac_ballistic_frontal_area: float = 0.2, ac_failure_prob: float = 5e-3, alt: float = 120,
+                 ac_ballistic_frontal_area: float = 0.1, ac_failure_prob: float = 5e-3, alt: float = 120,
                  vel: float = 18,
-                 wind_vel: float = 5, wind_dir: float = 90):
+                 wind_vel: float = 1, wind_dir: float = 220):
         super().__init__(key, colour, blocking, buffer_dist)
         delattr(self, '_colour')
 

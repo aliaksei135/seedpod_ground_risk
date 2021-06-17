@@ -54,14 +54,17 @@ class GridEnvironment:
         has_top = has_bottom = has_left = has_right = False
         neighbours = set()
         max_y, max_x = self.shape
+        # Offset into edge
+        max_y = max_y - 1
+        max_x = max_x - 1
 
         def eval_node(y, x):
             val = self.grid[y, x]
             nonlocal neighbours
-            if val >= 0:
+            if val >= 0 and np.isfinite(val):
                 neighbours.add(Node((y, x)))
 
-        if idx[1] - 1 >= 0:
+        if idx[1] - 1 > 0:
             has_left = True
             y, x = idx[0], idx[1] - 1
             eval_node(y, x)
@@ -69,7 +72,7 @@ class GridEnvironment:
             has_right = True
             y, x = idx[0], idx[1] + 1
             eval_node(y, x)
-        if idx[0] - 1 >= 0:
+        if idx[0] - 1 > 0:
             has_top = True
             y, x = idx[0] - 1, idx[1]
             eval_node(y, x)

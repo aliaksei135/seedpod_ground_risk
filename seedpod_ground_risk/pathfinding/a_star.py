@@ -2,28 +2,34 @@ from heapq import *
 from typing import List, Union, Tuple
 
 import numpy as np
+from skimage.draw import line as skline
 
-from seedpod_ground_risk.pathfinding import bresenham
 from seedpod_ground_risk.pathfinding.algorithm import Algorithm
 from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
 from seedpod_ground_risk.pathfinding.heuristic import Heuristic, ManhattanHeuristic
 
 
-def _reconstruct_path(end: Node, grid: np.ndarray) -> List[Node]:
+def _reconstruct_path(end: Node, grid: np.ndarray, smooth=True) -> List[Node]:
     reverse_path = []
     reverse_path_append = reverse_path.append
     reverse_path_append(end)
     node = end
     while node is not None:
         reverse_path_append(node)
+        if node.parent is None:
+            break
+        if node == node.parent:
+            reverse_path_append(node.parent)
+            break
         node = node.parent
     path = list(reversed(reverse_path))
 
-    # return path
+    if not smooth:
+        return path
 
     def get_path_sum(nx, ny, tx, ty, grid):
-        line = bresenham.make_line(nx, ny, tx, ty)
-        line_points = grid[line[:, 0], line[:, 1]]
+        line = skline(nx, ny, tx, ty)
+        line_points = grid[line[0], line[1]]
         # If the new line crosses any blocked areas the cost is inf
         if -1 in line_points:
             return np.inf
@@ -73,7 +79,8 @@ class GridAStar(Algorithm):
 # Canonical algorithm from literature
 class RiskAStar(Algorithm):
 
-    def find_path(self, environment: GridEnvironment, start: Node, end: Node, k=0.9) -> Union[List[Node], None]:
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node, k=0.9, smooth=True, **kwargs) -> Union[
+        List[Node], None]:
         grid = environment.grid
         min_dist = 2 ** 0.5
         goal_val = grid[end.position]
@@ -92,7 +99,7 @@ class RiskAStar(Algorithm):
                 continue
             closed.add(node)
             if node == end:
-                return _reconstruct_path(node, grid)
+                return _reconstruct_path(node, grid, smooth=smooth)
 
             current_cost = node.f
             node_val = grid[node.position]
@@ -106,8 +113,8 @@ class RiskAStar(Algorithm):
 
                     dist = ((node.position[1] - end.position[1]) ** 2 + (
                             node.position[0] - end.position[0]) ** 2) ** 0.5
-                    line = bresenham.make_line(node.position[1], node.position[0], end.position[1], end.position[0])
-                    min_val = grid[line[:, 0], line[:, 1]].min()
+                    line = skline(node.position[1], node.position[0], end.position[1], end.position[0])
+                    min_val = grid[line[0], line[1]].min()
                     node_val = grid[node.position]
                     h = k * ((((node_val + goal_val) / 2) * min_dist) + ((dist - min_dist) * min_val))
 
@@ -124,7 +131,8 @@ class RiskAStar(Algorithm):
 
 class RiskGridAStar(GridAStar):
 
-    def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[List[Node], None]:
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node, k=1, smooth=True, **kwargs) -> Union[
+        List[Node], None]:
         grid = environment.grid
 
         # Use heapq;the thread safety provided by PriorityQueue is not needed, as we only exec on a single thread
@@ -141,7 +149,7 @@ class RiskGridAStar(GridAStar):
                 continue
             closed.add(node)
             if node == end:
-                return _reconstruct_path(node, grid)
+                return _reconstruct_path(node, grid, smooth=smooth)
 
             current_cost = node.f
             for neighbour in environment.get_neighbours(node):
@@ -150,7 +158,7 @@ class RiskGridAStar(GridAStar):
                     neighbour.g = cost
                     h = abs((node.position[0] - end.position[0])) + abs((node.position[1] - end.position[1]))
                     neighbour.h = h
-                    neighbour.f = cost + h
+                    neighbour.f = cost + (k * h)
                     neighbour.parent = node
                     if neighbour not in open_cost or neighbour.f < open_cost[neighbour]:
                         heappush(open, neighbour)
