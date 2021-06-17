@@ -1,0 +1,66 @@
+
+{ "Default": {
+   "basic": {
+     "width": 2,
+     "length": 1.5,
+     "mass": 10
+   },
+   "ballistic": {
+     "drag_coeff": 0.8,
+     "frontal_area": 0.2
+   },
+   "gliding": {
+     "drag_coeff": 0.1,
+     "airspeed": 20,
+     "glide_ratio": 14
+   }
+ },
+  "SPOTTER": {
+   "basic": {
+     "width": 4,
+     "length": 3.5,
+     "mass": 35
+   },
+   "ballistic": {
+     "drag_coeff": 0.65,
+     "frontal_area": 0.7
+   },
+   "gliding": {
+     "drag_coeff": 0.1,
+     "airspeed": 28.3,
+     "glide_ratio": 10
+   }
+ },
+  "Decode Mk2": {
+   "basic": {
+     "width": 4.2,
+     "length": 3.5,
+     "mass": 23
+   },
+   "ballistic": {
+     "drag_coeff": 0.65,
+     "frontal_area": 0.7
+   },
+   "gliding": {
+     "drag_coeff": 0.1,
+     "airspeed": 29,
+     "glide_ratio": 10
+   }
+ },
+  "Sulsa v2": {
+   "basic": {
+     "width": 1.2,
+     "length": 1,
+     "mass": 3
+   },
+   "ballistic": {
+     "drag_coeff": 0.65,
+     "frontal_area": 0.1
+   },
+   "gliding": {
+     "drag_coeff": 0.08,
+     "airspeed": 20,
+     "glide_ratio": 8
+   }
+ }
+}
