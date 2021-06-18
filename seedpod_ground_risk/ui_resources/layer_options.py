@@ -1,3 +1,4 @@
+import json
 from seedpod_ground_risk.layers.arbitrary_obstacle_layer import ArbitraryObstacleLayer
 from seedpod_ground_risk.layers.osm_tag_layer import OSMTagLayer
 from seedpod_ground_risk.layers.path_analysis_layer import PathAnalysisLayer
@@ -5,6 +6,7 @@ from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
 from seedpod_ground_risk.layers.residential_layer import ResidentialLayer
 from seedpod_ground_risk.layers.roads_layer import RoadsLayer
 from seedpod_ground_risk.pathfinding.a_star import *
+
 
 LAYER_OBJECTS = {
     'Select a Layer': None,
@@ -82,3 +84,13 @@ LAYER_OPTIONS = {
         'Wind Bearing [deg]': (r'-?\d{0,3}\.?\d+', 'wind_dir', float)
     }
 }
+
+# Create aircraft list dictionary from UAV list found in static_data
+
+def aircraft_list(filepath = "static_data/aircraft_list.json"):
+    json_file_path = filepath
+    with open(json_file_path, 'r') as j:
+        aircrafts = json.loads(j.read())
+    return aircrafts
+
+AIRCRAFT_LIST = aircraft_list()
