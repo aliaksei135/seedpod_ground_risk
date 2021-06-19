@@ -135,8 +135,8 @@ class LayerWizard(QWizard):
         for name, opt in list(LAYER_OPTIONS.values())[self.layerType].items():
             if opt[1] == 'algo':
                 d = {opt[1]: list(ALGORITHM_OBJECTS.values())[self.field(name)]}
-            #elif opt[1] == 'aircraft':
-            #    d = {opt[1]: list(AIRCRAFT_LIST.values())[self.field(name)]}
+            elif opt[1] == 'aircraft':
+                d = {opt[1]: list(AIRCRAFT_LIST.values())[self.field(name)]}
             else:
                 d = {opt[1]: opt[2](self.field(name))}
             self.opts.update(d)

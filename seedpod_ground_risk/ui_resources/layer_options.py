@@ -58,7 +58,7 @@ LAYER_OPTIONS = {
         'End Latitude [dd]': (r'-?\d{0,3}\.\d+', 'end_lat', float),
         'End Longitude [dd]': (r'-?\d{0,3}\.\d+', 'end_lon', float),
         'Algorithm': ('algos', 'algo', eval),
-        'Aircraft': ('aircraft', 'Aircraft', eval),
+        'Aircraft': ('aircraft', 'aircraft', eval),
         'Risk-Distance Ratio': (r'\d{0,3}(\.\d+)?', 'rdr', float),
         'Wind Speed [m/s]': (r'-?\d{0,3}\.?\d+', 'wind_vel', float),
         'Wind Bearing [deg]': (r'-?\d{0,3}\.?\d+', 'wind_dir', float)
