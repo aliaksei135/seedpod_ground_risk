@@ -17,8 +17,7 @@ class NewAircraftInfoPage(QWizardPage):
     def initializePage(self) -> None:
         super().initializePage()
         layout = QGridLayout()
-        aircraftType = self.field('type')
-        for name, opt in list(AIRCRAFT_PARAMETERS.values())[aircraftType].items():
+        for name, opt in AIRCRAFT_PARAMETERS.items():
             regex = opt[0]
             label = QLabel(name)
             field = QLineEdit()
@@ -45,8 +44,8 @@ class AircraftWizard(QWizard):
     def accept(self) -> None:
         super().accept()
         self.aircraftKey = self.field('name')
-        self.aircraftType = self.field('type')
         self.opts = {}
-        for name, opt in list(AIRCRAFT_PARAMETERS.values())[self.aircraftType].items():
-            d = {opt[1]: opt[2](self.field(name))}
-        add_aircraft(d)
+        self.d = {}
+        for name, opt in AIRCRAFT_PARAMETERS.items():
+            self.d[f'{opt[1]}'] = opt[2](self.field(name))
+        return self.d

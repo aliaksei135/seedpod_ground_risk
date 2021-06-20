@@ -41,6 +41,8 @@ class Ui_MainWindow(object):
         self.actionRasterise.setCheckable(True)
         self.actionGenerate = QAction(MainWindow)
         self.actionGenerate.setObjectName(u"actionGenerate")
+        self.actionAdd_Aircraft = QAction(MainWindow)
+        self.actionAdd_Aircraft.setObjectName(u"actionAdd_Aircraft")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
@@ -74,10 +76,10 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.addLayerButton)
 
-        self.pushButton = QPushButton(self.centralwidget)
-        self.pushButton.setObjectName(u"pushButton")
+        self.generateButton = QPushButton(self.centralwidget)
+        self.generateButton.setObjectName(u"generateButton")
 
-        self.horizontalLayout.addWidget(self.pushButton)
+        self.horizontalLayout.addWidget(self.generateButton)
 
         self.verticalLayout.addLayout(self.horizontalLayout)
 
@@ -112,8 +114,6 @@ class Ui_MainWindow(object):
         self.menu_File.setObjectName(u"menu_File")
         self.menuEdit = QMenu(self.menuBar)
         self.menuEdit.setObjectName(u"menuEdit")
-        self.menu_Layer = QMenu(self.menuBar)
-        self.menu_Layer.setObjectName(u"menu_Layer")
         self.menu_Aircraft = QMenu(self.menuBar)
         self.menu_Aircraft.setObjectName(u"menu_Aircraft")
         self.menu_Help = QMenu(self.menuBar)
@@ -125,11 +125,11 @@ class Ui_MainWindow(object):
 
         self.menuBar.addAction(self.menu_File.menuAction())
         self.menuBar.addAction(self.menuEdit.menuAction())
-        self.menuBar.addAction(self.menu_Layer.menuAction())
         self.menuBar.addAction(self.menu_Aircraft.menuAction())
         self.menuBar.addAction(self.menu_Help.menuAction())
         self.menu_File.addAction(self.actionImport)
         self.menu_File.addAction(self.actionExport)
+        self.menu_Aircraft.addAction(self.actionAdd_Aircraft)
         self.menu_Help.addAction(self.actionAbout_Static_Sources)
         self.menu_Help.addAction(self.actionAbout_App)
 
@@ -149,11 +149,15 @@ class Ui_MainWindow(object):
         # if QT_CONFIG(tooltip)
         self.actionGenerate.setToolTip(QCoreApplication.translate("MainWindow", u"Generate Map for current view", None))
         # endif // QT_CONFIG(tooltip)
+        self.actionAdd_Aircraft.setText(QCoreApplication.translate("MainWindow", u"Add Aircraft", None))
+        # if QT_CONFIG(tooltip)
+        self.actionAdd_Aircraft.setToolTip(
+            QCoreApplication.translate("MainWindow", u"Add a custom aircraft to the database", None))
+        # endif // QT_CONFIG(tooltip)
         self.addLayerButton.setText(QCoreApplication.translate("MainWindow", u"Add Layer", None))
-        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Generate", None))
+        self.generateButton.setText(QCoreApplication.translate("MainWindow", u"Generate", None))
         self.menu_File.setTitle(QCoreApplication.translate("MainWindow", u"&File", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"&Edit", None))
-        self.menu_Layer.setTitle(QCoreApplication.translate("MainWindow", u"&Layer", None))
         self.menu_Aircraft.setTitle(QCoreApplication.translate("MainWindow", u"&Aircraft", None))
         self.menu_Help.setTitle(QCoreApplication.translate("MainWindow", u"&Help", None))
         self.toolBar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))

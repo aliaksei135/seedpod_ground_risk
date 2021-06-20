@@ -66,7 +66,7 @@ LAYER_OPTIONS = {
 }
 
 AIRCRAFT_PARAMETERS = {
-    'Aircraft Name': ('name', str),
+    'Aircraft Name': (r'.*', 'name', str),
     'Aircraft Width [m]': (r'-?\d{0,3}\.?\d+', 'width', float),
     'Aircraft Length [m]': (r'-?\d{0,3}\.?\d+', 'length', float),
     'Aircraft Mass [kg]': (r'-?\d{0,3}\.?\d+', 'mass', float),
@@ -90,11 +90,11 @@ def aircraft_list(filepath="static_data/aircraft_list.json"):
     return aircrafts
 
 
-def add_aircraft(new_ac, name):
+def add_aircraft(new_ac):
     ac_list = AIRCRAFT_LIST
-    ac_list[f'new_ac'] = new_ac
+    ac_list[f"{new_ac['name']}"] = new_ac
+    if 'name' in ac_list[f"{new_ac['name']}"]: del ac_list[f"{new_ac['name']}"]['name']
     with open("static_data/aircraft_list.json", 'w') as f:
         json.dump(ac_list, f)
-
 
 AIRCRAFT_LIST = aircraft_list()

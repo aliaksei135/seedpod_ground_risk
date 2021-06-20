@@ -90,7 +90,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton">
+           <widget class="QPushButton" name="generateButton">
             <property name="text">
              <string>Generate</string>
             </property>
@@ -152,15 +152,11 @@
      <string>&amp;Edit</string>
     </property>
    </widget>
-   <widget class="QMenu" name="menu_Layer">
-    <property name="title">
-     <string>&amp;Layer</string>
-    </property>
-   </widget>
    <widget class="QMenu" name="menu_Aircraft">
     <property name="title">
      <string>&amp;Aircraft</string>
     </property>
+    <addaction name="actionAdd_Aircraft"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -171,7 +167,6 @@
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menuEdit"/>
-   <addaction name="menu_Layer"/>
    <addaction name="menu_Aircraft"/>
    <addaction name="menu_Help"/>
   </widget>
@@ -220,6 +215,14 @@
    </property>
    <property name="toolTip">
     <string>Generate Map for current view</string>
+   </property>
+  </action>
+  <action name="actionAdd_Aircraft">
+   <property name="text">
+    <string>Add Aircraft</string>
+   </property>
+   <property name="toolTip">
+    <string>Add a custom aircraft to the database</string>
    </property>
   </action>
  </widget>
