@@ -1,4 +1,5 @@
 import json
+
 from seedpod_ground_risk.layers.arbitrary_obstacle_layer import ArbitraryObstacleLayer
 from seedpod_ground_risk.layers.osm_tag_layer import OSMTagLayer
 from seedpod_ground_risk.layers.path_analysis_layer import PathAnalysisLayer
@@ -6,7 +7,6 @@ from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
 from seedpod_ground_risk.layers.residential_layer import ResidentialLayer
 from seedpod_ground_risk.layers.roads_layer import RoadsLayer
 from seedpod_ground_risk.pathfinding.a_star import *
-
 
 LAYER_OBJECTS = {
     'Select a Layer': None,
@@ -65,12 +65,36 @@ LAYER_OPTIONS = {
     }
 }
 
+AIRCRAFT_PARAMETERS = {
+    'Aircraft Name': ('name', str),
+    'Aircraft Width [m]': (r'-?\d{0,3}\.?\d+', 'width', float),
+    'Aircraft Length [m]': (r'-?\d{0,3}\.?\d+', 'length', float),
+    'Aircraft Mass [kg]': (r'-?\d{0,3}\.?\d+', 'mass', float),
+    'Aircraft Glide Ratio': (r'-?\d{0,3}\.?\d+', 'glide_ratio', float),
+    'Aircraft Glide Speed [m/s]': (r'-?\d{0,3}\.?\d+', 'glide_speed', float),
+    'Aircraft Glide Drag Coeff': (r'-?\d{0,3}\.?\d+', 'glide_drag_coeff', float),
+    'Aircraft Ballistic Drag Coeff': (r'-?\d{0,3}\.?\d+', 'bal_drag_coeff', float),
+    'Aircraft Ballistic Frontal Area [m^2]': (r'-?\d{0,3}\.?\d+', 'frontal_area', float),
+    'Aircraft Failure Probability [0-1]': (r'-?\d{0,3}\.?\d+', 'failure_prob', float),
+    'Flight Altitude [m]': (r'-?\d{0,3}\.?\d+', 'alt', float),
+    'Flight Airspeed [m/s]': (r'-?\d{0,3}\.?\d+', 'vel', float)
+}
+
+
 # Create aircraft list dictionary from UAV list found in static_data
 
-def aircraft_list(filepath = "static_data/aircraft_list.json"):
+def aircraft_list(filepath="static_data/aircraft_list.json"):
     json_file_path = filepath
     with open(json_file_path, 'r') as j:
         aircrafts = json.loads(j.read())
     return aircrafts
+
+
+def add_aircraft(new_ac, name):
+    ac_list = AIRCRAFT_LIST
+    ac_list[f'new_ac'] = new_ac
+    with open("static_data/aircraft_list.json", 'w') as f:
+        json.dump(ac_list, f)
+
 
 AIRCRAFT_LIST = aircraft_list()
