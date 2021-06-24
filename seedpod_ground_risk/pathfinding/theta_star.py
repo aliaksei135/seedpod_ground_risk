@@ -19,9 +19,9 @@ class GridThetaStar(Algorithm):
         pass
 
 
-class RiskGridThetaStar(GridThetaStar):
+class RiskThetaStar(GridThetaStar):
 
-    def find_path(self, environment: GridEnvironment, start: Node, end: Node, smooth=False, k=1, thres=1e-12,
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node, smooth=False, k=1, thres=3e-8,
                   method=np.mean, **kwargs) -> Union[List[Node], None]:
         grid = environment.grid
         self.risk_threshold = thres

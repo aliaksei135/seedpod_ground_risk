@@ -12,6 +12,10 @@ from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.layers.data_layer import DataLayer
 from seedpod_ground_risk.layers.fatality_risk_layer import FatalityRiskLayer
 from seedpod_ground_risk.layers.layer import Layer
+from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
+from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
+from seedpod_ground_risk.pathfinding.heuristic import ManhattanRiskHeuristic
+from seedpod_ground_risk.pathfinding.theta_star import RiskThetaStar
 
 
 class PlotServer:
@@ -62,7 +66,13 @@ class PlotServer:
             FatalityRiskLayer('Fatality Risk')
         ]
 
-        self.annotation_layers = []
+        self.annotation_layers = [PathfindingLayer('A*', 53.58, -2.25, 53.65,
+                                                   -2.12,
+                                                   RiskGridAStar, ManhattanRiskHeuristic,
+                                                   0.51), PathfindingLayer('Theta*', 53.58, -2.25, 53.65,
+                                                                           -2.12,
+                                                                           RiskThetaStar, ManhattanRiskHeuristic,
+                                                                           0.49)]
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None

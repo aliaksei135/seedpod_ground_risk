@@ -21,7 +21,7 @@ ALGORITHM_OBJECTS = {
     'Select Pathfinding Algorithm': None,
     # 'Grid A*': GridAStar,
     'Risk Grid A*': RiskGridAStar,
-    'Risk Grid Theta*': RiskGridThetaStar
+    'Risk Grid Theta*': RiskThetaStar
     # 'Jump Point Search+ A*': JumpPointSearchAStar,
     # 'Risk Jump Point Search+ A*': RiskJumpPointSearchAStar
 }
