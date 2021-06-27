@@ -7,6 +7,7 @@ from PySide2.QtGui import QRegExpValidator
 from PySide2.QtWidgets import QWizard, QWizardPage, QLabel, QLineEdit, QComboBox, QCheckBox, QGridLayout, QColorDialog, \
     QPushButton, QFileDialog
 
+from seedpod_ground_risk.ui_resources.coordbox import GeoWidget
 from seedpod_ground_risk.ui_resources.layer_options import *
 
 
@@ -99,6 +100,12 @@ class SpecificLayerInfoPage(QWizardPage):
                 # self.registerField('algo*', algoSpinner)
             elif regex is bool:
                 field = QCheckBox()
+            elif 'Start' in name:
+                self.geo_widget1 = GeoWidget()
+                continue
+            elif 'End' in name:
+                self.geo_widget2 = GeoWidget()
+                continue
             else:
                 field = QLineEdit()
                 field.setValidator(QRegExpValidator(QRegExp(regex)))

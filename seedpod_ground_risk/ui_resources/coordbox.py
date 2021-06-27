@@ -52,10 +52,10 @@ class GeoWidget(QWidget):
         self._coordinate = QGeoCoordinate(0, 0)
 
         self._lat_spinbox = QDoubleSpinBox(
-            minimum=-90.0, maximum=90.0, valueChanged=self.handle_value_changed,
+            minimum=-90.0, maximum=90.0  # , valueChanged=self.handle_value_changed,
         )
         self._lng_spinbox = QDoubleSpinBox(
-            minimum=-180.0, maximum=180.0, valueChanged=self.handle_value_changed,
+            minimum=-180.0, maximum=180.0  # , valueChanged=self.handle_value_changed,
         )
         self.btn = QToolButton(text="map", clicked=self.handle_clicked)
         self.map_view = MapDialog(self)
@@ -101,8 +101,8 @@ class WizardPage(QWizardPage):
         self.geo_widget1 = GeoWidget()
         self.geo_widget2 = GeoWidget()
 
-        self.registerField("coordinate1", self.geo_widget1, b"coordinate")
-        self.registerField("coordinate2", self.geo_widget2, b"coordinate")
+        self.registerField("coordinate1", self.geo_widget1)
+        self.registerField("coordinate2", self.geo_widget2)
 
         lay = QVBoxLayout(self)
         lay.addWidget(self.geo_widget1)
