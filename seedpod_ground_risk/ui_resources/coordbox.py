@@ -28,7 +28,7 @@ class MapDialog(QDialog):
         self.setWindowTitle("Map")
         self.map_widget = QQuickWidget(resizeMode=QQuickWidget.SizeRootObjectToView)
         self.map_widget.rootContext().setContextProperty("controller", geo_widget)
-        filename = os.fspath(CURRENT_DIRECTORY / "main.qml")
+        filename = os.fspath(CURRENT_DIRECTORY / "coord_map.qml")
         url = QUrl.fromLocalFile(filename)
         self.map_widget.setSource(url)
 
