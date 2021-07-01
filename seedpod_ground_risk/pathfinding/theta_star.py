@@ -10,16 +10,10 @@ from seedpod_ground_risk.pathfinding.environment import Node, GridEnvironment
 from seedpod_ground_risk.pathfinding.heuristic import Heuristic, ManhattanHeuristic
 
 
-class GridThetaStar(Algorithm):
+class RiskThetaStar(Algorithm):
+
     def __init__(self, heuristic: Heuristic = ManhattanHeuristic()):
         self.heuristic = heuristic.h
-
-    def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[
-        List[Node], None]:
-        pass
-
-
-class RiskThetaStar(GridThetaStar):
 
     def find_path(self, environment: GridEnvironment, start: Node, end: Node, smooth=False, k=1, thres=3e-8,
                   method=np.mean, **kwargs) -> Union[List[Node], None]:
