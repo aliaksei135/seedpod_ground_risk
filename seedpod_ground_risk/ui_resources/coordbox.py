@@ -22,6 +22,7 @@ from PySide2.QtWidgets import (
 CURRENT_DIRECTORY = Path(__file__).resolve().parent
 
 
+# TODO: Give the user feedback on where their coordinate is when clicked
 class MapDialog(QDialog):
     def __init__(self, geo_widget):
         super().__init__(geo_widget)
@@ -52,14 +53,16 @@ class GeoWidget(QWidget):
         self._coordinate = QGeoCoordinate(0, 0)
 
         self._lat_spinbox = QDoubleSpinBox(
-            minimum=-90.0, maximum=90.0  # , valueChanged=self.handle_value_changed,
+            minimum=49.0, maximum=56.0  # , valueChanged=self.handle_value_changed,
         )
         self._lng_spinbox = QDoubleSpinBox(
-            minimum=-180.0, maximum=180.0  # , valueChanged=self.handle_value_changed,
+            minimum=-8, maximum=2  # , valueChanged=self.handle_value_changed,
         )
-        self.btn = QToolButton(text="map", clicked=self.handle_clicked)
+        self.btn = QToolButton(text="Map", clicked=self.handle_clicked)
         self.map_view = MapDialog(self)
 
+        # self.coordinate_changed.connect(self.handle_value_changed)
+        # self.coordinate_changed.connect(self.handle_value_changed)
         lay = QHBoxLayout(self)
         lay.addWidget(QLabel("Latitude:"))
         lay.addWidget(self._lat_spinbox)
@@ -93,6 +96,8 @@ class GeoWidget(QWidget):
     def handle_clicked(self):
         self.map_view.exec_()
 
+
+# Rest of code is used to debug this coordinate box
 
 class WizardPage(QWizardPage):
     def __init__(self, parent=None):
