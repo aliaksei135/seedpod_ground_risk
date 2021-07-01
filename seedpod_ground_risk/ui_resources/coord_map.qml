@@ -2,14 +2,14 @@ import QtLocation 5.15
 import QtQuick 2.15
 
 Item {
-    width: 400
-    height: 400
+    width: 600
+    height: 600
 
     Map {
         id: map
 
         anchors.fill: parent
-        zoomLevel: 14
+        zoomLevel: 6
 
         MouseArea {
             id: mouse
