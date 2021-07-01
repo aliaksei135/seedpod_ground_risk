@@ -5,6 +5,7 @@ from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
 from seedpod_ground_risk.layers.residential_layer import ResidentialLayer
 from seedpod_ground_risk.layers.roads_layer import RoadsLayer
 from seedpod_ground_risk.pathfinding.a_star import *
+from seedpod_ground_risk.pathfinding.theta_star import *
 
 LAYER_OBJECTS = {
     'Select a Layer': None,
@@ -20,6 +21,7 @@ ALGORITHM_OBJECTS = {
     'Select Pathfinding Algorithm': None,
     # 'Grid A*': GridAStar,
     'Risk Grid A*': RiskGridAStar,
+    'Risk Grid Theta*': RiskThetaStar
     # 'Jump Point Search+ A*': JumpPointSearchAStar,
     # 'Risk Jump Point Search+ A*': RiskJumpPointSearchAStar
 }

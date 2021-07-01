@@ -7,11 +7,15 @@ from skimage.draw import line
 from seedpod_ground_risk.pathfinding.a_star import _reconstruct_path
 from seedpod_ground_risk.pathfinding.algorithm import Algorithm
 from seedpod_ground_risk.pathfinding.environment import Node, GridEnvironment
+from seedpod_ground_risk.pathfinding.heuristic import Heuristic, ManhattanHeuristic
 
 
 class RiskThetaStar(Algorithm):
 
-    def find_path(self, environment: GridEnvironment, start: Node, end: Node, smooth=False, k=1, thres=1e-12,
+    def __init__(self, heuristic: Heuristic = ManhattanHeuristic()):
+        self.heuristic = heuristic.h
+
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node, smooth=False, k=1, thres=3e-8,
                   method=np.mean, **kwargs) -> Union[List[Node], None]:
         grid = environment.grid
         self.risk_threshold = thres
