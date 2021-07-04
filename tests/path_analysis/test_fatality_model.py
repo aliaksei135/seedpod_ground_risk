@@ -2,10 +2,12 @@ import unittest
 
 import matplotlib.pyplot as mpl
 import numpy as np
-from labellines import labelLines
 
 from seedpod_ground_risk.path_analysis.harm_models.fatality_model import prob_fatality
 from seedpod_ground_risk.path_analysis.utils import velocity_to_kinetic_energy
+
+
+# from labellines import labelLines
 
 
 class FatalityModelTestCase(unittest.TestCase):
