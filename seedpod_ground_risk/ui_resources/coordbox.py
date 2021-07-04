@@ -1,12 +1,10 @@
 import os
-import sys
 from pathlib import Path
 
 from PySide2.QtCore import Property, Signal, Slot, Qt, QUrl
 from PySide2.QtPositioning import QGeoCoordinate
 from PySide2.QtQuickWidgets import QQuickWidget
 from PySide2.QtWidgets import (
-    QApplication,
     QDialog,
     QDialogButtonBox,
     QDoubleSpinBox,
@@ -15,8 +13,6 @@ from PySide2.QtWidgets import (
     QToolButton,
     QVBoxLayout,
     QWidget,
-    QWizard,
-    QWizardPage,
 )
 
 CURRENT_DIRECTORY = Path(__file__).resolve().parent
@@ -61,8 +57,6 @@ class GeoWidget(QWidget):
         self.btn = QToolButton(text="Map", clicked=self.handle_clicked)
         self.map_view = MapDialog(self)
 
-        # self.coordinate_changed.connect(self.handle_value_changed)
-        # self.coordinate_changed.connect(self.handle_value_changed)
         lay = QHBoxLayout(self)
         lay.addWidget(QLabel("Latitude:"))
         lay.addWidget(self._lat_spinbox)
@@ -95,35 +89,3 @@ class GeoWidget(QWidget):
 
     def handle_clicked(self):
         self.map_view.exec_()
-
-
-# Rest of code is used to debug this coordinate box
-
-class WizardPage(QWizardPage):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        self.geo_widget1 = GeoWidget()
-        self.geo_widget2 = GeoWidget()
-
-        self.registerField("coordinate1", self.geo_widget1)
-        self.registerField("coordinate2", self.geo_widget2)
-
-        lay = QVBoxLayout(self)
-        lay.addWidget(self.geo_widget1)
-        lay.addWidget(self.geo_widget2)
-
-
-def main():
-    app = QApplication(sys.argv)
-
-    w = QWizard()
-    page = WizardPage()
-    w.addPage(page)
-    w.show()
-
-    sys.exit(app.exec_())
-
-
-if __name__ == "__main__":
-    main()
