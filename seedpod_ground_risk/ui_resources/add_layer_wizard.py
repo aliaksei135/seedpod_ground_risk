@@ -100,8 +100,8 @@ class SpecificLayerInfoPage(QWizardPage):
                 # self.registerField('algo*', algoSpinner)
             elif regex is bool:
                 field = QCheckBox()
-            # TODO: Make the Start and End coordinate field mandatory. Currently the wizard is unable to be used of they are mandatory
-            elif "Start" in name or "End" in name:
+            # TODO: Make the Start and End coordinate field mandatory. Currently the wizard is unable to be used if they are mandatory
+            elif regex == 'coordinate':
                 field = GeoWidget()
                 self.registerField(name, field, "coordinate", "coordinate_changed")
                 label.setBuddy(field)
@@ -141,7 +141,7 @@ class LayerWizard(QWizard):
         for name, opt in list(LAYER_OPTIONS.values())[self.layerType].items():
             if opt[1] == 'algo':
                 d = {opt[1]: list(ALGORITHM_OBJECTS.values())[self.field(name)]}
-            elif "Start" in name or "End" in name:
+            elif opt[1] == 'coordinate':
                 d = {opt[1]: (self.field(name).latitude(), self.field(name).longitude())}
             else:
                 d = {opt[1]: opt[2](self.field(name))}

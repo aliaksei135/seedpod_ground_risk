@@ -63,8 +63,8 @@ LAYER_OPTIONS = {
         'Blocking': (bool, 'blocking', bool),
     },
     'Pathfinding': {
-        'Start Coordiante [dd]': (r'-?\d{0,3}\.\d+', 'start_coord', tuple),
-        'End Coordinate [dd]': (r'-?\d{0,3}\.\d+', 'end_coord', tuple),
+        'Start Coordiante [dd]': ('coordinate', 'start_coord', tuple),
+        'End Coordinate [dd]': ('coordinate', 'end_coord', tuple),
         'Algorithm': ('algos', 'algo', eval),
         'Risk-Distance Ratio': (r'\d{0,3}(\.\d+)?', 'rdr', float),
         'Aircraft Width [m]': (r'-?\d{0,3}\.?\d+', 'ac_width', float),
