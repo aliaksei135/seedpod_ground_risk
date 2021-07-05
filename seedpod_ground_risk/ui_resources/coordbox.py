@@ -15,8 +15,6 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
-CURRENT_DIRECTORY = Path(__file__).resolve().parent
-
 
 # TODO: Give the user feedback on where their coordinate is when clicked
 class MapDialog(QDialog):
@@ -25,7 +23,7 @@ class MapDialog(QDialog):
         self.setWindowTitle("Map")
         self.map_widget = QQuickWidget(resizeMode=QQuickWidget.SizeRootObjectToView)
         self.map_widget.rootContext().setContextProperty("controller", geo_widget)
-        filename = os.fspath(CURRENT_DIRECTORY / "coord_map.qml")
+        filename = os.fspath(Path(__file__).resolve().parent / "coord_map.qml")
         url = QUrl.fromLocalFile(filename)
         self.map_widget.setSource(url)
 
@@ -47,12 +45,12 @@ class GeoWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._coordinate = QGeoCoordinate(0, 0)
-
+        # The coordinate bounds below only bound England, they can be expanded if more countries are added
         self._lat_spinbox = QDoubleSpinBox(
-            minimum=49.0, maximum=56.0  # , valueChanged=self.handle_value_changed,
+            minimum=49.0, maximum=56.0
         )
         self._lng_spinbox = QDoubleSpinBox(
-            minimum=-8, maximum=2  # , valueChanged=self.handle_value_changed,
+            minimum=-8, maximum=2
         )
         self.btn = QToolButton(text="Map", clicked=self.handle_clicked)
         self.map_view = MapDialog(self)
