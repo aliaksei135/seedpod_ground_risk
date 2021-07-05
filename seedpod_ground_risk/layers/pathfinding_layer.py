@@ -16,6 +16,11 @@ from seedpod_ground_risk.pathfinding.heuristic import Heuristic, ManhattanRiskHe
 
 
 class PathfindingLayer(AnnotationLayer):
+    '''
+    start_coord: list of length 2, (starting latitude, starting longitude)
+    end_coord: list of length 2, (ending latitude, ending longitude)
+    rdr: float, Risk to Distance ratio
+    '''
 
     def __init__(self, key, start_coord: list = (0, 0), end_coord: list = (0, 0),
                  algo: Algorithm = RiskGridAStar, heuristic: Heuristic = ManhattanRiskHeuristic,
