@@ -239,11 +239,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             [self.listWidget.item(n).text() for n in range(self.listWidget.count())])
 
     def add_aircraft(self):
-        from seedpod_ground_risk.ui_resources.layer_options import add_aircraft
+        from seedpod_ground_risk.ui_resources.aircraft_options import add_aircraft
         wizard = AircraftWizard(self, Qt.Window)
         wizard.exec()
-        airc = wizard.d
-        add_aircraft(airc)
+        ac = wizard.d
+        add_aircraft(ac)
 
     def time_changed(self, value):
         from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps

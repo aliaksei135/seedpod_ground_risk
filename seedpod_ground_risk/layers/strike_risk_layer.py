@@ -14,7 +14,7 @@ from seedpod_ground_risk.path_analysis.descent_models.ballistic_model import Bal
 from seedpod_ground_risk.path_analysis.descent_models.glide_model import GlideDescentModel
 from seedpod_ground_risk.path_analysis.harm_models.strike_model import StrikeModel
 from seedpod_ground_risk.path_analysis.utils import bearing_to_angle, velocity_to_kinetic_energy
-from seedpod_ground_risk.ui_resources.layer_options import AIRCRAFT_LIST
+from seedpod_ground_risk.ui_resources.aircraft_options import AIRCRAFT_LIST
 
 
 # ~10sec for 567,630 elements
@@ -89,8 +89,7 @@ class StrikeRiskLayer(BlockableDataLayer):
             TemporalPopulationEstimateLayer(f'_strike_risk_tpe_{key}', buffer_dist=buffer_dist),
             RoadsLayer(f'_strike_risk_roads_{key}', buffer_dist=buffer_dist)]
 
-        self.aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, ac['width'], ac['length'],
-                                            ac['mass'])
+        self.aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, ac['width'], ac['length'], ac['mass'])
         self.aircraft.set_ballistic_drag_coefficient(ac['bal_drag_coeff'])
         self.aircraft.set_ballistic_frontal_area(ac['frontal_area'])
         self.aircraft.set_glide_speed_ratio(ac['glide_speed'], ac['glide_ratio'])
