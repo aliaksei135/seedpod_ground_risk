@@ -7,6 +7,7 @@ from PySide2.QtGui import QRegExpValidator
 from PySide2.QtWidgets import QWizard, QWizardPage, QLabel, QLineEdit, QComboBox, QCheckBox, QGridLayout, QColorDialog, \
     QPushButton, QFileDialog
 
+from seedpod_ground_risk.ui_resources.coordbox import GeoWidget
 from seedpod_ground_risk.ui_resources.layer_options import *
 
 
@@ -103,6 +104,15 @@ class SpecificLayerInfoPage(QWizardPage):
                 field.addItems(AIRCRAFT_LIST.keys())
             elif regex is bool:
                 field = QCheckBox()
+            # TODO: Make the Start and End coordinate field mandatory. Currently the wizard is unable to be used if they are mandatory
+            elif regex == 'coordinate':
+                field = GeoWidget()
+                self.registerField(name, field, "coordinate", "coordinate_changed")
+                label.setBuddy(field)
+                label.setAlignment(Qt.AlignCenter)
+                layout.addWidget(label)
+                layout.addWidget(field)
+                continue
             else:
                 field = QLineEdit()
                 field.setValidator(QRegExpValidator(QRegExp(regex)))
@@ -135,6 +145,8 @@ class LayerWizard(QWizard):
         for name, opt in list(LAYER_OPTIONS.values())[self.layerType].items():
             if opt[1] == 'algo':
                 d = {opt[1]: list(ALGORITHM_OBJECTS.values())[self.field(name)]}
+            elif opt[1] == 'coordinate':
+                d = {opt[1]: (self.field(name).latitude(), self.field(name).longitude())}
             elif opt[1] == 'aircraft':
                 d = {opt[1]: list(AIRCRAFT_LIST.values())[self.field(name)]}
             else:
