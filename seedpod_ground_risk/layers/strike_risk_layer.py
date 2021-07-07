@@ -14,6 +14,7 @@ from seedpod_ground_risk.path_analysis.descent_models.ballistic_model import Bal
 from seedpod_ground_risk.path_analysis.descent_models.glide_model import GlideDescentModel
 from seedpod_ground_risk.path_analysis.harm_models.strike_model import StrikeModel
 from seedpod_ground_risk.path_analysis.utils import bearing_to_angle, velocity_to_kinetic_energy
+from seedpod_ground_risk.ui_resources.aircraft_options import AIRCRAFT_LIST
 
 
 # ~10sec for 567,630 elements
@@ -78,12 +79,8 @@ def wrap_row_pipeline(row, shape, padded_pdf, padded_centre, sm):
 
 
 class StrikeRiskLayer(BlockableDataLayer):
-    def __init__(self, key, colour: str = None, blocking=False, buffer_dist=0, ac_width: float = 2,
-                 ac_length: float = 2,
-                 ac_mass: float = 15, ac_glide_ratio: float = 12, ac_glide_speed: float = 15,
-                 ac_glide_drag_coeff: float = 0.1, ac_ballistic_drag_coeff: float = 0.8,
-                 ac_ballistic_frontal_area: float = 0.1, ac_failure_prob: float = 5e-3, alt: float = 120,
-                 vel: float = 18,
+    def __init__(self, key, colour: str = None, blocking=False, buffer_dist=0,
+                 ac: dict = AIRCRAFT_LIST['SPOTTER'],
                  wind_vel: float = 1, wind_dir: float = 220):
         super().__init__(key, colour, blocking, buffer_dist)
         delattr(self, '_colour')
@@ -92,21 +89,21 @@ class StrikeRiskLayer(BlockableDataLayer):
             TemporalPopulationEstimateLayer(f'_strike_risk_tpe_{key}', buffer_dist=buffer_dist),
             RoadsLayer(f'_strike_risk_roads_{key}', buffer_dist=buffer_dist)]
 
-        self.aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, ac_width, ac_length, ac_mass)
-        self.aircraft.set_ballistic_drag_coefficient(ac_ballistic_drag_coeff)
-        self.aircraft.set_ballistic_frontal_area(ac_ballistic_frontal_area)
-        self.aircraft.set_glide_speed_ratio(ac_glide_speed, ac_glide_ratio)
-        self.aircraft.set_glide_drag_coefficient(ac_glide_drag_coeff)
+        self.aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, ac['width'], ac['length'], ac['mass'])
+        self.aircraft.set_ballistic_drag_coefficient(ac['bal_drag_coeff'])
+        self.aircraft.set_ballistic_frontal_area(ac['frontal_area'])
+        self.aircraft.set_glide_speed_ratio(ac['glide_speed'], ac['glide_ratio'])
+        self.aircraft.set_glide_drag_coefficient(ac['glide_drag_coeff'])
 
-        self.alt = alt
-        self.vel = vel
+        self.alt = ac['cruise_alt']
+        self.vel = ac['cruise_speed']
         self.wind_vel = wind_vel
         # !! This is the direction the wind is COMING FROM !! #
         self.wind_dir = np.deg2rad(
             (((wind_dir - 180) % 360) - 90) % 360
         )
 
-        self.event_prob = ac_failure_prob
+        self.event_prob = ac['failure_prob']
 
         self.bm = BallisticModel(self.aircraft)
         self.gm = GlideDescentModel(self.aircraft)
