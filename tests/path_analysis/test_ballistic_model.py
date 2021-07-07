@@ -231,7 +231,6 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
             ax.arrow(loc_x, loc_y, wind_vel_mean * np.cos(bearing_to_angle(np.deg2rad(wind_dir_mean))),
                      wind_vel_mean * np.sin(bearing_to_angle(np.deg2rad(wind_dir_mean))), label='Wind Direction',
                      width=1, color='red')
-            fig.savefig(f'figs/ballistic_simp.png', bbox_inches='tight')
             fig.show()
 
 
