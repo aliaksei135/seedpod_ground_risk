@@ -23,12 +23,13 @@ class PathfindingLayer(AnnotationLayer):
     '''
 
     def __init__(self, key, start_coord: list = (0, 0), end_coord: list = (0, 0),
-                 algo: Algorithm = RiskGridAStar, heuristic: Heuristic = ManhattanRiskHeuristic,
+                 algo: Algorithm = RiskGridAStar, aircraft: dict = {},heuristic: Heuristic = ManhattanRiskHeuristic,
                  rdr: float = 0.2, **kwargs):
         super().__init__(key)
         self.start_coord = start_coord
         self.end_coord = end_coord
         self.algo = algo
+        self.aircraft = aircraft
         self.heuristic = heuristic
         self.rdr = rdr
 
