@@ -154,7 +154,7 @@ class FullRiskMapTestCase(unittest.TestCase):
         ax1.set_xticklabels([self.test_bound_coords[0], self.test_bound_coords[2]], )
         ax1.set_yticklabels([self.test_bound_coords[3], self.test_bound_coords[1]], )
         fig1.tight_layout()
-        fig1.savefig(f'figs/tpe_t{self.hour}.png', bbox_inches='tight')
+        fig1.savefig(f'tests/layers/figs/tpe_t{self.hour}.png', bbox_inches='tight')
         fig1.show()
 
         if self.serialise:
@@ -169,7 +169,7 @@ class FullRiskMapTestCase(unittest.TestCase):
         ax2.set_xticklabels([self.test_bound_coords[0], self.test_bound_coords[2]], )
         ax2.set_yticklabels([self.test_bound_coords[3], self.test_bound_coords[1]], )
         fig2.tight_layout()
-        fig2.savefig(f'figs/risk_strike_t{self.hour}.png', bbox_inches='tight')
+        fig2.savefig(f'tests/layers/figs/risk_strike_t{self.hour}.png', bbox_inches='tight')
         fig2.show()
 
         fatality_pdf = fm.transform(strike_pdf, impact_ke=impact_ke_g) + fm.transform(strike_pdf, impact_ke=impact_ke_b)
@@ -185,13 +185,13 @@ class FullRiskMapTestCase(unittest.TestCase):
         ax3.set_xticklabels([self.test_bound_coords[0], self.test_bound_coords[2]], )
         ax3.set_yticklabels([self.test_bound_coords[3], self.test_bound_coords[1]], )
         fig3.tight_layout()
-        fig3.savefig(f'figs/risk_fatality_t{self.hour}.png', bbox_inches='tight')
+        fig3.savefig(f'tests/layers/figs/risk_fatality_t{self.hour}.png', bbox_inches='tight')
         fig3.show()
 
         import rasterio
         from rasterio import transform
         trans = transform.from_bounds(*self.test_bound_coords, *self.raster_shape)
-        rds = rasterio.open(f'tiffs/fatality_risk_h{self.hour}.tif', 'w', driver='GTiff', count=1,
+        rds = rasterio.open(f'tests/layers/tiffs/fatality_risk_h{self.hour}.tif', 'w', driver='GTiff', count=1,
                             dtype=rasterio.float64,
                             crs='EPSG:4326', transform=trans, compress='lzw',
                             width=self.raster_shape[0], height=self.raster_shape[1])
