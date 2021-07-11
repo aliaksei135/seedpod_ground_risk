@@ -8,12 +8,6 @@ class BaseLayerTestCase(unittest.TestCase):
         super().setUp()
         if not hasattr(self, 'layer'):
             return
-        import os
-        os.chdir(
-            os.sep.join((
-                os.path.dirname(os.path.realpath(__file__)),
-                '..', '..'))
-        )
         self.layer.preload_data()
         self.test_bounds = make_bounds_polygon((-1.5, -1.3), (50.87, 51))
         self.raster_shape = (500, 500)
