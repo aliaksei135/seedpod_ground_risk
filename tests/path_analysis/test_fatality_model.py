@@ -9,7 +9,6 @@ from seedpod_ground_risk.path_analysis.utils import velocity_to_kinetic_energy
 
 # from labellines import labelLines
 
-
 class FatalityModelTestCase(unittest.TestCase):
 
     def test_curve_means(self):
@@ -68,7 +67,7 @@ class FatalityModelTestCase(unittest.TestCase):
             ax.plot(ke, p, label=f'$p_s={p_s[idx]:1g}$')
 
         x_pos = np.logspace(1.6, 11.6, 11)
-        labelLines(ax.get_lines(), xvals=x_pos)
+        # labelLines(ax.get_lines(), xvals=x_pos)
 
         ax.set_xlabel('Impact Kinetic Energy [J]')
         ax.set_ylabel('Probability of Fatality')
