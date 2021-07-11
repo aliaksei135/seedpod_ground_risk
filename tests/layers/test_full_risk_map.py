@@ -51,11 +51,13 @@ class FullRiskMapTestCase(unittest.TestCase):
 
         self._setup_aircraft()
 
+        print(os.getcwd())
         os.chdir(
             os.sep.join((
                 os.path.dirname(os.path.realpath(__file__)),
                 '..', '..'))
         )
+        print(os.getcwd())
 
         ps = PlotServer()
         ps.set_time(self.hour)
