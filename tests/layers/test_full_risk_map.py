@@ -51,14 +51,6 @@ class FullRiskMapTestCase(unittest.TestCase):
 
         self._setup_aircraft()
 
-        print(os.getcwd())
-        os.chdir(
-            os.sep.join((
-                os.path.dirname(os.path.realpath(__file__)),
-                '..', '..'))
-        )
-        print(os.getcwd())
-
         ps = PlotServer()
         ps.set_time(self.hour)
         self.raster_shape = ps._get_raster_dimensions(self.test_bounds, self.resolution)
@@ -225,13 +217,6 @@ def plot_path_risk(hour):
     import shapely.geometry as sg
     import numpy as np
     import geopandas as gpd
-
-    # import os
-    # os.chdir(
-    #     os.sep.join((
-    #         os.path.dirname(os.path.realpath(__file__)),
-    #         '..', '..'))
-    # )
 
     path = np.genfromtxt('fr_map_path.csv', delimiter=',').astype(int)
     raster_indices = dict(Longitude=np.genfromtxt('raster_indices_lon.csv', delimiter=','),
