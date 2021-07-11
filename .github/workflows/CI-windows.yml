@@ -26,8 +26,8 @@ jobs:
           dir
           python -m pip install --upgrade pip
           pip install wheel
-          pip install -r seedpod_ground_risk/requirements.txt
-          pip wheel --wheel-dir= extern -r seedpod_ground_risk/requirements.txt
+          pip install -r requirements.txt
+          pip wheel --wheel-dir= extern -r requirements.txt
           pip install flake8
           pip install pytest
       - name: Lint with flake8
