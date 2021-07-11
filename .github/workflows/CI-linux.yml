@@ -30,7 +30,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install gdal-bin libgdal-dev
           pip install GDAL==3.2.3
-          pip install flake8 pytest Cython numpy pyproj geos
+          pip install flake8 pytest Cython numpy pyproj pygeos
           if [ -f requirements-linux.txt ]; then pip install -r requirements-linux.txt; fi
       - name: Lint with flake8
         run: |
