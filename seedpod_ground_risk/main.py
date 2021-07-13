@@ -191,6 +191,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dialog.ui.textEdit.setDocument(doc)
         self.dialog.show()
 
+    def menu_show_RvD_graph(self):
+        for layer in layers:
+
     @Slot(str)
     def plot_ready(self, url):
         self.plotWebview.load(url)

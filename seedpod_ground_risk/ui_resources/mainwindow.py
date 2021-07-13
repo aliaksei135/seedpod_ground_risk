@@ -12,8 +12,8 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
-from .maplayerslistwidget import MapLayersListWidget
-from .plot_webview import PlotWebview
+from maplayerslistwidget import MapLayersListWidget
+from plot_webview import PlotWebview
 
 
 class Ui_MainWindow(object):
@@ -43,6 +43,8 @@ class Ui_MainWindow(object):
         self.actionGenerate.setObjectName(u"actionGenerate")
         self.actionAdd_Aircraft = QAction(MainWindow)
         self.actionAdd_Aircraft.setObjectName(u"actionAdd_Aircraft")
+        self.actionView_Risk_vs_Distance_Graph = QAction(MainWindow)
+        self.actionView_Risk_vs_Distance_Graph.setObjectName(u"actionView_Risk_vs_Distance_Graph")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
@@ -81,7 +83,9 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.generateButton)
 
+
         self.verticalLayout.addLayout(self.horizontalLayout)
+
 
         self.horizontalLayout_4.addLayout(self.verticalLayout)
 
@@ -118,6 +122,8 @@ class Ui_MainWindow(object):
         self.menu_Aircraft.setObjectName(u"menu_Aircraft")
         self.menu_Help = QMenu(self.menuBar)
         self.menu_Help.setObjectName(u"menu_Help")
+        self.menuGraphs = QMenu(self.menuBar)
+        self.menuGraphs.setObjectName(u"menuGraphs")
         MainWindow.setMenuBar(self.menuBar)
         self.toolBar = QToolBar(MainWindow)
         self.toolBar.setObjectName(u"toolBar")
@@ -126,12 +132,14 @@ class Ui_MainWindow(object):
         self.menuBar.addAction(self.menu_File.menuAction())
         self.menuBar.addAction(self.menuEdit.menuAction())
         self.menuBar.addAction(self.menu_Aircraft.menuAction())
+        self.menuBar.addAction(self.menuGraphs.menuAction())
         self.menuBar.addAction(self.menu_Help.menuAction())
         self.menu_File.addAction(self.actionImport)
         self.menu_File.addAction(self.actionExport)
         self.menu_Aircraft.addAction(self.actionAdd_Aircraft)
         self.menu_Help.addAction(self.actionAbout_Static_Sources)
         self.menu_Help.addAction(self.actionAbout_App)
+        self.menuGraphs.addAction(self.actionView_Risk_vs_Distance_Graph)
 
         self.retranslateUi(MainWindow)
 
@@ -154,12 +162,15 @@ class Ui_MainWindow(object):
         self.actionAdd_Aircraft.setToolTip(
             QCoreApplication.translate("MainWindow", u"Add a custom aircraft to the database", None))
         # endif // QT_CONFIG(tooltip)
+        self.actionView_Risk_vs_Distance_Graph.setText(
+            QCoreApplication.translate("MainWindow", u"Risk vs Distance Graph", None))
         self.addLayerButton.setText(QCoreApplication.translate("MainWindow", u"Add Layer", None))
         self.generateButton.setText(QCoreApplication.translate("MainWindow", u"Generate", None))
         self.menu_File.setTitle(QCoreApplication.translate("MainWindow", u"&File", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"&Edit", None))
         self.menu_Aircraft.setTitle(QCoreApplication.translate("MainWindow", u"&Aircraft", None))
         self.menu_Help.setTitle(QCoreApplication.translate("MainWindow", u"&Help", None))
+        self.menuGraphs.setTitle(QCoreApplication.translate("MainWindow", u"Graphs", None))
         self.toolBar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
     # retranslateUi
 
