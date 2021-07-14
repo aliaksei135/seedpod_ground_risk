@@ -148,16 +148,16 @@
     <addaction name="actionExport"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
-    <property name="title">
-     <string>&amp;Edit</string>
-    </property>
+       <property name="title">
+           <string>&amp;Edit</string>
+       </property>
    </widget>
-   <widget class="QMenu" name="menu_Aircraft">
-    <property name="title">
-     <string>&amp;Aircraft</string>
-    </property>
-       <addaction name="actionAdd_Aircraft"/>
-   </widget>
+      <widget class="QMenu" name="menu_Aircraft">
+          <property name="title">
+              <string>&amp;Aircraft</string>
+          </property>
+          <addaction name="actionAdd_Aircraft"/>
+      </widget>
       <widget class="QMenu" name="menu_Help">
           <property name="title">
               <string>&amp;Help</string>
@@ -165,16 +165,9 @@
           <addaction name="actionAbout_Static_Sources"/>
           <addaction name="actionAbout_App"/>
       </widget>
-      <widget class="QMenu" name="menuGraphs">
-          <property name="title">
-              <string>Graphs</string>
-          </property>
-          <addaction name="actionView_Risk_vs_Distance_Graph"/>
-      </widget>
       <addaction name="menu_File"/>
       <addaction name="menuEdit"/>
       <addaction name="menu_Aircraft"/>
-      <addaction name="menuGraphs"/>
       <addaction name="menu_Help"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -216,14 +209,14 @@
     <string>Rasterise</string>
    </property>
   </action>
-  <action name="actionGenerate">
-   <property name="text">
-    <string>Generate</string>
-   </property>
-      <property name="toolTip">
-          <string>Generate Map for current view</string>
-      </property>
-  </action>
+     <action name="actionGenerate">
+         <property name="text">
+             <string>Generate</string>
+         </property>
+         <property name="toolTip">
+             <string>Generate Map for current view</string>
+         </property>
+     </action>
      <action name="actionAdd_Aircraft">
          <property name="text">
              <string>Add Aircraft</string>
