@@ -10,6 +10,7 @@ from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.ui_resources.add_layer_wizard import LayerWizard
 from seedpod_ground_risk.ui_resources.layer_options import LAYER_OBJECTS
 from seedpod_ground_risk.ui_resources.layerlistdelegate import Ui_delegate
+from seedpod_ground_risk.ui_resources.new_aircraft_wizard import AircraftWizard
 
 print("Builtin modules imported")
 from PySide2.QtCore import Qt, QRect, Slot, QThreadPool
@@ -139,6 +140,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.addLayerButton.clicked.connect(self.layer_add)
 
+        self.generateButton.clicked.connect(self.plot_worker.signals.generate.emit)
+
         self.plotWebview.resize.connect(self.resize_plot)
 
         self.actionRasterise.triggered.connect(self.menu_config_rasterise)
@@ -146,7 +149,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionExport.triggered.connect(self.menu_file_export)
         self.actionAbout_Static_Sources.triggered.connect(self.menu_about_static_sources)
         self.actionAbout_App.triggered.connect(self.menu_about_app)
-        self.actionGenerate.triggered.connect(self.plot_worker.signals.generate.emit)
+        self.actionAdd_Aircraft.triggered.connect(self.add_aircraft)
 
     def menu_config_rasterise(self, checked):
         # TODO: Allow reliable on-the-fly rasterisation switching
@@ -234,6 +237,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print('Layers reordered')
         self.plot_worker.signals.reorder_layers.emit(
             [self.listWidget.item(n).text() for n in range(self.listWidget.count())])
+
+    def add_aircraft(self):
+        from seedpod_ground_risk.ui_resources.aircraft_options import add_aircraft
+        wizard = AircraftWizard(self, Qt.Window)
+        wizard.exec()
+        ac = wizard.d
+        add_aircraft(ac)
 
     def time_changed(self, value):
         from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps
