@@ -84,6 +84,9 @@ class LayerItemDelegate(QWidget):
             layer = layerObj(wizard.layerKey, **wizard.opts)
             self._plot_worker.add_layer(layer)
 
+    def path_data(self):
+        self._plot_worker.path_data(self._layer)
+
     def export_path_json(self):
         from PySide2.QtWidgets import QFileDialog
 
@@ -100,6 +103,7 @@ class LayerItemDelegate(QWidget):
             menu.addAction("Edit Layer", self.edit_layer)
             if isinstance(self._layer, AnnotationLayer):
                 menu.addAction("Export .GeoJSON", self.export_path_json)
+                menu.addAction("Show path data", self.path_data)
             menu.exec_(event.globalPos())
 
 
@@ -191,9 +195,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dialog.ui.textEdit.setDocument(doc)
         self.dialog.show()
 
-    def menu_show_RvD_graph(self):
-        for layer in layers:
-
     @Slot(str)
     def plot_ready(self, url):
         self.plotWebview.load(url)
@@ -243,10 +244,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def add_aircraft(self):
         from seedpod_ground_risk.ui_resources.aircraft_options import add_aircraft
-        wizard = AircraftWizard(self, Qt.Window)
-        wizard.exec()
-        ac = wizard.d
-        add_aircraft(ac)
+        try:
+            wizard = AircraftWizard(self, Qt.Window)
+            wizard.exec()
+            ac = wizard.d
+            add_aircraft(ac)
+        except:
+            pass
 
     def time_changed(self, value):
         from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps
