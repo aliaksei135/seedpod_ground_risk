@@ -333,12 +333,12 @@ class PlotServer:
 
     def generate_path_data_popup(self, layer):
         from seedpod_ground_risk.pathfinding.environment import GridEnvironment
-        from seedpod_ground_risk.ui_resources.info_popups import GraphPopup
+        from seedpod_ground_risk.ui_resources.info_popups import DataWindow
         if layer in self.annotation_layers:
-            path = np.array(layer.dataframe.apply(lambda x: [y for y in x['geometry'].coords], axis=1).values[0])
+            path = layer.path
             cur_layer = GridEnvironment(self._generated_data_layers['Fatality Risk'][1])
             grid = cur_layer.grid
-            popup = GraphPopup(path, grid)
+            popup = DataWindow(path, grid)
             popup.exec()
 
     def _get_raster_dimensions(self, bounds_poly: sg.Polygon, raster_resolution_m: float) -> Tuple[int, int]:
