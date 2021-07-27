@@ -2,6 +2,7 @@ from typing import NoReturn
 
 import geopandas as gpd
 
+from seedpod_ground_risk.data.external_data_references import england_wa_2011_clipped_filepath
 from seedpod_ground_risk.layers.blockable_data_layer import BlockableDataLayer
 from seedpod_ground_risk.layers.osm_tag_layer import query_osm_polygons
 
@@ -149,9 +150,8 @@ class TemporalPopulationEstimateLayer(BlockableDataLayer):
         import os
 
         # Import Census boundaries in Ordnance Survey grid and reproject
-        census_wards_df = gpd.read_file(
-            os.sep.join(('static_data', 'england_wa_2011_clipped.shp'))).drop(
-            ['altname', 'oldcode'], axis=1)
+        filepath = england_wa_2011_clipped_filepath()
+        census_wards_df = gpd.read_file(filepath).drop(['altname', 'oldcode'], axis=1)
         if not census_wards_df.crs:
             census_wards_df = census_wards_df.set_crs('EPSG:27700')
         census_wards_df = census_wards_df.to_crs('EPSG:4326')
