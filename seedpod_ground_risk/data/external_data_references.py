@@ -11,6 +11,16 @@ def england_wa_2011_clipped_filepath():
     return england_wa_2011_clipped_fp
 
 
+def nhaps_data_filepath():
+    nhaps_data_fp = os.sep.join(('static_data', 'nhaps.json'))
+    return nhaps_data_fp
+
+
+def density_filepath():
+    density_fp = os.sep.join(('static_data', 'density.csv'))
+    return density_fp
+
+
 def traffic_count_filepath():
     traffic_count_fp = os.sep.join(('static_data', 'dft_traffic_counts_aadf.csv'))
     return traffic_count_fp
