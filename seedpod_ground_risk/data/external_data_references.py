@@ -24,3 +24,8 @@ def density_filepath():
 def traffic_count_filepath():
     traffic_count_fp = os.sep.join(('static_data', 'dft_traffic_counts_aadf.csv'))
     return traffic_count_fp
+
+
+def road_geometry_filepath():
+    road_geometry_fp = os.sep.join(('static_data', '2018-MRDB-minimal.shp'))
+    return road_geometry_fp

@@ -6,7 +6,7 @@ from holoviews.element import Geometry
 from shapely import geometry as sg
 from shapely import speedups
 
-from seedpod_ground_risk.data.external_data_references import traffic_count_filepath
+from seedpod_ground_risk.data.external_data_references import traffic_count_filepath, road_geometry_filepath
 from seedpod_ground_risk.layers.data_layer import DataLayer
 
 gpd.options.use_pygeos = True  # Use GEOS optimised C++ routines
@@ -140,8 +140,8 @@ class RoadsLayer(DataLayer):
         import pandas as pd
 
         # Ingest raw data
-        filepath = traffic_count_filepath()
-        counts_df = pd.read_csv(filepath)
+        traffic_filepath = traffic_count_filepath()
+        counts_df = pd.read_csv(traffic_filepath)
         # Select only desired columns
         counts_df = counts_df[TRAFFIC_COUNT_COLUMNS]
         # Groupby year and select out only the latest year
@@ -178,10 +178,8 @@ class RoadsLayer(DataLayer):
         """
         Ingest simplified road geometries in EPSG:27700 coords
         """
-        import os
-
-        self._roads_geometries = gpd.read_file(os.sep.join(('static_data', '2018-MRDB-minimal.shp'))).rename(
-            columns={'CP_Number': 'count_point_id'})
+        road_geom_filepath = road_geometry_filepath()
+        self._roads_geometries = gpd.read_file(road_geom_filepath).rename(columns={'CP_Number': 'count_point_id'})
         if not self._roads_geometries.crs:
             self._roads_geometries = self._roads_geometries.set_crs('EPSG:27700')
 
