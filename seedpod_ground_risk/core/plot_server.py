@@ -56,12 +56,11 @@ class PlotServer:
 
         self._generated_data_layers = {}
         self.data_layer_order = []
-        from seedpod_ground_risk.layers.residential_layer import ResidentialLayer
         self.data_layers = [
             # TemporalPopulationEstimateLayer('Temporal Pop. Est'),
             # RoadsLayer('Road Traffic Population/Hour')
             FatalityRiskLayer('Fatality Risk'),
-            ResidentialLayer('Residential Layer')
+            # ResidentialLayer('Residential Layer')
         ]
 
         self.annotation_layers = []
