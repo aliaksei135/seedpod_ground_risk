@@ -29,3 +29,8 @@ def traffic_count_filepath():
 def road_geometry_filepath():
     road_geometry_fp = os.sep.join(('static_data', '2018-MRDB-minimal.shp'))
     return road_geometry_fp
+
+
+def relative_variation_filepath():
+    relative_variation_fp = os.sep.join(('static_data', 'tra0307.ods'))
+    return relative_variation_fp

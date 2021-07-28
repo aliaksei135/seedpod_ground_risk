@@ -6,7 +6,8 @@ from holoviews.element import Geometry
 from shapely import geometry as sg
 from shapely import speedups
 
-from seedpod_ground_risk.data.external_data_references import traffic_count_filepath, road_geometry_filepath
+from seedpod_ground_risk.data.external_data_references import traffic_count_filepath, road_geometry_filepath, \
+    relative_variation_filepath
 from seedpod_ground_risk.layers.data_layer import DataLayer
 
 gpd.options.use_pygeos = True  # Use GEOS optimised C++ routines
@@ -166,10 +167,10 @@ class RoadsLayer(DataLayer):
 
     def _ingest_relative_traffic_variations(self):
         import pandas as pd
-        import os
 
         # Ingest data, ignoring header and footer info
-        relative_variations_df = pd.read_excel(os.sep.join(('static_data', 'tra0307.ods')), engine='odf',
+        rel_var_filepath = relative_variation_filepath()
+        relative_variations_df = pd.read_excel(rel_var_filepath, engine='odf',
                                                header=5, skipfooter=8)
         # Flatten into continuous list of hourly variations for the week
         self.relative_variations_flat = (relative_variations_df.iloc[:, 1:] / 100).melt()['value']
