@@ -141,8 +141,7 @@ class RoadsLayer(DataLayer):
         import pandas as pd
 
         # Ingest raw data
-        traffic_filepath = traffic_count_filepath()
-        counts_df = pd.read_csv(traffic_filepath)
+        counts_df = pd.read_csv(traffic_count_filepath())
         # Select only desired columns
         counts_df = counts_df[TRAFFIC_COUNT_COLUMNS]
         # Groupby year and select out only the latest year
@@ -169,8 +168,7 @@ class RoadsLayer(DataLayer):
         import pandas as pd
 
         # Ingest data, ignoring header and footer info
-        rel_var_filepath = relative_variation_filepath()
-        relative_variations_df = pd.read_excel(rel_var_filepath, engine='odf',
+        relative_variations_df = pd.read_excel(relative_variation_filepath(), engine='odf',
                                                header=5, skipfooter=8)
         # Flatten into continuous list of hourly variations for the week
         self.relative_variations_flat = (relative_variations_df.iloc[:, 1:] / 100).melt()['value']
@@ -179,8 +177,7 @@ class RoadsLayer(DataLayer):
         """
         Ingest simplified road geometries in EPSG:27700 coords
         """
-        road_geom_filepath = road_geometry_filepath()
-        self._roads_geometries = gpd.read_file(road_geom_filepath).rename(columns={'CP_Number': 'count_point_id'})
+        self._roads_geometries = gpd.read_file(road_geometry_filepath()).rename(columns={'CP_Number': 'count_point_id'})
         if not self._roads_geometries.crs:
             self._roads_geometries = self._roads_geometries.set_crs('EPSG:27700')
 

@@ -150,14 +150,12 @@ class TemporalPopulationEstimateLayer(BlockableDataLayer):
         import pandas as pd
 
         # Import Census boundaries in Ordnance Survey grid and reproject
-        shp_filepath = england_wa_2011_clipped_filepath()
-        census_wards_df = gpd.read_file(shp_filepath).drop(['altname', 'oldcode'], axis=1)
+        census_wards_df = gpd.read_file(england_wa_2011_clipped_filepath()).drop(['altname', 'oldcode'], axis=1)
         if not census_wards_df.crs:
             census_wards_df = census_wards_df.set_crs('EPSG:27700')
         census_wards_df = census_wards_df.to_crs('EPSG:4326')
         # Import census ward densities
-        density_fp = density_filepath()
-        density_df = pd.read_csv(density_fp, header=0)
+        density_df = pd.read_csv(density_filepath(), header=0)
         # Scale from hectares to km^2
         density_df['area'] = density_df['area'] * 0.01
         density_df['density'] = density_df['density'] / 0.01
@@ -170,5 +168,4 @@ class TemporalPopulationEstimateLayer(BlockableDataLayer):
         Ingest NHAPS serialised spatiotemporal population location proportions
         """
         import pandas as pd
-        nhaps_filepath = nhaps_data_filepath()
-        self.nhaps_df = pd.read_json(nhaps_filepath)
+        self.nhaps_df = pd.read_json(nhaps_data_filepath())
