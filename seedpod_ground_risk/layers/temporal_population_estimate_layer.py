@@ -2,7 +2,7 @@ from typing import NoReturn
 
 import geopandas as gpd
 
-from seedpod_ground_risk.data.external_data_references import england_wa_2011_clipped_filepath, nhaps_data_filepath, \
+from seedpod_ground_risk.data import england_wa_2011_clipped_filepath, nhaps_data_filepath, \
     density_filepath
 from seedpod_ground_risk.layers.blockable_data_layer import BlockableDataLayer
 from seedpod_ground_risk.layers.osm_tag_layer import query_osm_polygons

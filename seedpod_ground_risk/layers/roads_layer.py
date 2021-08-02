@@ -6,7 +6,7 @@ from holoviews.element import Geometry
 from shapely import geometry as sg
 from shapely import speedups
 
-from seedpod_ground_risk.data.external_data_references import traffic_count_filepath, road_geometry_filepath, \
+from seedpod_ground_risk.data import traffic_count_filepath, road_geometry_filepath, \
     relative_variation_filepath
 from seedpod_ground_risk.layers.data_layer import DataLayer
 

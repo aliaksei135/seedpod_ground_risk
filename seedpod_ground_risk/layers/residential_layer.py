@@ -6,7 +6,7 @@ import shapely.geometry as sg
 from holoviews.element import Geometry
 from shapely import speedups
 
-from seedpod_ground_risk.data.external_data_references import england_wa_2011_clipped_filepath, density_filepath
+from seedpod_ground_risk.data import england_wa_2011_clipped_filepath, density_filepath
 from seedpod_ground_risk.layers.osm_tag_layer import OSMTagLayer
 
 gpd.options.use_pygeos = True  # Use GEOS optimised C++ routines

@@ -1,6 +1,6 @@
 import json
 
-from seedpod_ground_risk.data.external_data_references import aircraft_list_filepath
+from seedpod_ground_risk.data import aircraft_list_filepath
 
 
 def aircraft_list():
