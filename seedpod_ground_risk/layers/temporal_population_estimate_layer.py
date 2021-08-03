@@ -2,6 +2,8 @@ from typing import NoReturn
 
 import geopandas as gpd
 
+from seedpod_ground_risk.data import england_wa_2011_clipped_filepath, nhaps_data_filepath, \
+    density_filepath
 from seedpod_ground_risk.layers.blockable_data_layer import BlockableDataLayer
 from seedpod_ground_risk.layers.osm_tag_layer import query_osm_polygons
 
@@ -146,17 +148,14 @@ class TemporalPopulationEstimateLayer(BlockableDataLayer):
         Ingest Census boundaries and density values and overlay/merge
         """
         import pandas as pd
-        import os
 
         # Import Census boundaries in Ordnance Survey grid and reproject
-        census_wards_df = gpd.read_file(
-            os.sep.join(('static_data', 'england_wa_2011_clipped.shp'))).drop(
-            ['altname', 'oldcode'], axis=1)
+        census_wards_df = gpd.read_file(england_wa_2011_clipped_filepath()).drop(['altname', 'oldcode'], axis=1)
         if not census_wards_df.crs:
             census_wards_df = census_wards_df.set_crs('EPSG:27700')
         census_wards_df = census_wards_df.to_crs('EPSG:4326')
         # Import census ward densities
-        density_df = pd.read_csv(os.sep.join(('static_data', 'density.csv')), header=0)
+        density_df = pd.read_csv(density_filepath(), header=0)
         # Scale from hectares to km^2
         density_df['area'] = density_df['area'] * 0.01
         density_df['density'] = density_df['density'] / 0.01
@@ -169,6 +168,4 @@ class TemporalPopulationEstimateLayer(BlockableDataLayer):
         Ingest NHAPS serialised spatiotemporal population location proportions
         """
         import pandas as pd
-        import os
-
-        self.nhaps_df = pd.read_json(os.sep.join(('static_data', 'nhaps.json')))
+        self.nhaps_df = pd.read_json(nhaps_data_filepath())

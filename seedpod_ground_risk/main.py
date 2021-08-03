@@ -76,6 +76,7 @@ class LayerItemDelegate(QWidget):
         self._plot_worker.remove_layer(self._layer)
 
     def edit_layer(self):
+        old_layer = self._layer
         self._plot_worker.remove_layer(self._layer)
         wizard = LayerWizard(self, Qt.Window)
         wizard.exec_()  # Open wizard and block until result
@@ -83,6 +84,8 @@ class LayerItemDelegate(QWidget):
             layerObj = list(LAYER_OBJECTS.values())[wizard.layerType]
             layer = layerObj(wizard.layerKey, **wizard.opts)
             self._plot_worker.add_layer(layer)
+        else:
+            self._plot_worker.add_layer(old_layer)
 
     def path_data(self):
         self._plot_worker.path_data(self._layer)
