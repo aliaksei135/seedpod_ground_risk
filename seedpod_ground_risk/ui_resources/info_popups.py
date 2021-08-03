@@ -41,7 +41,8 @@ class DataWindow(QDialog):
         ax1.set_ylabel('Risk of fatality (per hour)')
         ax1.set_title(f"The total fatality risk over this path = {self.total_risk(ys)} per hour", pad=20)
 
-        ax2.add_patch(p)
+        p = self.create_info_patch()
+        ax2.add_artist(p)
         self.canvas.draw()
         self.show()
 
@@ -50,6 +51,7 @@ class DataWindow(QDialog):
         return tot_risk
 
     def create_info_patch(self):
+        import matplotlib.patches as pch
 
         # build a rectangle in axes coords
         left, width = .25, .5
@@ -58,7 +60,7 @@ class DataWindow(QDialog):
         top = bottom + height
 
         # axes coordinates: (0, 0) is bottom left and (1, 1) is upper right
-        p = patches.Rectangle(
+        p = pch.Rectangle(
             (left, bottom), width, height,
             fill=False, clip_on=False
         )
