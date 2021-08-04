@@ -1,5 +1,6 @@
 import matplotlib.pyplot as mpl
 from PySide2.QtWidgets import QDialog, QVBoxLayout
+from matplotlib import gridspec
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
@@ -13,7 +14,8 @@ class DataWindow(QDialog):
     # constructor
     def __init__(self, path, grid, parent=None):
         super(DataWindow, self).__init__(parent)
-        self.figure = mpl.figure()
+        self.resize(1000, 500)
+        self.figure = mpl.figure(figsize=(8, 4))
         self.path = path
         self.grid = grid
 
@@ -26,8 +28,9 @@ class DataWindow(QDialog):
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
         self.setLayout(layout)
-        ax1 = self.figure.add_subplot(121)
-        ax2 = self.figure.add_subplot(122)
+        gs = gridspec.GridSpec(1, 2, width_ratios=[2.5, 1])
+        ax1 = self.figure.add_subplot(gs[0])
+        ax2 = self.figure.add_subplot(gs[1])
         ys = []
         dist = []
         for idx in range(len(path[:-1])):
@@ -39,10 +42,21 @@ class DataWindow(QDialog):
         ax1.plot(ys)
         ax1.set_xlabel('Distance (m)')
         ax1.set_ylabel('Risk of fatality (per hour)')
-        ax1.set_title(f"The total fatality risk over this path = {self.total_risk(ys)} per hour", pad=20)
 
-        p = self.create_info_patch()
-        ax2.add_artist(p)
+        p = self.create_info_patch(ys)
+        data_txt = f"The total fatality risk over this path is \n{self.total_risk(ys)} per hour" \
+                   f"\n\nThe average fatality risk over this path is \n{self.average_risk(ys)} per hour" \
+                   f"\n\nThe max fatality risk over this path is \n{self.maximum_risk(ys)} per hour" \
+                   f"\n\nThe min fatality risk over this path is \n{self.minimum_risk(ys)} per hour"
+
+        ax2.add_patch(p)
+        ax2.axis('off')
+        ax2.text(0.5, 0.5, data_txt,
+                 horizontalalignment='center',
+                 verticalalignment='center',
+                 fontsize=10, color='black',
+                 transform=ax2.transAxes, wrap=True)
+
         self.canvas.draw()
         self.show()
 
@@ -50,21 +64,29 @@ class DataWindow(QDialog):
         tot_risk = "{:.2e}".format(sum(ys))
         return tot_risk
 
-    def create_info_patch(self):
+    def average_risk(self, ys):
+        ave_risk = "{:.2e}".format(np.average(ys))
+        return ave_risk
+
+    def maximum_risk(self, ys):
+        max_risk = "{:.2e}".format(max(ys))
+        return max_risk
+
+    def minimum_risk(self, ys):
+        min_risk = "{:.2e}".format(min(ys))
+        return min_risk
+
+    def create_info_patch(self, ys):
         import matplotlib.patches as pch
 
-        # build a rectangle in axes coords
-        left, width = .25, .5
-        bottom, height = .25, .5
+        left, width = 0, 1
+        bottom, height = 0, 1
         right = left + width
         top = bottom + height
 
-        # axes coordinates: (0, 0) is bottom left and (1, 1) is upper right
         p = pch.Rectangle(
-            (left, bottom), width, height,
+            (left, bottom), width, height, color="white",
             fill=False, clip_on=False
         )
 
         return p
-
-
