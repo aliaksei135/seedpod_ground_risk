@@ -6,6 +6,8 @@ from holoviews.element import Geometry
 from shapely import geometry as sg
 from shapely import speedups
 
+from seedpod_ground_risk.data import traffic_count_filepath, road_geometry_filepath, \
+    relative_variation_filepath
 from seedpod_ground_risk.layers.data_layer import DataLayer
 
 gpd.options.use_pygeos = True  # Use GEOS optimised C++ routines
@@ -137,10 +139,9 @@ class RoadsLayer(DataLayer):
         Only the latest year of data is used.
         """
         import pandas as pd
-        import os
 
         # Ingest raw data
-        counts_df = pd.read_csv(os.sep.join(('static_data', 'dft_traffic_counts_aadf.csv')))
+        counts_df = pd.read_csv(traffic_count_filepath())
         # Select only desired columns
         counts_df = counts_df[TRAFFIC_COUNT_COLUMNS]
         # Groupby year and select out only the latest year
@@ -165,10 +166,9 @@ class RoadsLayer(DataLayer):
 
     def _ingest_relative_traffic_variations(self):
         import pandas as pd
-        import os
 
         # Ingest data, ignoring header and footer info
-        relative_variations_df = pd.read_excel(os.sep.join(('static_data', 'tra0307.ods')), engine='odf',
+        relative_variations_df = pd.read_excel(relative_variation_filepath(), engine='odf',
                                                header=5, skipfooter=8)
         # Flatten into continuous list of hourly variations for the week
         self.relative_variations_flat = (relative_variations_df.iloc[:, 1:] / 100).melt()['value']
@@ -177,10 +177,7 @@ class RoadsLayer(DataLayer):
         """
         Ingest simplified road geometries in EPSG:27700 coords
         """
-        import os
-
-        self._roads_geometries = gpd.read_file(os.sep.join(('static_data', '2018-MRDB-minimal.shp'))).rename(
-            columns={'CP_Number': 'count_point_id'})
+        self._roads_geometries = gpd.read_file(road_geometry_filepath()).rename(columns={'CP_Number': 'count_point_id'})
         if not self._roads_geometries.crs:
             self._roads_geometries = self._roads_geometries.set_crs('EPSG:27700')
 
