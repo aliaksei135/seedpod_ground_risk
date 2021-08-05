@@ -40,14 +40,14 @@ class DataWindow(QDialog):
             ys.append(grid[l[0], l[1]])
         ys = np.hstack(ys)
         ax1.plot(ys)
-        ax1.set_xlabel('Distance (m)')
-        ax1.set_ylabel('Risk of fatality (per hour)')
+        ax1.set_xlabel('Distance [m]')
+        ax1.set_ylabel('Risk of fatality [per hour]')
 
         p = self.create_info_patch(ys)
-        data_txt = f"The total fatality risk over this path is \n{self.total_risk(ys)} per hour" \
-                   f"\n\nThe average fatality risk over this path is \n{self.average_risk(ys)} per hour" \
-                   f"\n\nThe max fatality risk over this path is \n{self.maximum_risk(ys)} per hour" \
-                   f"\n\nThe min fatality risk over this path is \n{self.minimum_risk(ys)} per hour"
+        data_txt = f"The total fatality risk over this path is \n{self.op_format(ys, sum)} per hour" \
+                   f"\n\nThe average fatality risk over this path is \n{self.op_format(ys, np.average)} per hour" \
+                   f"\n\nThe max fatality risk over this path is \n{self.op_format(ys, max)} per hour" \
+                   f"\n\nThe min fatality risk over this path is \n{self.op_format(ys, min)} per hour"
 
         ax2.add_patch(p)
         ax2.axis('off')
@@ -60,21 +60,8 @@ class DataWindow(QDialog):
         self.canvas.draw()
         self.show()
 
-    def total_risk(self, ys):
-        tot_risk = "{:.2e}".format(sum(ys))
-        return tot_risk
-
-    def average_risk(self, ys):
-        ave_risk = "{:.2e}".format(np.average(ys))
-        return ave_risk
-
-    def maximum_risk(self, ys):
-        max_risk = "{:.2e}".format(max(ys))
-        return max_risk
-
-    def minimum_risk(self, ys):
-        min_risk = "{:.2e}".format(min(ys))
-        return min_risk
+    def op_format(self, val, op):
+        return "{:.2e}".format(op(val))
 
     def create_info_patch(self, ys):
         import matplotlib.patches as pch
