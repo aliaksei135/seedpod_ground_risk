@@ -8,6 +8,7 @@ def aircraft_list_filepath():
 
 def england_wa_2011_clipped_filepath():
     england_wa_2011_clipped_fp = os.path.join('static_data', 'england_wa_2011_clipped.shp')
+    print(england_wa_2011_clipped_fp + "exists: " + str(os.path.exists(england_wa_2011_clipped_fp)))
     return england_wa_2011_clipped_fp
 
 
