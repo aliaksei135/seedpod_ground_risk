@@ -3,9 +3,7 @@
 
 name: SEEDPOD Windows
 
-on:
-  pull_request:
-    branches: [ '**' ]
+on: [ push, pull_request ]
 
 jobs:
   build:
