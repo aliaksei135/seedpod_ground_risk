@@ -100,13 +100,15 @@ class LayerItemDelegate(QWidget):
 
     def mousePressEvent(self, event: PySide2.QtGui.QMouseEvent) -> None:
         super().mousePressEvent(event)
+        from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
         if event.button() == Qt.RightButton:
             menu = QMenu()
             menu.addAction("Delete", self.delete_layer)
             menu.addAction("Edit Layer", self.edit_layer)
             if isinstance(self._layer, AnnotationLayer):
                 menu.addAction("Export .GeoJSON", self.export_path_json)
-                menu.addAction("Show path data", self.path_data)
+                if isinstance(self._layer, PathfindingLayer):
+                    menu.addAction("Show path data", self.path_data)
             menu.exec_(event.globalPos())
 
 
