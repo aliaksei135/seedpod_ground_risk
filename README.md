@@ -1,22 +1,15 @@
-# SEEDPOD Ground Risk Prototype
+# SEEDPOD Ground Risk Model
 
-Proof of Concept demonstrating modelling of ground risk from open source data sources.
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4776529.svg)](https://doi.org/10.5281/zenodo.4776529)
+
+Proof of Concept demonstrating modelling of UAS ground risk from open source data sources. This constructs a
+spatiotemporal population density map and evaluates the risk posed by a parameterised UAS.
 
 All data processing is performed locally, so performance depends on your machine spec. At least 8GiB of RAM is essential
 however.
 
-Developed as part of the [SEEDPOD project](https://cascadeuav.com/seedpod/) funded by the CASCADE programme
-grant ([EP/R009953/1)](https://gow.epsrc.ukri.org/NGBOViewGrant.aspx?GrantRef=EP/R009953/1).
-
-## Method
-
-### Residential population density
-
-TODO
-
-### Hourly road traffic population
-
-TODO
+Developed as part of the [SEEDPOD project](https://cascadeuav.com/seedpod/) funded by the E-Drone project grant
+grant ([EP/V002619/1)](https://gow.epsrc.ukri.org/NGBOViewGrant.aspx?GrantRef=EP/V002619/1).
 
 ## Disclaimer
 
@@ -24,6 +17,21 @@ TODO
 extensive or complete picture of the ground risks. While the software is intended to promote safe drone flight, use of
 this software does not in itself guarantee safe or legal drone operation. Follow
 the [drone code](https://dronesafe.uk/drone-code/).***
+
+## Usage
+
+### UI
+
+A Windows 64-bit installer is provided with each release. This is the easiest option for just using the tool. This works
+on its own, however is not able to take advantage of the GPU, causing rather slow risk map generation. For this reason
+it is highly recommended to install the [Nvidia CUDA Toolkit](https://developer.nvidia.com/cuda-downloads).
+
+### CLI
+
+A CLI is provided to allow for automation. Currently this requires building your own wheels as local wheel dependencies
+cannot be packaged and distributed. The included data files also take the package above the PyPI limit.
+
+See `BUILD.md` for further instructions.
 
 ## License
 

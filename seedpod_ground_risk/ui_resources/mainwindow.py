@@ -20,7 +20,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1200, 836)
+        MainWindow.resize(1200, 857)
         sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -41,6 +41,10 @@ class Ui_MainWindow(object):
         self.actionRasterise.setCheckable(True)
         self.actionGenerate = QAction(MainWindow)
         self.actionGenerate.setObjectName(u"actionGenerate")
+        self.actionAdd_Aircraft = QAction(MainWindow)
+        self.actionAdd_Aircraft.setObjectName(u"actionAdd_Aircraft")
+        self.actionView_Risk_vs_Distance_Graph = QAction(MainWindow)
+        self.actionView_Risk_vs_Distance_Graph.setObjectName(u"actionView_Risk_vs_Distance_Graph")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
@@ -74,18 +78,26 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.addLayerButton)
 
+        self.generateButton = QPushButton(self.centralwidget)
+        self.generateButton.setObjectName(u"generateButton")
+
+        self.horizontalLayout.addWidget(self.generateButton)
+
 
         self.verticalLayout.addLayout(self.horizontalLayout)
+
 
         self.horizontalLayout_4.addLayout(self.verticalLayout)
 
         self.plotWebview = PlotWebview(self.centralwidget)
         self.plotWebview.setObjectName(u"plotWebview")
+        self.plotWebview.setEnabled(True)
         sizePolicy.setHeightForWidth(self.plotWebview.sizePolicy().hasHeightForWidth())
         self.plotWebview.setSizePolicy(sizePolicy)
-        self.plotWebview.setMinimumSize(QSize(800, 770))
+        self.plotWebview.setMinimumSize(QSize(800, 700))
 
         self.horizontalLayout_4.addWidget(self.plotWebview)
+
 
         self.gridLayout.addLayout(self.horizontalLayout_4, 0, 0, 1, 1)
 
@@ -99,19 +111,31 @@ class Ui_MainWindow(object):
         self.statusBar = QStatusBar(MainWindow)
         self.statusBar.setObjectName(u"statusBar")
         MainWindow.setStatusBar(self.statusBar)
+        self.menuBar = QMenuBar(MainWindow)
+        self.menuBar.setObjectName(u"menuBar")
+        self.menuBar.setGeometry(QRect(0, 0, 1200, 21))
+        self.menu_File = QMenu(self.menuBar)
+        self.menu_File.setObjectName(u"menu_File")
+        self.menuEdit = QMenu(self.menuBar)
+        self.menuEdit.setObjectName(u"menuEdit")
+        self.menu_Aircraft = QMenu(self.menuBar)
+        self.menu_Aircraft.setObjectName(u"menu_Aircraft")
+        self.menu_Help = QMenu(self.menuBar)
+        self.menu_Help.setObjectName(u"menu_Help")
+        MainWindow.setMenuBar(self.menuBar)
         self.toolBar = QToolBar(MainWindow)
         self.toolBar.setObjectName(u"toolBar")
-        self.toolBar.setMovable(False)
-        self.toolBar.setFloatable(False)
         MainWindow.addToolBar(Qt.TopToolBarArea, self.toolBar)
 
-        self.toolBar.addAction(self.actionAbout_App)
-        self.toolBar.addAction(self.actionAbout_Static_Sources)
-        self.toolBar.addSeparator()
-        self.toolBar.addAction(self.actionExport)
-        self.toolBar.addSeparator()
-        self.toolBar.addAction(self.actionGenerate)
-        self.toolBar.addSeparator()
+        self.menuBar.addAction(self.menu_File.menuAction())
+        self.menuBar.addAction(self.menuEdit.menuAction())
+        self.menuBar.addAction(self.menu_Aircraft.menuAction())
+        self.menuBar.addAction(self.menu_Help.menuAction())
+        self.menu_File.addAction(self.actionImport)
+        self.menu_File.addAction(self.actionExport)
+        self.menu_Aircraft.addAction(self.actionAdd_Aircraft)
+        self.menu_Help.addAction(self.actionAbout_Static_Sources)
+        self.menu_Help.addAction(self.actionAbout_App)
 
         self.retranslateUi(MainWindow)
 
@@ -126,10 +150,22 @@ class Ui_MainWindow(object):
         self.actionAbout_App.setText(QCoreApplication.translate("MainWindow", u"About App", None))
         self.actionRasterise.setText(QCoreApplication.translate("MainWindow", u"Rasterise", None))
         self.actionGenerate.setText(QCoreApplication.translate("MainWindow", u"Generate", None))
-#if QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
         self.actionGenerate.setToolTip(QCoreApplication.translate("MainWindow", u"Generate Map for current view", None))
-#endif // QT_CONFIG(tooltip)
+        # endif // QT_CONFIG(tooltip)
+        self.actionAdd_Aircraft.setText(QCoreApplication.translate("MainWindow", u"Add Aircraft", None))
+        # if QT_CONFIG(tooltip)
+        self.actionAdd_Aircraft.setToolTip(
+            QCoreApplication.translate("MainWindow", u"Add a custom aircraft to the database", None))
+        # endif // QT_CONFIG(tooltip)
+        self.actionView_Risk_vs_Distance_Graph.setText(
+            QCoreApplication.translate("MainWindow", u"Risk vs Distance Graph", None))
         self.addLayerButton.setText(QCoreApplication.translate("MainWindow", u"Add Layer", None))
+        self.generateButton.setText(QCoreApplication.translate("MainWindow", u"Generate", None))
+        self.menu_File.setTitle(QCoreApplication.translate("MainWindow", u"&File", None))
+        self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"&Edit", None))
+        self.menu_Aircraft.setTitle(QCoreApplication.translate("MainWindow", u"&Aircraft", None))
+        self.menu_Help.setTitle(QCoreApplication.translate("MainWindow", u"&Help", None))
         self.toolBar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
     # retranslateUi
 

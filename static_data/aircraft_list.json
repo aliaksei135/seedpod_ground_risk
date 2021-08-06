@@ -1,0 +1,67 @@
+{
+  "Default": {
+    "width": 2,
+    "length": 1.5,
+    "mass": 10,
+    "bal_drag_coeff": 0.8,
+    "frontal_area": 0.2,
+    "glide_drag_coeff": 0.1,
+    "glide_speed": 20,
+    "glide_ratio": 14,
+    "cruise_speed": 25,
+    "cruise_alt": 100,
+    "failure_prob": 0.05
+  },
+  "SPOTTER": {
+    "width": 4,
+    "length": 3.5,
+    "mass": 35,
+    "bal_drag_coeff": 0.65,
+    "frontal_area": 0.7,
+    "glide_drag_coeff": 0.1,
+    "glide_speed": 28.3,
+    "glide_ratio": 10,
+    "cruise_speed": 25,
+    "cruise_alt": 100,
+    "failure_prob": 0.05
+  },
+  "Decode Mk2": {
+    "width": 4.2,
+    "length": 3.5,
+    "mass": 23,
+    "bal_drag_coeff": 0.65,
+    "frontal_area": 0.7,
+    "glide_drag_coeff": 0.1,
+    "glide_speed": 29,
+    "glide_ratio": 10,
+    "cruise_speed": 25,
+    "cruise_alt": 100,
+    "failure_prob": 0.05
+  },
+  "Sulsa v2": {
+    "width": 1.2,
+    "length": 1,
+    "mass": 3,
+    "bal_drag_coeff": 0.65,
+    "frontal_area": 0.1,
+    "glide_drag_coeff": 0.08,
+    "glide_speed": 20,
+    "glide_ratio": 8,
+    "cruise_speed": 25,
+    "cruise_alt": 100,
+    "failure_prob": 0.05
+  },
+  "GA MQ-9 Reaper": {
+    "width": 20,
+    "length": 17,
+    "mass": 5300,
+    "bal_drag_coeff": 0.65,
+    "frontal_area": 3,
+    "glide_drag_coeff": 0.08,
+    "glide_speed": 60,
+    "glide_ratio": 15,
+    "cruise_speed": 80.46,
+    "cruise_alt": 1500,
+    "failure_prob": 0.005
+  }
+}

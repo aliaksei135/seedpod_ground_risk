@@ -10,6 +10,7 @@ from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.ui_resources.add_layer_wizard import LayerWizard
 from seedpod_ground_risk.ui_resources.layer_options import LAYER_OBJECTS
 from seedpod_ground_risk.ui_resources.layerlistdelegate import Ui_delegate
+from seedpod_ground_risk.ui_resources.new_aircraft_wizard import AircraftWizard
 
 print("Builtin modules imported")
 from PySide2.QtCore import Qt, QRect, Slot, QThreadPool
@@ -75,6 +76,7 @@ class LayerItemDelegate(QWidget):
         self._plot_worker.remove_layer(self._layer)
 
     def edit_layer(self):
+        old_layer = self._layer
         self._plot_worker.remove_layer(self._layer)
         wizard = LayerWizard(self, Qt.Window)
         wizard.exec_()  # Open wizard and block until result
@@ -82,6 +84,11 @@ class LayerItemDelegate(QWidget):
             layerObj = list(LAYER_OBJECTS.values())[wizard.layerType]
             layer = layerObj(wizard.layerKey, **wizard.opts)
             self._plot_worker.add_layer(layer)
+        else:
+            self._plot_worker.add_layer(old_layer)
+
+    def path_data(self):
+        self._plot_worker.path_data(self._layer)
 
     def export_path_json(self):
         from PySide2.QtWidgets import QFileDialog
@@ -93,12 +100,15 @@ class LayerItemDelegate(QWidget):
 
     def mousePressEvent(self, event: PySide2.QtGui.QMouseEvent) -> None:
         super().mousePressEvent(event)
+        from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
         if event.button() == Qt.RightButton:
             menu = QMenu()
             menu.addAction("Delete", self.delete_layer)
             menu.addAction("Edit Layer", self.edit_layer)
             if isinstance(self._layer, AnnotationLayer):
                 menu.addAction("Export .GeoJSON", self.export_path_json)
+                if isinstance(self._layer, PathfindingLayer):
+                    menu.addAction("Show path data", self.path_data)
             menu.exec_(event.globalPos())
 
 
@@ -139,6 +149,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.addLayerButton.clicked.connect(self.layer_add)
 
+        self.generateButton.clicked.connect(self.plot_worker.signals.generate.emit)
+
         self.plotWebview.resize.connect(self.resize_plot)
 
         self.actionRasterise.triggered.connect(self.menu_config_rasterise)
@@ -146,7 +158,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionExport.triggered.connect(self.menu_file_export)
         self.actionAbout_Static_Sources.triggered.connect(self.menu_about_static_sources)
         self.actionAbout_App.triggered.connect(self.menu_about_app)
-        self.actionGenerate.triggered.connect(self.plot_worker.signals.generate.emit)
+        self.actionAdd_Aircraft.triggered.connect(self.add_aircraft)
 
     def menu_config_rasterise(self, checked):
         # TODO: Allow reliable on-the-fly rasterisation switching
@@ -234,6 +246,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print('Layers reordered')
         self.plot_worker.signals.reorder_layers.emit(
             [self.listWidget.item(n).text() for n in range(self.listWidget.count())])
+
+    def add_aircraft(self):
+        from seedpod_ground_risk.ui_resources.aircraft_options import add_aircraft
+        wizard = AircraftWizard(self, Qt.Window)
+        wizard.exec()
+        ac = wizard.d
+        add_aircraft(ac)
 
     def time_changed(self, value):
         from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps

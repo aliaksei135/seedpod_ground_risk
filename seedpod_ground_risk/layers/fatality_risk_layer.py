@@ -1,5 +1,3 @@
-import os
-
 import geoviews as gv
 import numpy as np
 
@@ -33,18 +31,18 @@ class FatalityRiskLayer(BlockableDataLayer):
             tools=['hover'],
             clipping_colors={
                 'min': (0, 0, 0, 0)})
-        import rasterio
-        from rasterio import transform
-        trans = transform.from_bounds(*flipped_bounds, *raster_shape)
-        p = os.path.expanduser(f'~/GroundRiskMaps')
-        if not os.path.exists(p):
-            os.mkdir(p)
-        rds = rasterio.open(
-            os.path.expanduser(p + f'/fatality_risk_{hour}h_ac{hash(self._strike_layer.aircraft)}.tif'),
-            'w', driver='GTiff', count=1, dtype=rasterio.float64, crs='EPSG:4326', transform=trans, compress='lzw',
-            width=raster_shape[0], height=raster_shape[1])
-        rds.write(risk_map, 1)
-        rds.close()
+        # import rasterio
+        # from rasterio import transform
+        # trans = transform.from_bounds(*flipped_bounds, *raster_shape)
+        # p = os.path.expanduser(f'~/GroundRiskMaps')
+        # if not os.path.exists(p):
+        #     os.mkdir(p)
+        # rds = rasterio.open(
+        #     os.path.expanduser(p + f'/fatality_risk_{hour}h_ac{hash(self._strike_layer.aircraft)}.tif'),
+        #     'w', driver='GTiff', count=1, dtype=rasterio.float64, crs='EPSG:4326', transform=trans, compress='lzw',
+        #     width=raster_shape[0], height=raster_shape[1])
+        # rds.write(risk_map, 1)
+        # rds.close()
 
         return risk_raster, risk_map, None
 
