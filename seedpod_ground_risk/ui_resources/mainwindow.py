@@ -43,6 +43,8 @@ class Ui_MainWindow(object):
         self.actionGenerate.setObjectName(u"actionGenerate")
         self.actionAdd_Aircraft = QAction(MainWindow)
         self.actionAdd_Aircraft.setObjectName(u"actionAdd_Aircraft")
+        self.actionView_Risk_vs_Distance_Graph = QAction(MainWindow)
+        self.actionView_Risk_vs_Distance_Graph.setObjectName(u"actionView_Risk_vs_Distance_Graph")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
@@ -81,7 +83,9 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.generateButton)
 
+
         self.verticalLayout.addLayout(self.horizontalLayout)
+
 
         self.horizontalLayout_4.addLayout(self.verticalLayout)
 
@@ -154,6 +158,8 @@ class Ui_MainWindow(object):
         self.actionAdd_Aircraft.setToolTip(
             QCoreApplication.translate("MainWindow", u"Add a custom aircraft to the database", None))
         # endif // QT_CONFIG(tooltip)
+        self.actionView_Risk_vs_Distance_Graph.setText(
+            QCoreApplication.translate("MainWindow", u"Risk vs Distance Graph", None))
         self.addLayerButton.setText(QCoreApplication.translate("MainWindow", u"Add Layer", None))
         self.generateButton.setText(QCoreApplication.translate("MainWindow", u"Generate", None))
         self.menu_File.setTitle(QCoreApplication.translate("MainWindow", u"&File", None))

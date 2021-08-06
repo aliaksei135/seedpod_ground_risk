@@ -54,8 +54,8 @@ class PathfindingLayer(AnnotationLayer):
         env = GridEnvironment(raster_grid, diagonals=False)
         algo = self.algo(heuristic=self.heuristic(env, risk_to_dist_ratio=self.rdr))
         t0 = time()
-        path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)))
-        if path is None:
+        self.path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)))
+        if self.path is None:
             print("Path not found")
             return None
         else:
@@ -70,7 +70,7 @@ class PathfindingLayer(AnnotationLayer):
         # mpl.show()
 
         snapped_path = []
-        for node in path:
+        for node in self.path:
             lat = raster_data[0]['Latitude'][node.position[0]]
             lon = raster_data[0]['Longitude'][node.position[1]]
             snapped_path.append((lon, lat))
