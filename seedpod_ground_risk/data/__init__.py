@@ -1,7 +1,6 @@
 import os
 
 import fiona
-import gdal
 import geopandas
 
 
@@ -14,7 +13,6 @@ def england_wa_2011_clipped_filepath():
     england_wa_2011_clipped_fp = os.path.join('static_data', 'england_wa_2011_clipped.shp')
     print("Fiona Version: " + fiona.__version__)
     print("Fiona GDAL Version: " + fiona.gdal_version)
-    print("GDAL installed version: " + gdal.VersionInfo())
     print("Geopandas installed version: " + geopandas.__version__)
     geopandas.show_versions()
     print("Fiona Supported Drivers: " + fiona.supported_drivers)
