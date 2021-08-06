@@ -249,13 +249,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def add_aircraft(self):
         from seedpod_ground_risk.ui_resources.aircraft_options import add_aircraft
-        try:
-            wizard = AircraftWizard(self, Qt.Window)
-            wizard.exec()
-            ac = wizard.d
-            add_aircraft(ac)
-        except:
-            pass
+        wizard = AircraftWizard(self, Qt.Window)
+        wizard.exec()
+        ac = wizard.d
+        add_aircraft(ac)
 
     def time_changed(self, value):
         from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps
