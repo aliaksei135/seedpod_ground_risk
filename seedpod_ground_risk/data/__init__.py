@@ -1,5 +1,7 @@
 import os
 
+import fiona
+
 
 def aircraft_list_filepath():
     aircraft_list_fp = os.path.join("static_data", "aircraft_list.json")
@@ -8,7 +10,8 @@ def aircraft_list_filepath():
 
 def england_wa_2011_clipped_filepath():
     england_wa_2011_clipped_fp = os.path.join('static_data', 'england_wa_2011_clipped.shp')
-    print(england_wa_2011_clipped_fp + "exists: " + str(os.path.exists(england_wa_2011_clipped_fp)))
+    print("Fiona Supported Drivers: " + fiona.supported_drivers)
+    print(england_wa_2011_clipped_fp + " exists: " + str(os.path.exists(england_wa_2011_clipped_fp)))
     return england_wa_2011_clipped_fp
 
 
