@@ -154,8 +154,8 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         self.ac = AircraftSpecs(enums.AircraftType.FIXED_WING,
-                                1,  # width
-                                0.3,  # length
+                                0.88,  # width
+                                0.88,  # length
                                 3.75  # mass
                                 )
         self.ac.set_ballistic_frontal_area(0.1)
@@ -207,13 +207,13 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
 
         if make_plot:
             # Make a sampling grid for plotting
-            x, y = np.mgrid[(loc_x - 10):(loc_x + 100), (loc_y - 100):(loc_y + 100)]
+            x, y = np.mgrid[(loc_x - 5):(loc_x + 95):0.5, (loc_y - 35):(loc_y + 40):0.5]
             pos = np.vstack([x.ravel(), y.ravel()])
             # Sample KDE PDF on these points
             density = dist.pdf(pos.T)
             # Plot sampled KDE PDF
             import matplotlib.pyplot as mpl
-            fig, ax = mpl.subplots(1, 1, figsize=(8, 8))
+            fig, ax = mpl.subplots(1, 1, figsize=(8, 6))
             sc = ax.scatter(x, y, c=density)
             cbar = fig.colorbar(sc)
             cbar.set_label('Probability')
@@ -231,6 +231,7 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
             ax.arrow(loc_x, loc_y, wind_vel_mean * np.cos(bearing_to_angle(np.deg2rad(wind_dir_mean))),
                      wind_vel_mean * np.sin(bearing_to_angle(np.deg2rad(wind_dir_mean))), label='Wind Direction',
                      width=1, color='red')
+            fig.savefig(f'figs/ballistic_simp.png', bbox_inches='tight')
             fig.show()
 
 

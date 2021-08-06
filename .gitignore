@@ -197,3 +197,5 @@ compile_commands.json
 
 /Output/
 /.envs/
+/tiffs/
+/figs/

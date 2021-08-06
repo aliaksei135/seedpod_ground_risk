@@ -41,11 +41,11 @@ class FullRiskMapTestCase(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
 
-        self.hour = 13
+        self.hour = 17
         self.serialise = False
-        self.test_bound_coords = [-1.6, 50.87, -1.3, 51]
+        self.test_bound_coords = [-1.5, 50.87, -1.3, 51]
         # self.test_bound_coords = [-1.55, 50.745, -1.3, 51]
-        self.resolution = 60
+        self.resolution = 30
         self.test_bounds = make_bounds_polygon((self.test_bound_coords[0], self.test_bound_coords[2]),
                                                (self.test_bound_coords[1], self.test_bound_coords[3]))
 
@@ -74,15 +74,6 @@ class FullRiskMapTestCase(unittest.TestCase):
         # self.path_coords = list(gpd.read_file('path.geojson').iloc[0].geometry.coords)
 
     def test_full_risk_map(self):
-        import matplotlib.pyplot as mpl
-        fig1, ax1 = mpl.subplots(1, 1)
-        ax1.tick_params(left=False, right=False,
-                        bottom=False, top=False,
-                        labelleft=False, labelbottom=False)
-        m1 = ax1.matshow(self.raster_grid)
-        ax1.set_title(f'Population Density at t={self.hour}')
-        fig1.colorbar(m1, label='Spatiotemporal Population Density [people/km$^2$]')
-        fig1.show()
 
         bm = BallisticModel(self.aircraft)
         gm = GlideDescentModel(self.aircraft)
@@ -153,25 +144,32 @@ class FullRiskMapTestCase(unittest.TestCase):
         # snapped_points = [snap_coords_to_grid(self.raster_indices, *coords) for coords in self.path_coords]
 
         import matplotlib.pyplot as mpl
+        import matplotlib.colors as mc
         fig1, ax1 = mpl.subplots(1, 1)
-        ax1.tick_params(left=False, right=False,
-                        bottom=False, top=False,
-                        labelleft=False, labelbottom=False)
-        m1 = ax1.matshow(self.raster_grid)
-        ax1.set_title(f'Population Density at t={self.hour}')
+        m1 = ax1.matshow(self.raster_grid, norm=mc.LogNorm())
         fig1.colorbar(m1, label='Population Density [people/km$^2$]')
+        ax1.set_title(f'Population Density at t={self.hour}')
+        ax1.set_xticks([0, self.raster_shape[1] - 1])
+        ax1.set_yticks([0, self.raster_shape[0] - 1])
+        ax1.set_xticklabels([self.test_bound_coords[0], self.test_bound_coords[2]], )
+        ax1.set_yticklabels([self.test_bound_coords[3], self.test_bound_coords[1]], )
+        fig1.tight_layout()
+        fig1.savefig(f'figs/tpe_t{self.hour}.png', bbox_inches='tight')
         fig1.show()
 
         if self.serialise:
             np.savetxt(f'strike_map_t{self.hour}', strike_pdf, delimiter=',')
 
         fig2, ax2 = mpl.subplots(1, 1)
-        ax2.tick_params(left=False, right=False,
-                        bottom=False, top=False,
-                        labelleft=False, labelbottom=False)
         m2 = ax2.matshow(strike_pdf)
         fig2.colorbar(m2, label='Strike Risk [h$^{-1}$]')
         ax2.set_title(f'Strike Risk Map at t={self.hour}')
+        ax2.set_xticks([0, self.raster_shape[1] - 1])
+        ax2.set_yticks([0, self.raster_shape[0] - 1])
+        ax2.set_xticklabels([self.test_bound_coords[0], self.test_bound_coords[2]], )
+        ax2.set_yticklabels([self.test_bound_coords[3], self.test_bound_coords[1]], )
+        fig2.tight_layout()
+        fig2.savefig(f'figs/risk_strike_t{self.hour}.png', bbox_inches='tight')
         fig2.show()
 
         fatality_pdf = fm.transform(strike_pdf, impact_ke=impact_ke_g) + fm.transform(strike_pdf, impact_ke=impact_ke_b)
@@ -179,28 +177,32 @@ class FullRiskMapTestCase(unittest.TestCase):
             np.savetxt(f'fatality_map_t{self.hour}', fatality_pdf, delimiter=',')
 
         fig3, ax3 = mpl.subplots(1, 1)
-        ax3.tick_params(left=False, right=False,
-                        bottom=False, top=False,
-                        labelleft=False, labelbottom=False)
         m3 = ax3.matshow(fatality_pdf)
         fig3.colorbar(m3, label='Fatality Risk [h$^{-1}$]')
         ax3.set_title(f'Fatality Risk Map at t={self.hour}')
+        ax3.set_xticks([0, self.raster_shape[1] - 1])
+        ax3.set_yticks([0, self.raster_shape[0] - 1])
+        ax3.set_xticklabels([self.test_bound_coords[0], self.test_bound_coords[2]], )
+        ax3.set_yticklabels([self.test_bound_coords[3], self.test_bound_coords[1]], )
+        fig3.tight_layout()
+        fig3.savefig(f'figs/risk_fatality_t{self.hour}.png', bbox_inches='tight')
         fig3.show()
 
         import rasterio
         from rasterio import transform
         trans = transform.from_bounds(*self.test_bound_coords, *self.raster_shape)
-        rds = rasterio.open(f'fatality_risk_{self.hour}00h.tif', 'w', driver='GTiff', count=1, dtype=rasterio.float64,
+        rds = rasterio.open(f'tiffs/fatality_risk_h{self.hour}.tif', 'w', driver='GTiff', count=1,
+                            dtype=rasterio.float64,
                             crs='EPSG:4326', transform=trans, compress='lzw',
                             width=self.raster_shape[0], height=self.raster_shape[1])
         rds.write(fatality_pdf, 1)
         rds.close()
 
-    def _setup_aircraft(self, ac_width: float = 2, ac_length: float = 1.5,
-                        ac_mass: float = 2, ac_glide_ratio: float = 12, ac_glide_speed: float = 15,
+    def _setup_aircraft(self, ac_width: float = 2.22, ac_length: float = 1.63,
+                        ac_mass: float = 17, ac_glide_ratio: float = 11, ac_glide_speed: float = 21,
                         ac_glide_drag_coeff: float = 0.1, ac_ballistic_drag_coeff: float = 0.8,
-                        ac_ballistic_frontal_area: float = 0.1, ac_failure_prob: float = 5e-3, alt: float = 50,
-                        vel: float = 18,
+                        ac_ballistic_frontal_area: float = 0.5, ac_failure_prob: float = 5e-3, alt: float = 100,
+                        vel: float = 31,
                         wind_vel: float = 5, wind_dir: float = 45):
         self.aircraft = casex.AircraftSpecs(casex.enums.AircraftType.FIXED_WING, ac_width, ac_length, ac_mass)
         self.aircraft.set_ballistic_drag_coefficient(ac_ballistic_drag_coeff)

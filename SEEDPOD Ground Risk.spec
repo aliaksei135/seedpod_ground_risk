@@ -9,7 +9,9 @@ import distributed
 import fiona
 import geopandas
 import panel
+import pyproj
 import pyviz_comms
+import rasterio
 import rtree
 import shiboken2
 import sklearn
@@ -68,6 +70,8 @@ a = Analysis(['seedpod_ground_risk/main.py'],
                  (sklearn.__path__[0], "sklearn"),
                  (datashader.__path__[0], "datashader"),
                  (distributed.__path__[0], "distributed"),
+                 (rasterio.__path__[0], "rasterio"),
+                 (pyproj.__path__[0], "pyproj"),
                  (os.path.join(fiona.__path__[0], "*.pyd"), "fiona"),  # Geospatial primitives
                  # Geopandas requires access to its data dir
                  (os.path.join(geopandas.__path__[0], "datasets"), "geopandas/datasets"),

@@ -16,14 +16,20 @@ from seedpod_ground_risk.pathfinding.heuristic import Heuristic, ManhattanRiskHe
 
 
 class PathfindingLayer(AnnotationLayer):
+    '''
+    start_coord: list of length 2, (starting latitude, starting longitude)
+    end_coord: list of length 2, (ending latitude, ending longitude)
+    rdr: float, Risk to Distance ratio
+    '''
 
-    def __init__(self, key, start_lat: float = 0, start_lon: float = 0, end_lat: float = 0, end_lon: float = 0,
-                 algo: Algorithm = RiskGridAStar, heuristic: Heuristic = ManhattanRiskHeuristic,
+    def __init__(self, key, start_coord: list = (0, 0), end_coord: list = (0, 0),
+                 algo: Algorithm = RiskGridAStar, aircraft: dict = {},heuristic: Heuristic = ManhattanRiskHeuristic,
                  rdr: float = 0.2, **kwargs):
         super().__init__(key)
-        self.start_coords = (start_lat, start_lon)
-        self.end_coords = (end_lat, end_lon)
+        self.start_coord = start_coord
+        self.end_coord = end_coord
         self.algo = algo
+        self.aircraft = aircraft
         self.heuristic = heuristic
         self.rdr = rdr
 
@@ -35,8 +41,8 @@ class PathfindingLayer(AnnotationLayer):
 
         raster_grid = np.flipud(raster_data[1])
 
-        start_x, start_y = snap_coords_to_grid(raster_data[0], self.start_coords[1], self.start_coords[0])
-        end_x, end_y = snap_coords_to_grid(raster_data[0], self.end_coords[1], self.end_coords[0])
+        start_x, start_y = snap_coords_to_grid(raster_data[0], self.start_coord[1], self.start_coord[0])
+        end_x, end_y = snap_coords_to_grid(raster_data[0], self.end_coord[1], self.end_coord[0])
 
         if raster_grid[start_y, start_x] < 0:
             print('Start node in blocked area, path impossible')
@@ -48,8 +54,8 @@ class PathfindingLayer(AnnotationLayer):
         env = GridEnvironment(raster_grid, diagonals=False)
         algo = self.algo(heuristic=self.heuristic(env, risk_to_dist_ratio=self.rdr))
         t0 = time()
-        path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)))
-        if path is None:
+        self.path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)))
+        if self.path is None:
             print("Path not found")
             return None
         else:
@@ -64,7 +70,7 @@ class PathfindingLayer(AnnotationLayer):
         # mpl.show()
 
         snapped_path = []
-        for node in path:
+        for node in self.path:
             lat = raster_data[0]['Latitude'][node.position[0]]
             lon = raster_data[0]['Longitude'][node.position[1]]
             snapped_path.append((lon, lat))
