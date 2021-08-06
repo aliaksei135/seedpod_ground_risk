@@ -81,6 +81,10 @@ class PlotWorker(QRunnable):
     def export_path_json(self, layer, filepath):
         self.plot_server.export_path_geojson(layer, filepath)
 
+    @Slot(Layer)
+    def path_data(self, layer):
+        self.plot_server.generate_path_data_popup(layer)
+
     @Slot(int, int)
     def resize_plot(self, width, height):
         self.plot_server.plot_size = (width, height)

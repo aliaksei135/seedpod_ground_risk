@@ -87,6 +87,9 @@ class LayerItemDelegate(QWidget):
         else:
             self._plot_worker.add_layer(old_layer)
 
+    def path_data(self):
+        self._plot_worker.path_data(self._layer)
+
     def export_path_json(self):
         from PySide2.QtWidgets import QFileDialog
 
@@ -97,12 +100,15 @@ class LayerItemDelegate(QWidget):
 
     def mousePressEvent(self, event: PySide2.QtGui.QMouseEvent) -> None:
         super().mousePressEvent(event)
+        from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
         if event.button() == Qt.RightButton:
             menu = QMenu()
             menu.addAction("Delete", self.delete_layer)
             menu.addAction("Edit Layer", self.edit_layer)
             if isinstance(self._layer, AnnotationLayer):
                 menu.addAction("Export .GeoJSON", self.export_path_json)
+                if isinstance(self._layer, PathfindingLayer):
+                    menu.addAction("Show path data", self.path_data)
             menu.exec_(event.globalPos())
 
 
