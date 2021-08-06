@@ -333,11 +333,15 @@ class PlotServer:
     def generate_path_data_popup(self, layer):
         from seedpod_ground_risk.pathfinding.environment import GridEnvironment
         from seedpod_ground_risk.ui_resources.info_popups import DataWindow
-        path = layer.path
-        cur_layer = GridEnvironment(self._generated_data_layers['Fatality Risk'][1])
-        grid = cur_layer.grid
-        popup = DataWindow(path, grid)
-        popup.exec()
+        from seedpod_ground_risk.layers.fatality_risk_layer import FatalityRiskLayer
+        for i in self.data_layers:
+            if isinstance(i, FatalityRiskLayer):
+                path = layer.path
+                cur_layer = GridEnvironment(self._generated_data_layers['Fatality Risk'][1])
+                grid = cur_layer.grid
+                popup = DataWindow(path, grid)
+                popup.exec()
+                break
 
     def _get_raster_dimensions(self, bounds_poly: sg.Polygon, raster_resolution_m: float) -> Tuple[int, int]:
         """
