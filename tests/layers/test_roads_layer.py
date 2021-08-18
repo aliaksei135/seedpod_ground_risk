@@ -12,13 +12,5 @@ class UnbufferedRoadsLayerTestCase(BaseLayerTestCase):
         super().setUp()
 
 
-class BufferedRoadsLayerTestCase(BaseLayerTestCase):
-
-    def setUp(self) -> None:
-        self.plot_title = 'Full Roads Population Transiting Density'
-        self.layer = RoadsLayer('test', buffer_dist=10)
-        super().setUp()
-
-
 if __name__ == '__main__':
     unittest.main()
