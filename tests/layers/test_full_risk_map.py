@@ -51,12 +51,6 @@ class FullRiskMapTestCase(unittest.TestCase):
 
         self._setup_aircraft()
 
-        os.chdir(
-            os.sep.join((
-                os.path.dirname(os.path.realpath(__file__)),
-                '..', '..'))
-        )
-
         ps = PlotServer()
         ps.set_time(self.hour)
         self.raster_shape = ps._get_raster_dimensions(self.test_bounds, self.resolution)
@@ -154,7 +148,7 @@ class FullRiskMapTestCase(unittest.TestCase):
         ax1.set_xticklabels([self.test_bound_coords[0], self.test_bound_coords[2]], )
         ax1.set_yticklabels([self.test_bound_coords[3], self.test_bound_coords[1]], )
         fig1.tight_layout()
-        fig1.savefig(f'figs/tpe_t{self.hour}.png', bbox_inches='tight')
+        fig1.savefig(f'tests/layers/figs/tpe_t{self.hour}.png', bbox_inches='tight')
         fig1.show()
 
         if self.serialise:
@@ -169,7 +163,7 @@ class FullRiskMapTestCase(unittest.TestCase):
         ax2.set_xticklabels([self.test_bound_coords[0], self.test_bound_coords[2]], )
         ax2.set_yticklabels([self.test_bound_coords[3], self.test_bound_coords[1]], )
         fig2.tight_layout()
-        fig2.savefig(f'figs/risk_strike_t{self.hour}.png', bbox_inches='tight')
+        fig2.savefig(f'tests/layers/figs/risk_strike_t{self.hour}.png', bbox_inches='tight')
         fig2.show()
 
         fatality_pdf = fm.transform(strike_pdf, impact_ke=impact_ke_g) + fm.transform(strike_pdf, impact_ke=impact_ke_b)
@@ -185,13 +179,13 @@ class FullRiskMapTestCase(unittest.TestCase):
         ax3.set_xticklabels([self.test_bound_coords[0], self.test_bound_coords[2]], )
         ax3.set_yticklabels([self.test_bound_coords[3], self.test_bound_coords[1]], )
         fig3.tight_layout()
-        fig3.savefig(f'figs/risk_fatality_t{self.hour}.png', bbox_inches='tight')
+        fig3.savefig(f'tests/layers/figs/risk_fatality_t{self.hour}.png', bbox_inches='tight')
         fig3.show()
 
         import rasterio
         from rasterio import transform
         trans = transform.from_bounds(*self.test_bound_coords, *self.raster_shape)
-        rds = rasterio.open(f'tiffs/fatality_risk_h{self.hour}.tif', 'w', driver='GTiff', count=1,
+        rds = rasterio.open(f'tests/layers/tiffs/fatality_risk_h{self.hour}.tif', 'w', driver='GTiff', count=1,
                             dtype=rasterio.float64,
                             crs='EPSG:4326', transform=trans, compress='lzw',
                             width=self.raster_shape[0], height=self.raster_shape[1])
@@ -223,13 +217,6 @@ def plot_path_risk(hour):
     import shapely.geometry as sg
     import numpy as np
     import geopandas as gpd
-
-    # import os
-    # os.chdir(
-    #     os.sep.join((
-    #         os.path.dirname(os.path.realpath(__file__)),
-    #         '..', '..'))
-    # )
 
     path = np.genfromtxt('fr_map_path.csv', delimiter=',').astype(int)
     raster_indices = dict(Longitude=np.genfromtxt('raster_indices_lon.csv', delimiter=','),
