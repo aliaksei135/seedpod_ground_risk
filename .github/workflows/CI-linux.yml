@@ -12,6 +12,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          lfs: true
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
@@ -27,6 +29,8 @@ jobs:
           pip install wheel GDAL==3.2.3
           pip install flake8 pytest Cython numpy pyproj pygeos
           if [ -f requirements-linux.txt ]; then pip install -r requirements-linux.txt; fi
+          mkdir "tests/layers/figs"
+          mkdir "tests/layers/tiffs"
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
