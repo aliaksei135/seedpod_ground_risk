@@ -15,7 +15,7 @@ class VectorRotationTestCase(unittest.TestCase):
         vec = np.array([0, 1])  # y, x order
         out = rotate_2d(vec, theta)
         val = np.sqrt(2) / 2
-        np.testing.assert_array_equal(out, np.array([val, val]))
+        np.assert_array_almost_equal_nulp(out, np.array([val, val]), 1e-14)
 
     def test_sec_quad(self):
         """
@@ -25,7 +25,7 @@ class VectorRotationTestCase(unittest.TestCase):
         vec = np.array([1, 0])  # y, x order
         out = rotate_2d(vec, theta)
         val = np.sqrt(2) / 2
-        np.testing.assert_array_equal(out, np.array([val, -val]))
+        np.assert_array_almost_equal_nulp(out, np.array([val, -val]), 1e-14)
 
     def test_third_quad(self):
         """
@@ -35,7 +35,7 @@ class VectorRotationTestCase(unittest.TestCase):
         vec = np.array([0, -1])  # y, x order
         out = rotate_2d(vec, theta)
         val = np.sqrt(2) / 2
-        np.testing.assert_array_equal(out, np.array([-val, -val]))
+        np.assert_array_almost_equal_nulp(out, np.array([-val, -val]), 1e-14)
 
     def test_fourth_quad(self):
         """
@@ -45,21 +45,21 @@ class VectorRotationTestCase(unittest.TestCase):
         vec = np.array([-1, 0])  # y, x order
         out = rotate_2d(vec, theta)
         val = np.sqrt(2) / 2
-        np.testing.assert_array_equal(out, np.array([-val, val]))
+        np.assert_array_almost_equal_nulp(out, np.array([-val, val]), 1e-14)
 
     def test_negative_theta(self):
         theta = np.deg2rad(-45)
         vec = np.array([-1, 0])  # y, x order
         out = rotate_2d(vec, theta)
         val = np.sqrt(2) / 2
-        np.testing.assert_array_almost_equal(out, np.array([-val, val]))
+        np.testing.assert_array_almost_equal(out, np.array([-val, val]), 1e-14)
 
     def test_over_2pi(self):
         theta = np.deg2rad(45) + (2 * np.pi)
         vec = np.array([0, 1])  # y, x order
         out = rotate_2d(vec, theta)
         val = np.sqrt(2) / 2
-        np.testing.assert_array_almost_equal(out, np.array([val, val]))
+        np.testing.assert_array_almost_equal(out, np.array([val, val]), 1e-14)
 
 
 class BearingRotationTestCase(unittest.TestCase):
