@@ -35,7 +35,7 @@ class BallisticModelPAEFTestCase(unittest.TestCase):
         vy = 1
         samples = 2000
 
-        # Compute ballistic distances in the path aligned LTP frame with origin at the directly below the event location
+        # Compute ballistic distances in the path aligned LTP frame with origin directly below the event location
         # AKA PAEF
         d_i, v_i, a_i, t_i = self.bm.compute_ballistic_distance(ss.norm(alt_mean, alt_std).rvs(samples),
                                                                 ss.norm(vx_mean, vx_std).rvs(samples), vy)
