@@ -57,7 +57,7 @@ class BallisticModelPAEFTestCase(unittest.TestCase):
 
     def test_ballistic_time(self):
         """
-        Test ballistic model impact time distributions in the Path Aligned Event frame
+        Test ballistic model impact time distributions in the Path Aligned Event frame.
         """
         alt_mean = 50
         alt_std = 5
