@@ -35,7 +35,7 @@ class BallisticModelPAEFTestCase(unittest.TestCase):
         vy = 1
         samples = 2000
 
-        # Compute ballistic distances in the path aligned LTP frame with origin at the directly below the event location
+        # Compute ballistic distances in the path aligned LTP frame with origin directly below the event location
         # AKA PAEF
         d_i, v_i, a_i, t_i = self.bm.compute_ballistic_distance(ss.norm(alt_mean, alt_std).rvs(samples),
                                                                 ss.norm(vx_mean, vx_std).rvs(samples), vy)
@@ -57,7 +57,7 @@ class BallisticModelPAEFTestCase(unittest.TestCase):
 
     def test_ballistic_time(self):
         """
-        Test ballistic model impact time distributions in the Path Aligned Event frame
+        Test ballistic model impact time distributions in the Path Aligned Event frame.
         """
         alt_mean = 50
         alt_std = 5
@@ -231,7 +231,6 @@ class BallisticModelNEDWindTestCase(unittest.TestCase):
             ax.arrow(loc_x, loc_y, wind_vel_mean * np.cos(bearing_to_angle(np.deg2rad(wind_dir_mean))),
                      wind_vel_mean * np.sin(bearing_to_angle(np.deg2rad(wind_dir_mean))), label='Wind Direction',
                      width=1, color='red')
-            fig.savefig(f'figs/ballistic_simp.png', bbox_inches='tight')
             fig.show()
 
 
