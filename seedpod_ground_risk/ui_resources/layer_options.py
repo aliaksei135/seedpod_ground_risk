@@ -57,7 +57,7 @@ LAYER_OPTIONS = {
         'End Coordinate [dd]': ('coordinate', 'end_coord', tuple),
         'Algorithm': ('algos', 'algo', eval),
         'Aircraft': ('aircraft', 'aircraft', eval),
-        'Risk-Distance Ratio': (r'\d{0,3}(\.\d+)?', 'rdr', float),
+        'Risk-Distance Ratio (A*) / Risk Threshold (\u1432*)': (r'\d{0,3}(\.\d+)?', 'rdr', float),
         'Wind Speed [m/s]': (r'-?\d{0,3}\.?\d+', 'wind_vel', float),
         'Wind Bearing [deg]': (r'-?\d{0,3}\.?\d+', 'wind_dir', float)
     }
