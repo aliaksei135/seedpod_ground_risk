@@ -45,7 +45,7 @@ class PathAnalysisLayer(AnnotationLayer):
         self.endpoint = self.dataframe.iloc[0].geometry.coords[-1]
 
     def annotate(self, data: List[gpd.GeoDataFrame], raster_data: Tuple[Dict[str, np.array], np.array],
-                 resolution=20, **kwargs) -> Overlay:
+                 resolution=30, **kwargs) -> Overlay:
         import geoviews as gv
         import scipy.stats as ss
         import joblib as jl

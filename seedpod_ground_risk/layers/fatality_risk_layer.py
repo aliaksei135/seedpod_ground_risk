@@ -16,7 +16,7 @@ class FatalityRiskLayer(BlockableDataLayer):
     def preload_data(self):
         self._strike_layer.preload_data()
 
-    def generate(self, bounds_polygon, raster_shape, hour=8, resolution=40, **kwargs):
+    def generate(self, bounds_polygon, raster_shape, hour=8, resolution=30, **kwargs):
         strike_risk, impact_kes = self._strike_layer.make_strike_map(bounds_polygon, hour, raster_shape, resolution)
 
         fm = FatalityModel(0.3, 1e6, 34)
