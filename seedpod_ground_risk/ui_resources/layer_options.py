@@ -21,7 +21,7 @@ ALGORITHM_OBJECTS = {
     'Select Pathfinding Algorithm': None,
     # 'Grid A*': GridAStar,
     'Risk Grid A*': RiskGridAStar,
-    'Risk Grid Theta*': RiskThetaStar
+    'Risk Grid \u03B8*': RiskThetaStar
     # 'Jump Point Search+ A*': JumpPointSearchAStar,
     # 'Risk Jump Point Search+ A*': RiskJumpPointSearchAStar
 }
@@ -57,7 +57,8 @@ LAYER_OPTIONS = {
         'End Coordinate [dd]': ('coordinate', 'end_coord', tuple),
         'Algorithm': ('algos', 'algo', eval),
         'Aircraft': ('aircraft', 'aircraft', eval),
-        'Risk-Distance Ratio (A*) / Risk Threshold (\u1432*)': (r'\d{0,3}(\.\d+)?', 'rdr', float),
+        'Risk-Distance Ratio (A*) / Risk Threshold (\u03B8*)': (r'\d{0,3}(\.\d+)?', 'rdr', float),
+        # change the icon to a theta
         'Wind Speed [m/s]': (r'-?\d{0,3}\.?\d+', 'wind_vel', float),
         'Wind Bearing [deg]': (r'-?\d{0,3}\.?\d+', 'wind_dir', float)
     }
