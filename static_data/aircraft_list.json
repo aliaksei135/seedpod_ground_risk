@@ -10,7 +10,7 @@
     "glide_ratio": 14,
     "cruise_speed": 25,
     "cruise_alt": 100,
-    "failure_prob": 0.05
+    "failure_prob": 0.01
   },
   "SPOTTER": {
     "width": 4,

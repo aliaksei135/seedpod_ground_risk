@@ -36,9 +36,18 @@ def query_osm_polygons(osm_tag, bound_poly: sg.Polygon) -> gpd.GeoDataFrame:
               out center qt;
           """.format(tag=osm_tag,
                      s_bound=bounds[0], w_bound=bounds[1], n_bound=bounds[2], e_bound=bounds[3])
-    resp = requests.get(overpass_url, params={'data': query})
+    resp = requests.get(overpass_url, params={'data': query}, verify=False)
     if resp.status_code != 200:
         print(resp)
+        overpass_url1 = "https://lz4.overpass-api.de/api/interpreter"
+        resp = requests.get(overpass_url1, params={'data': query}, verify=False)
+    elif resp.status_code != 200:
+        print(resp)
+        overpass_url2 = "https://overpass.kumi.systems/api/interpreter"
+        resp = requests.get(overpass_url2, params={'data': query}, verify=False)
+    if resp.status_code != 200:
+        print(resp)
+
     data = resp.json()
     print("OSM query took ", time() - t0)
 
