@@ -18,6 +18,8 @@ def query_osm_polygons(osm_tag, bound_poly: sg.Polygon) -> gpd.GeoDataFrame:
     """
     from time import time
     import requests
+    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
     t0 = time()
     bounds = bound_poly.bounds
@@ -46,7 +48,7 @@ def query_osm_polygons(osm_tag, bound_poly: sg.Polygon) -> gpd.GeoDataFrame:
         overpass_url2 = "https://overpass.kumi.systems/api/interpreter"
         resp = requests.get(overpass_url2, params={'data': query}, verify=False)
     if resp.status_code != 200:
-        print(resp)
+        print(f'OSM Tag Layer failed with{resp}')
 
     data = resp.json()
     print("OSM query took ", time() - t0)
