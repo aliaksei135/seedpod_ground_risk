@@ -3,8 +3,12 @@ from typing import Tuple
 
 import geopandas as gpd
 import numpy as np
+import requests
 import shapely.geometry as sg
 from holoviews.element import Geometry
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 from seedpod_ground_risk.layers.blockable_data_layer import BlockableDataLayer
 
@@ -17,40 +21,18 @@ def query_osm_polygons(osm_tag, bound_poly: sg.Polygon) -> gpd.GeoDataFrame:
     :param shapely.Polygon bound_poly: bounding box around requested area in EPSG:4326 coordinates
     """
     from time import time
-    import requests
-    from requests.packages.urllib3.exceptions import InsecureRequestWarning
-    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
     t0 = time()
     bounds = bound_poly.bounds
-    overpass_url = "https://overpass.kumi.systems/api/interpreter"
-    query = """
-              [out:json]
-              [timeout:30]
-              [bbox:{s_bound}, {w_bound}, {n_bound}, {e_bound}];
-              (
-                  node[{tag}];
-                  way[{tag}];
-                  rel[{tag}];
-              ); 
-              out center body;
-              >;
-              out center qt;
-          """.format(tag=osm_tag,
-                     s_bound=bounds[0], w_bound=bounds[1], n_bound=bounds[2], e_bound=bounds[3])
-    resp = requests.get(overpass_url, params={'data': query}, verify=False)
-    if resp.status_code != 200:
-        print(resp)
-        overpass_url1 = "https://lz4.overpass-api.de/api/interpreter"
-        resp = requests.get(overpass_url1, params={'data': query}, verify=False)
-    elif resp.status_code != 200:
-        print(resp)
-        overpass_url2 = "https://overpass.kumi.systems/api/interpreter"
-        resp = requests.get(overpass_url2, params={'data': query}, verify=False)
-    if resp.status_code != 200:
-        print(f'OSM Tag Layer failed with{resp}')
+    overpass_urls = ["https://overpass.kumi.systems/api/interpreter", "https://lz4.overpass-api.de/api/interpreter",
+                     "https://overpass.kumi.systems/api/interpreter"]
+    for i, url in enumerate(overpass_urls):
+        resp, data = query_request(overpass_urls[i], osm_tag, bounds)
+        if resp.status_code == 200:
+            break
+        else:
+            print(resp.status_code)
 
-    data = resp.json()
     print("OSM query took ", time() - t0)
 
     ways = {o['id']: o['nodes'] for o in data['elements'] if o['type'] == 'way'}
@@ -216,6 +198,26 @@ def query_osm_polygons(osm_tag, bound_poly: sg.Polygon) -> gpd.GeoDataFrame:
     poly_df = gpd.GeoDataFrame(df_list, columns=['geometry']).set_crs('EPSG:4326')
     poly_df.drop_duplicates(subset='geometry', inplace=True, ignore_index=True)
     return poly_df
+
+
+def query_request(overpass_url, osm_tag, bounds):
+    query = """
+              [out:json]
+              [timeout:30]
+              [bbox:{s_bound}, {w_bound}, {n_bound}, {e_bound}];
+              (
+                  node[{tag}];
+                  way[{tag}];
+                  rel[{tag}];
+              ); 
+              out center body;
+              >;
+              out center qt;
+          """.format(tag=osm_tag,
+                     s_bound=bounds[0], w_bound=bounds[1], n_bound=bounds[2], e_bound=bounds[3])
+    resp = requests.get(overpass_url, params={'data': query}, verify=False)
+    data = resp.json()
+    return resp, data
 
 
 class OSMTagLayer(BlockableDataLayer):
