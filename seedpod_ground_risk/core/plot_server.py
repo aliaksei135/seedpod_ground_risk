@@ -239,6 +239,8 @@ class PlotServer:
             # Just display map tiles in case this was transient
             import traceback
             traceback.print_exc()
+            self._progress_callback(
+                f'Plotting failed with the following error: {e}. Please attempt to re-generate the plot')
             print(e)
             plot = self._base_tiles
 
