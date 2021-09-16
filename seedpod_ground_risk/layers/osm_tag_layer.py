@@ -25,7 +25,9 @@ def query_osm_polygons(osm_tag, bound_poly: sg.Polygon) -> gpd.GeoDataFrame:
     t0 = time()
     bounds = bound_poly.bounds
     overpass_urls = ["https://overpass.kumi.systems/api/interpreter", "https://lz4.overpass-api.de/api/interpreter",
-                     "https://z.overpass-api.de/api/interpreter"]
+                     "https://z.overpass-api.de/api/interpreter", "https://overpass.openstreetmap.ru/api/interpreter",
+                     "https://overpass.openstreetmap.fr/api/interpreter",
+                     "https://overpass.nchc.org.tw/api/interpreter"]
     for i, url in enumerate(overpass_urls):
         resp, data = query_request(overpass_urls[i], osm_tag, bounds)
         if resp.status_code == 200:
