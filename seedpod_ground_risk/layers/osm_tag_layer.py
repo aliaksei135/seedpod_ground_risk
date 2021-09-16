@@ -8,6 +8,7 @@ import shapely.geometry as sg
 from holoviews.element import Geometry
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
+# TODO The below line is a symptom of us not varifying the SSL certs.
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 from seedpod_ground_risk.layers.blockable_data_layer import BlockableDataLayer
