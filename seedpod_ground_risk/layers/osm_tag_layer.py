@@ -218,7 +218,7 @@ def query_request(overpass_url, osm_tag, bounds):
               out center qt;
           """.format(tag=osm_tag,
                      s_bound=bounds[0], w_bound=bounds[1], n_bound=bounds[2], e_bound=bounds[3])
-    resp = requests.get(overpass_url, params={'data': query}, verify=False)
+    resp = requests.post(overpass_url, data={'data': query}, verify=False)
     data = resp.json()
     return resp, data
 

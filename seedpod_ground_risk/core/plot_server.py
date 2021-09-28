@@ -145,6 +145,7 @@ class PlotServer:
         hvPlot = self.compose_overlay_plot(self._x_range, self._y_range)
         if self._preload_complete:
             self._progress_bar_callback(100)
+            self._progress_callback("Plotting complete")
         fig = hv.render(hvPlot, backend='bokeh')
         fig.output_backend = 'webgl'
 
