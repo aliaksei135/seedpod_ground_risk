@@ -204,7 +204,7 @@ def query_osm_polygons(osm_tag, bound_poly: sg.Polygon) -> gpd.GeoDataFrame:
 
 
 def query_request(overpass_url, osm_tag, bounds):
-    headers = {'User-Agent': 'seedpod-ground-risk v0.13.0 (Python 3.8/requests v2.25.1;)',
+    headers = {'User-Agent': f'seedpod-ground-risk v0.13.0 (Python 3.8/requests v{requests.__version__};)',
                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
     query = """
               [out:json]
