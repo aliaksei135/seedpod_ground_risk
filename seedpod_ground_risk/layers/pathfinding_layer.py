@@ -56,9 +56,9 @@ class PathfindingLayer(AnnotationLayer):
         env = GridEnvironment(raster_grid, diagonals=False)
         algo = self.algo(heuristic=self.heuristic(env, risk_to_dist_ratio=self.rdr))
         t0 = time()
-        if algo == RiskThetaStar:
-            self.path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)), self.thres)
-        elif algo == RiskGridAStar:
+        if isinstance(algo, RiskThetaStar):
+            self.path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)), thres=self.thresh)
+        elif isinstance(algo, RiskGridAStar):
             self.path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)))
         if self.path is None:
             print("Path not found")
