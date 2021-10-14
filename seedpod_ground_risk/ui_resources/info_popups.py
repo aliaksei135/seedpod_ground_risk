@@ -34,6 +34,7 @@ class DataWindow(QDialog):
         ax2 = self.figure.add_subplot(gs[1])
         ys = []
         dist = []
+        i = 0
         for idx in range(len(path[:-1])):
             n0 = self.path[idx].position
             n1 = self.path[idx + 1].position
@@ -42,7 +43,8 @@ class DataWindow(QDialog):
             i += 1
             dist.append(i * self.resolution)
         ys = np.hstack(ys)
-        ax1.plot(ys)
+        dist = np.hstack(dist)
+        ax1.plot(dist, ys)
         ax1.set_xlabel('Distance [m]')
         ax1.set_ylabel('Risk of fatality [per hour]')
 
