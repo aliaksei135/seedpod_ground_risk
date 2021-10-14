@@ -12,13 +12,15 @@ from seedpod_ground_risk.pathfinding.moo_ga import *
 class DataWindow(QDialog):
 
     # constructor
-    def __init__(self, path, grid, resolution, parent=None):
+    def __init__(self, pathfinding_layer, grid, resolution, raster_grid, raster_indices, parent=None):
         super(DataWindow, self).__init__(parent)
         self.resize(1000, 500)
         self.figure = mpl.figure(figsize=(8, 4))
-        self.path = path
+        self.pathfinding_layer = pathfinding_layer
         self.grid = grid
         self.resolution = resolution
+        self.raster_grid = raster_grid
+        self.raster_indices = raster_indices
 
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
@@ -32,19 +34,21 @@ class DataWindow(QDialog):
         gs = gridspec.GridSpec(1, 2, width_ratios=[2.5, 1])
         ax1 = self.figure.add_subplot(gs[0])
         ax2 = self.figure.add_subplot(gs[1])
+        path = self.pathfinding_layer.path
         ys = []
         dist = []
-        i = 0
         for idx in range(len(path[:-1])):
-            n0 = self.path[idx].position
-            n1 = self.path[idx + 1].position
+            n0 = path[idx].position
+            n1 = path[idx + 1].position
             l = line(n0[0], n0[1], n1[0], n1[1])
             ys.append(grid[l[0], l[1]])
-            i += 1
-            dist.append(i * self.resolution)
+            # if len(dist) != 0:
+
+        path_dist = self.pathfinding_layer.dataframe.to_crs('EPSG:27700').iloc[0].geometry.length
+        x = np.linspace(0, path_dist, len(ys))
         ys = np.hstack(ys)
-        dist = np.hstack(dist)
-        ax1.plot(dist, ys)
+        x = np.hstack(x)
+        ax1.plot(x, ys)
         ax1.set_xlabel('Distance [m]')
         ax1.set_ylabel('Risk of fatality [per hour]')
 
