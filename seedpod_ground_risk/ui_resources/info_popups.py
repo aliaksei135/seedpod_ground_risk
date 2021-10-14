@@ -12,12 +12,13 @@ from seedpod_ground_risk.pathfinding.moo_ga import *
 class DataWindow(QDialog):
 
     # constructor
-    def __init__(self, path, grid, parent=None):
+    def __init__(self, path, grid, resolution, parent=None):
         super(DataWindow, self).__init__(parent)
         self.resize(1000, 500)
         self.figure = mpl.figure(figsize=(8, 4))
         self.path = path
         self.grid = grid
+        self.resolution = resolution
 
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
@@ -38,6 +39,8 @@ class DataWindow(QDialog):
             n1 = self.path[idx + 1].position
             l = line(n0[0], n0[1], n1[0], n1[1])
             ys.append(grid[l[0], l[1]])
+            i += 1
+            dist.append(i * self.resolution)
         ys = np.hstack(ys)
         ax1.plot(ys)
         ax1.set_xlabel('Distance [m]')
