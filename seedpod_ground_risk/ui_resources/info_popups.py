@@ -45,9 +45,8 @@ class DataWindow(QDialog):
             # if len(dist) != 0:
 
         path_dist = self.pathfinding_layer.dataframe.to_crs('EPSG:27700').iloc[0].geometry.length
-        x = np.linspace(0, path_dist, len(ys))
         ys = np.hstack(ys)
-        x = np.hstack(x)
+        x = np.linspace(0, path_dist, len(ys))
         ax1.plot(x, ys)
         ax1.set_xlabel('Distance [m]')
         ax1.set_ylabel('Risk of fatality [per hour]')
