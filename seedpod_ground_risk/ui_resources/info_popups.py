@@ -12,15 +12,12 @@ from seedpod_ground_risk.pathfinding.moo_ga import *
 class DataWindow(QDialog):
 
     # constructor
-    def __init__(self, pathfinding_layer, grid, resolution, raster_grid, raster_indices, parent=None):
+    def __init__(self, pathfinding_layer, grid, parent=None):
         super(DataWindow, self).__init__(parent)
         self.resize(1000, 500)
         self.figure = mpl.figure(figsize=(8, 4))
         self.pathfinding_layer = pathfinding_layer
         self.grid = grid
-        self.resolution = resolution
-        self.raster_grid = raster_grid
-        self.raster_indices = raster_indices
 
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
@@ -36,13 +33,11 @@ class DataWindow(QDialog):
         ax2 = self.figure.add_subplot(gs[1])
         path = self.pathfinding_layer.path
         ys = []
-        dist = []
         for idx in range(len(path[:-1])):
             n0 = path[idx].position
             n1 = path[idx + 1].position
             l = line(n0[0], n0[1], n1[0], n1[1])
             ys.append(grid[l[0], l[1]])
-            # if len(dist) != 0:
 
         path_dist = self.pathfinding_layer.dataframe.to_crs('EPSG:27700').iloc[0].geometry.length
         ys = np.hstack(ys)

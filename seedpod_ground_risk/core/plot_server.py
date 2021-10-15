@@ -212,9 +212,7 @@ class PlotServer:
                              res[1] is not None],
                             axis=0)
                         raster_grid = np.flipud(raster_grid)
-                        self.raster_grid = raster_grid
                         raster_indices['Latitude'] = np.flip(raster_indices['Latitude'])
-                        self.raster_indices = raster_indices
 
                         self._progress_callback('Annotating Layers...')
                         res = jl.Parallel(n_jobs=1, verbose=1, backend='threading')(
@@ -343,7 +341,7 @@ class PlotServer:
             if isinstance(i, FatalityRiskLayer):
                 cur_layer = GridEnvironment(self._generated_data_layers['Fatality Risk'][1])
                 grid = cur_layer.grid
-                popup = DataWindow(layer, grid, self.raster_resolution_m, self.raster_grid, self.raster_indices)
+                popup = DataWindow(layer, grid)
                 popup.exec()
                 break
 
