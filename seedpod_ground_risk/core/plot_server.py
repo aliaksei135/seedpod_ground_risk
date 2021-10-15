@@ -339,10 +339,9 @@ class PlotServer:
         from seedpod_ground_risk.layers.fatality_risk_layer import FatalityRiskLayer
         for i in self.data_layers:
             if isinstance(i, FatalityRiskLayer):
-                path = layer.path
                 cur_layer = GridEnvironment(self._generated_data_layers['Fatality Risk'][1])
                 grid = cur_layer.grid
-                popup = DataWindow(path, grid)
+                popup = DataWindow(layer, grid)
                 popup.exec()
                 break
 
