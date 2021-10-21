@@ -79,13 +79,15 @@ class GeoWidget(QWidget):
         self.map_button = QToolButton(text="Map", clicked=self.handle_clicked_map)
         self.post_button = QToolButton(text='postcode', clicked=self.handle_clicked_post)
         self.map_view = MapDialog(self)
+        self.post_view = PostDialog(self)
 
         lay = QHBoxLayout(self)
         lay.addWidget(QLabel("Latitude:"))
         lay.addWidget(self._lat_spinbox)
         lay.addWidget(QLabel("Longitude:"))
         lay.addWidget(self._lng_spinbox)
-        lay.addWidget(self.btn)
+        lay.addWidget(self.map_button)
+        lay.addWidget(self.post_button)
 
     @Property(QGeoCoordinate, notify=coordinate_changed)
     def coordinate(self):
@@ -110,5 +112,8 @@ class GeoWidget(QWidget):
         self._lat_spinbox.setValue(self.coordinate.latitude())
         self._lng_spinbox.setValue(self.coordinate.longitude())
 
-    def handle_clicked(self):
+    def handle_clicked_map(self):
         self.map_view.exec_()
+
+    def handle_clicked_post(self):
+        pass
