@@ -76,7 +76,8 @@ class GeoWidget(QWidget):
         self._lng_spinbox = QDoubleSpinBox(
             minimum=-8, maximum=2
         )
-        self.btn = QToolButton(text="Map", clicked=self.handle_clicked)
+        self.map_button = QToolButton(text="Map", clicked=self.handle_clicked_map)
+        self.post_button = QToolButton(text='postcode', clicked=self.handle_clicked_post)
         self.map_view = MapDialog(self)
 
         lay = QHBoxLayout(self)
