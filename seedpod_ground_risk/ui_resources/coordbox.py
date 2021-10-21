@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
 
-from PySide2.QtCore import Property, Signal, Slot, Qt, QUrl
+from PySide2.QtCore import Property, Signal, Slot, Qt, QUrl, QRegExp
+from PySide2.QtGui import QRegExpValidator
 from PySide2.QtPositioning import QGeoCoordinate
 from PySide2.QtQuickWidgets import QQuickWidget
 from PySide2.QtWidgets import (
@@ -12,7 +13,7 @@ from PySide2.QtWidgets import (
     QLabel,
     QToolButton,
     QVBoxLayout,
-    QWidget,
+    QWidget, QLineEdit,
 )
 
 
@@ -37,6 +38,29 @@ class MapDialog(QDialog):
 
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
+
+
+class PostDialog(QDialog):
+    def __init__(self, geo_widget):
+        super().__init__(geo_widget)
+        self.setWindowTitle("Map")
+        self.map_widget = QQuickWidget(resizeMode=QQuickWidget.SizeRootObjectToView)
+        self.map_widget.rootContext().setContextProperty("controller", geo_widget)
+
+        label = QLabel('Postcode')
+        field = QLineEdit()
+        field.setValidator(QRegExpValidator(QRegExp(
+            '([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9][A-Za-z]?))))\s?[0-9][A-Za-z]{2})')))
+
+        button_box = QDialogButtonBox()
+        button_box.setOrientation(Qt.Horizontal)
+        button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+
+        layout = QVBoxLayout
+        label.setBuddy(field)
+        self.registerField('Postcode' + '*', field)
+        layout.addWidget(label)
+        layout.addWidget(field)
 
 
 class GeoWidget(QWidget):
