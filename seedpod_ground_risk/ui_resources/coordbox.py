@@ -106,11 +106,11 @@ class GeoWidget(QWidget):
         self.map_view.exec_()
 
     def handle_clicked_post(self):
-        pcode = QInputDialog.getText(self, 'Postcode Selector', 'Postcode:')
+        pcode = QInputDialog.getText(self, 'Postcode', 'Postcode:')
         api = pst.Api()
         valid = api.is_postcode_valid(pcode[0])
         while valid is False:
-            pcode = QInputDialog.getText(self, 'Postcode Invalid, please try again', 'Postcode:')
+            pcode = QInputDialog.getText(self, 'Postcode', 'Postcode Invalid, please try again')
             valid = api.is_postcode_valid(pcode[0])
         else:
             data = api.get_postcode(pcode[0])
