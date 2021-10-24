@@ -22,7 +22,8 @@ class TestCoordinateBox(unittest.TestCase):
                                    'parliamentary_constituency': 'E14000901', 'ccg': 'E38000253', 'ccg_id': 'D9Y0V',
                                    'ced': 'E99999999', 'nuts': 'TLJ32', 'lsoa': 'E01032756', 'msoa': 'E02003553',
                                    'lau2': 'E06000045'}}
-        self.assertEqual(data['result'], verified_data)
+        self.assertEqual(data['result']['longitude'], verified_data['longitude'])
+        self.assertEqual(data['result']['latitude'], verified_data['latitude'])
 
 
 if __name__ == '__main__':
