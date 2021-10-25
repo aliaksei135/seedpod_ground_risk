@@ -25,7 +25,7 @@ class PlotServer:
     def __init__(self, tiles: str = 'Wikipedia', tools: Optional[Iterable[str]] = None,
                  active_tools: Optional[Iterable[str]] = None,
                  cmap: str = 'CET_L18',
-                 raster_resolution: float = 40,
+                 raster_resolution: float = 100,
                  plot_size: Tuple[int, int] = (760, 735),
                  progress_callback: Optional[Callable[[str], None]] = None,
                  update_callback: Optional[Callable[[str], None]] = None,
