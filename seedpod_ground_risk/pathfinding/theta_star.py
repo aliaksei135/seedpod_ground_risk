@@ -21,6 +21,7 @@ class RiskThetaStar(Algorithm):
         self.risk_threshold = thres
         self.cost_method = method
         self.max_cost = grid.max()
+        grid = grid / self.max_cost
         self.max_dist = np.sqrt((grid.shape[0] ** 2) + (grid.shape[1] ** 2))
 
         # Use heapq;the thread safety provided by PriorityQueue is not needed, as we only exec on a single thread
