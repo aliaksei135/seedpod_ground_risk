@@ -40,20 +40,6 @@ class MapDialog(QDialog):
         button_box.rejected.connect(self.reject)
 
 
-# class PostDialog(QInputDialog):
-#     def __init__(self, geo_widget):
-#         super().__init__(geo_widget)
-#         self.setWindowTitle("Map")
-#         self.map_widget = QQuickWidget(resizeMode=QQuickWidget.SizeRootObjectToView)
-#         self.map_widget.rootContext().setContextProperty("controller", geo_widget)
-#
-#         self.setWindowTitle('Postcode Selector')
-#         self.setLabelText('Postcode')
-#         field = QLineEdit()
-#         field.setValidator(QRegExpValidator(QRegExp(
-#             '([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9][A-Za-z]?))))\s?[0-9][A-Za-z]{2})')))
-
-
 class GeoWidget(QWidget):
     coordinate_changed = Signal(name="coordinateChanged")
 
@@ -106,12 +92,14 @@ class GeoWidget(QWidget):
         self.map_view.exec_()
 
     def handle_clicked_post(self):
-        pcode = QInputDialog.getText(self, 'Postcode', 'Postcode:')
+        pcode, ok = QInputDialog.getText(self, 'Postcode', 'Postcode:')
         api = pst.Api()
         valid = api.is_postcode_valid(pcode[0])
         while valid is False:
-            pcode = QInputDialog.getText(self, 'Postcode', 'Postcode Invalid, please try again')
+            pcode, ok = QInputDialog.getText(self, 'Postcode', 'Postcode Invalid, please try again')
             valid = api.is_postcode_valid(pcode[0])
+            if ok is False:
+                break
         else:
             data = api.get_postcode(pcode[0])
             self.coordinate = QGeoCoordinate(
