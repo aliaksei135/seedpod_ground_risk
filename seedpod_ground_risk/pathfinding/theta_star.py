@@ -12,7 +12,8 @@ from seedpod_ground_risk.pathfinding.heuristic import Heuristic, ManhattanHeuris
 
 class RiskThetaStar(Algorithm):
 
-    def __init__(self, heuristic: Heuristic = ManhattanHeuristic()):
+    def __init__(self, heuristic: Heuristic = ManhattanHeuristic(), **kwargs):
+        super().__init__(**kwargs)
         self.heuristic = heuristic.h
 
     def find_path(self, environment: GridEnvironment, start: Node, end: Node, smooth=False, k=0.9, thres=3e-8,

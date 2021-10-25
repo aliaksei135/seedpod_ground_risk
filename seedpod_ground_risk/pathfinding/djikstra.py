@@ -11,7 +11,7 @@ from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
 
 
 class Djikstra(Algorithm):
-    def find_path(self, environment: GridEnvironment, start: Node, goal: Node):
+    def find_path(self, environment: GridEnvironment, start: Node, goal: Node, **kwargs):
         env_shape = environment.grid.shape
         costs = np.full(env_shape, np.inf)
         open = []
