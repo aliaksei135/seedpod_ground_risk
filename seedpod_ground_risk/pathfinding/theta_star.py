@@ -15,8 +15,8 @@ class RiskThetaStar(Algorithm):
     def __init__(self, heuristic: Heuristic = ManhattanHeuristic()):
         self.heuristic = heuristic.h
 
-    def find_path(self, environment: GridEnvironment, start: Node, end: Node, smooth=False, k=1, thres=3e-8,
-                  method=np.mean, **kwargs) -> Union[List[Node], None]:
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node, smooth=False, k=0.9, thres=3e-8,
+                  method=np.sum, **kwargs) -> Union[List[Node], None]:
         grid = environment.grid
         self.risk_threshold = thres
         self.cost_method = method
