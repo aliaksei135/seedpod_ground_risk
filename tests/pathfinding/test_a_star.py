@@ -25,7 +25,7 @@ class BaseAStarTestCase(unittest.TestCase):
         # Do not test base class!
         if self.__class__ is BaseAStarTestCase:
             return
-        path = self.algo.find_path(self.small_diag_environment, self.start, self.start)
+        path = self.algo.find_path(self.small_diag_environment, self.start, self.start, )
 
         self.assertEqual(path, [self.start])
 
@@ -36,7 +36,7 @@ class BaseAStarTestCase(unittest.TestCase):
         # Do not test base class!
         if self.__class__ is BaseAStarTestCase:
             return
-        path = self.algo.find_path(self.small_deadend_environment, self.start, self.end)
+        path = self.algo.find_path(self.small_deadend_environment, self.start, self.end, )
 
         self.assertEqual(path, None, "Impossible path should be None")
 
@@ -51,7 +51,7 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         """
         Test simplest case of direct path on small grid with no diagonals ignoring node values
         """
-        path = self.algo.find_path(self.small_no_diag_environment, self.start, self.end)
+        path = self.algo.find_path(self.small_no_diag_environment, self.start, self.end, )
 
         self.assertEqual(path[0], self.start, 'Start node not included in path')
         self.assertEqual(path[-1], self.end, 'Goal node not included in path')
@@ -63,7 +63,7 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         """
         Test simplest case of direct path on small grid with diagonals ignoring node values
         """
-        path = self.algo.find_path(self.small_diag_environment, self.start, self.end)
+        path = self.algo.find_path(self.small_diag_environment, self.start, self.end, )
 
         self.assertEqual(path[0], self.start, "Start node not included in path")
         self.assertEqual(path[-1], self.end, 'Goal node not included in path')
@@ -83,9 +83,7 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         """
         algo = RiskGridAStar(ManhattanRiskHeuristic(self.large_diag_environment,
                                                     risk_to_dist_ratio=1))
-        path = algo.find_path(self.large_diag_environment,
-                              Node((10, 10)),
-                              Node((490, 490)))
+        path = algo.find_path(self.large_diag_environment, Node((10, 10)), Node((490, 490)), )
         self.assertIsNotNone(path, 'Failed to find possible path')
 
     def test_repeatability(self):
@@ -101,7 +99,7 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         def make_path(start, end, rdr):
             algo = RiskGridAStar(ManhattanRiskHeuristic(self.large_diag_environment,
                                                         risk_to_dist_ratio=rdr))
-            return algo.find_path(self.large_diag_environment, start, end)
+            return algo.find_path(self.large_diag_environment, start, end, )
 
         # def run_params(rdr):
         #     paths = [make_path(start, end, rdr) for _ in range(repeats)]

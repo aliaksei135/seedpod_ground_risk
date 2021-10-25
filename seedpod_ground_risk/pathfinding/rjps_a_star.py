@@ -85,7 +85,7 @@ class RiskJumpPointSearchAStar(JumpPointSearchAStar):
         self.jump_limit = jump_limit
         self.heuristic_env_hash = hash(heuristic.environment)
 
-    def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node, **kwargs) -> Union[
         List[Node], None]:
         if not environment.diagonals:
             raise ValueError('JPS relies on a grid environment with diagonals')

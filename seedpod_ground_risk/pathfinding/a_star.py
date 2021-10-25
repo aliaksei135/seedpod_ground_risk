@@ -68,10 +68,11 @@ def _reconstruct_path(end: Node, grid: np.ndarray, smooth=True) -> List[Node]:
 
 
 class GridAStar(Algorithm):
-    def __init__(self, heuristic: Heuristic = ManhattanHeuristic()):
+    def __init__(self, heuristic: Heuristic = ManhattanHeuristic(), **kwargs):
+        super().__init__(**kwargs)
         self.heuristic = heuristic.h
 
-    def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node, **kwargs) -> Union[
         List[Node], None]:
         pass
 
@@ -131,7 +132,7 @@ class RiskAStar(Algorithm):
 
 class RiskGridAStar(GridAStar):
 
-    def find_path(self, environment: GridEnvironment, start: Node, end: Node, k=1, smooth=True, **kwargs) -> Union[
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node, **kwargs) -> Union[
         List[Node], None]:
         grid = environment.grid
 
@@ -140,6 +141,8 @@ class RiskGridAStar(GridAStar):
         start.f = start.g = start.h = 0
         open_cost = {start: start.f}
         closed = set()
+        smooth = kwargs['smooth'] if kwargs['smooth'] else False
+        k = kwargs['k'] if kwargs['k'] else 0.9
 
         while open:
             node = heappop(open)
@@ -169,7 +172,7 @@ class RiskGridAStar(GridAStar):
 
 class JumpPointSearchAStar(GridAStar):
 
-    def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node, **kwargs) -> Union[
         List[Node], None]:
         if not environment.diagonals:
             raise ValueError('JPS relies on a grid environment with diagonals')
