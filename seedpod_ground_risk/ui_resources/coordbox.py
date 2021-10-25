@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 
-import postcodes_io_api as pst
 from PySide2.QtCore import Property, Signal, Slot, Qt, QUrl
 from PySide2.QtPositioning import QGeoCoordinate
 from PySide2.QtQuickWidgets import QQuickWidget
@@ -13,7 +12,7 @@ from PySide2.QtWidgets import (
     QLabel,
     QToolButton,
     QVBoxLayout,
-    QWidget, QInputDialog,
+    QWidget,
 )
 
 
@@ -53,8 +52,7 @@ class GeoWidget(QWidget):
         self._lng_spinbox = QDoubleSpinBox(
             minimum=-8, maximum=2
         )
-        self.map_button = QToolButton(text="Map", clicked=self.handle_clicked_map)
-        self.post_button = QToolButton(text='Postcode', clicked=self.handle_clicked_post)
+        self.btn = QToolButton(text="Map", clicked=self.handle_clicked)
         self.map_view = MapDialog(self)
 
         lay = QHBoxLayout(self)
@@ -62,8 +60,7 @@ class GeoWidget(QWidget):
         lay.addWidget(self._lat_spinbox)
         lay.addWidget(QLabel("Longitude:"))
         lay.addWidget(self._lng_spinbox)
-        lay.addWidget(self.map_button)
-        lay.addWidget(self.post_button)
+        lay.addWidget(self.btn)
 
     @Property(QGeoCoordinate, notify=coordinate_changed)
     def coordinate(self):
@@ -88,23 +85,5 @@ class GeoWidget(QWidget):
         self._lat_spinbox.setValue(self.coordinate.latitude())
         self._lng_spinbox.setValue(self.coordinate.longitude())
 
-    def handle_clicked_map(self):
+    def handle_clicked(self):
         self.map_view.exec_()
-
-    def handle_clicked_post(self):
-        pcode, ok = QInputDialog.getText(self, 'Postcode', 'Postcode:')
-        api = pst.Api()
-        if ok is True:
-            valid = api.is_postcode_valid(pcode[0])
-            while valid is False:
-                pcode, ok = QInputDialog.getText(self, 'Postcode', 'Postcode Invalid, please try again')
-                if ok is False:
-                    break
-                valid = api.is_postcode_valid(pcode[0])
-            else:
-                data = api.get_postcode(pcode[0])
-                self.coordinate = QGeoCoordinate(
-                    data['result']['latitude'], data['result']['longitude']
-                )
-                self._lat_spinbox.setValue(self.coordinate.latitude())
-                self._lng_spinbox.setValue(self.coordinate.longitude())
