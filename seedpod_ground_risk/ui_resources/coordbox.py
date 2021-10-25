@@ -94,16 +94,17 @@ class GeoWidget(QWidget):
     def handle_clicked_post(self):
         pcode, ok = QInputDialog.getText(self, 'Postcode', 'Postcode:')
         api = pst.Api()
-        valid = api.is_postcode_valid(pcode[0])
-        while valid is False:
-            pcode, ok = QInputDialog.getText(self, 'Postcode', 'Postcode Invalid, please try again')
+        if ok is True:
             valid = api.is_postcode_valid(pcode[0])
-            if ok is False:
-                break
-        else:
-            data = api.get_postcode(pcode[0])
-            self.coordinate = QGeoCoordinate(
-                data['result']['latitude'], data['result']['longitude']
-            )
-            self._lat_spinbox.setValue(self.coordinate.latitude())
-            self._lng_spinbox.setValue(self.coordinate.longitude())
+            while valid is False:
+                pcode, ok = QInputDialog.getText(self, 'Postcode', 'Postcode Invalid, please try again')
+                if ok is False:
+                    break
+                valid = api.is_postcode_valid(pcode[0])
+            else:
+                data = api.get_postcode(pcode[0])
+                self.coordinate = QGeoCoordinate(
+                    data['result']['latitude'], data['result']['longitude']
+                )
+                self._lat_spinbox.setValue(self.coordinate.latitude())
+                self._lng_spinbox.setValue(self.coordinate.longitude())
