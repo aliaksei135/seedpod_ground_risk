@@ -48,7 +48,7 @@ class RiskThetaStar(Algorithm):
                     del open_cost[neighbour]
                 neighbour.g = cost
                 neighbour.parent = parent
-                neighbour.f = cost + (k * self._euc_dist(neighbour, node))
+                neighbour.f = cost + (k * self._edge_cost(neighbour, end, grid))
                 heappush(open, neighbour)
                 open_cost[neighbour] = neighbour.f
 
