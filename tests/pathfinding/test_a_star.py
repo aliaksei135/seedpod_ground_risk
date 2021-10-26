@@ -25,7 +25,7 @@ class BaseAStarTestCase(unittest.TestCase):
         # Do not test base class!
         if self.__class__ is BaseAStarTestCase:
             return
-        path = self.algo.find_path(self.small_diag_environment, self.start, self.start, )
+        path = self.algo.find_path(self.small_diag_environment, self.start, self.start, smooth=True)
 
         self.assertEqual(path, [self.start])
 
@@ -51,7 +51,7 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         """
         Test simplest case of direct path on small grid with no diagonals ignoring node values
         """
-        path = self.algo.find_path(self.small_no_diag_environment, self.start, self.end, )
+        path = self.algo.find_path(self.small_no_diag_environment, self.start, self.end, smooth=True)
 
         self.assertEqual(path[0], self.start, 'Start node not included in path')
         self.assertEqual(path[-1], self.end, 'Goal node not included in path')
@@ -63,7 +63,7 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         """
         Test simplest case of direct path on small grid with diagonals ignoring node values
         """
-        path = self.algo.find_path(self.small_diag_environment, self.start, self.end, )
+        path = self.algo.find_path(self.small_diag_environment, self.start, self.end, smooth=True)
 
         self.assertEqual(path[0], self.start, "Start node not included in path")
         self.assertEqual(path[-1], self.end, 'Goal node not included in path')
