@@ -141,8 +141,8 @@ class RiskGridAStar(GridAStar):
         start.f = start.g = start.h = 0
         open_cost = {start: start.f}
         closed = set()
-        smooth = kwargs['smooth'] if kwargs['smooth'] else False
-        k = kwargs['k'] if kwargs['k'] else 0.9
+        smooth = kwargs.get('smooth', False)
+        k = kwargs.get('k', 0.9)
 
         while open:
             node = heappop(open)
