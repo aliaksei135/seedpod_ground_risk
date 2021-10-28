@@ -4,13 +4,17 @@ import numpy as np
 from seedpod_ground_risk.layers.blockable_data_layer import BlockableDataLayer
 from seedpod_ground_risk.layers.strike_risk_layer import StrikeRiskLayer
 from seedpod_ground_risk.path_analysis.harm_models.fatality_model import FatalityModel
+from seedpod_ground_risk.ui_resources.aircraft_options import AIRCRAFT_LIST
 
 
 class FatalityRiskLayer(BlockableDataLayer):
 
-    def __init__(self, key, colour: str = None, blocking=False, buffer_dist=0, **kwargs):
+    def __init__(self, key, ac: dict = AIRCRAFT_LIST['Default'],
+                 wind_vel: float = 0, wind_dir: float = 0, colour: str = None, blocking=False, buffer_dist=0,
+                 **kwargs):
         super().__init__(key, colour, blocking, buffer_dist)
-        self._strike_layer = StrikeRiskLayer(f'{key}_strike_', buffer_dist=buffer_dist, **kwargs)
+        self._strike_layer = StrikeRiskLayer(f'{key}_strike_', ac=ac, wind_vel=wind_vel, wind_dir=wind_dir,
+                                             buffer_dist=buffer_dist, **kwargs)
         delattr(self, '_colour')
 
     def preload_data(self):
