@@ -9,11 +9,16 @@ from seedpod_ground_risk.ui_resources.aircraft_options import AIRCRAFT_LIST
 
 class FatalityRiskLayer(BlockableDataLayer):
 
-    def __init__(self, key, ac: dict = AIRCRAFT_LIST['Default'],
+    def __init__(self, key, ac: str = 'Default',
                  wind_vel: float = 0, wind_dir: float = 0, colour: str = None, blocking=False, buffer_dist=0,
                  **kwargs):
         super().__init__(key, colour, blocking, buffer_dist)
-        self._strike_layer = StrikeRiskLayer(f'{key}_strike_', ac=ac, wind_vel=wind_vel, wind_dir=wind_dir,
+        self.ac = ac
+        self.wind_vel = wind_vel
+        self.wind_dir = wind_dir
+        self.ac_dict = AIRCRAFT_LIST[ac]
+        self._strike_layer = StrikeRiskLayer(f'{key}_strike_', ac=self.ac_dict, wind_vel=self.wind_vel,
+                                             wind_dir=self.wind_dir,
                                              buffer_dist=buffer_dist, **kwargs)
         delattr(self, '_colour')
 

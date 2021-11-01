@@ -295,6 +295,8 @@ class PlotServer:
         Tuple[str, Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]], Tuple[str, None]]:
 
         try:
+            if isinstance(layer, FatalityRiskLayer):
+                layer.key = f'{layer.key} {layer.ac} {layer.wind_dir:03d}@{layer.wind_vel}kts'
             result = layer.key, layer.generate(bounds_poly, raster_shape, from_cache=False, hour=hour,
                                                resolution=resolution)
             return result
