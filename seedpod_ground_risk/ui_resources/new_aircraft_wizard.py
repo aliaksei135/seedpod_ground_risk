@@ -36,7 +36,7 @@ class AircraftWizard(QWizard):
 
         self.addPage(NewAircraftInfoPage(self))
 
-        self.setWindowTitle('Add Layer')
+        self.setWindowTitle('Add Aircraft')
 
         # TODO: Going back in wizard does not clear page fields.
         # Hook into back button click and remove and re add page.
