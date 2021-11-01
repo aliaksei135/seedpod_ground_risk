@@ -63,7 +63,6 @@ class PlotServer:
             # ResidentialLayer('Residential Layer')
         ]
 
-        self.annotation_layers = []
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
@@ -198,6 +197,13 @@ class PlotServer:
 
                     t0 = time()
                     self._progress_bar_callback(10)
+                    if len(self.annotation_layers) > 0:
+                        for alayer in self.annotation_layers:
+                            for dlayer in self.data_layers:
+                                if alayer.aircraft != dlayer.ac_dict:
+                                    self.remove_layer(dlayer)
+                                    new_layer = FatalityRiskLayer('Fatality Risk', ac=alayer.aircraft['name'])
+                                    self.add_layer(new_layer)
                     self.generate_layers(bounds_poly, raster_shape)
                     self._progress_bar_callback(50)
                     plot = Overlay([res[0] for res in self._generated_data_layers.values()])
