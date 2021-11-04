@@ -1,4 +1,17 @@
 {
+  "Select Aircraft...": {
+    "width": 0,
+    "length": 0,
+    "mass": 0,
+    "bal_drag_coeff": 0,
+    "frontal_area": 0,
+    "glide_drag_coeff": 0,
+    "glide_speed": 0,
+    "glide_ratio": 0,
+    "cruise_speed": 0,
+    "cruise_alt": 0,
+    "failure_prob": 0
+  },
   "Default": {
     "width": 2,
     "length": 1.5,
