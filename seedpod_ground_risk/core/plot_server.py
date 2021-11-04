@@ -59,10 +59,11 @@ class PlotServer:
         self.data_layers = [
             # TemporalPopulationEstimateLayer('Temporal Pop. Est'),
             # RoadsLayer('Road Traffic Population/Hour')
-            FatalityRiskLayer('Fatality Risk'),
+            FatalityRiskLayer('Fatality Risk SPOTTER 000@0kts'),
             # ResidentialLayer('Residential Layer')
         ]
 
+        self.annotation_layers = []
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
