@@ -198,13 +198,20 @@ class PlotServer:
 
                     t0 = time()
                     self._progress_bar_callback(10)
+                    new_data_layers = []
+                    old_data_layers = []
                     if len(self.annotation_layers) > 0:
                         for alayer in self.annotation_layers:
                             for dlayer in self.data_layers:
                                 if alayer.aircraft != dlayer.ac_dict:
-                                    self.remove_layer(dlayer)
+                                    old_data_layers.append((dlayer))
                                     new_layer = FatalityRiskLayer('Fatality Risk', ac=alayer.aircraft['name'])
-                                    self.add_layer(new_layer)
+                                    new_data_layers.append(new_layer)
+                    for old_lay in old_data_layers:
+                        self.remove_layer(old_lay)
+                    for new_lay in new_data_layers:
+                        self.add_layer(new_lay)
+                    self._progress_bar_callback(20)
                     self.generate_layers(bounds_poly, raster_shape)
                     self._progress_bar_callback(50)
                     plot = Overlay([res[0] for res in self._generated_data_layers.values()])
