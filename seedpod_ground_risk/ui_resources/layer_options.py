@@ -80,3 +80,18 @@ AIRCRAFT_PARAMETERS = {
     'Flight Airspeed [m/s]': (r'-?\d{0,3}\.?\d+', 'vel', float)
 }
 
+dummy_aircraft_variable = {
+    "Select Aircraft...": {
+        "width": 0,
+        "length": 0,
+        "mass": 0,
+        "bal_drag_coeff": 0,
+        "frontal_area": 0,
+        "glide_drag_coeff": 0,
+        "glide_speed": 0,
+        "glide_ratio": 0,
+        "cruise_speed": 0,
+        "cruise_alt": 0,
+        "failure_prob": 0
+    }
+}
