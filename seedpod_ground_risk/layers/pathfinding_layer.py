@@ -38,7 +38,7 @@ class PathfindingLayer(AnnotationLayer):
         pass
 
     def annotate(self, data: List[gpd.GeoDataFrame], raster_data: Tuple[Dict[str, np.array], np.array],
-                 resolution=100, **kwargs) -> Geometry:
+                 **kwargs) -> Geometry:
 
         raster_grid = np.flipud(raster_data[1])
 
