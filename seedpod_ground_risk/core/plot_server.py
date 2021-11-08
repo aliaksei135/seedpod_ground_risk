@@ -198,6 +198,7 @@ class PlotServer:
 
                     t0 = time()
                     self._progress_bar_callback(10)
+                    # TODO: This will give multiple data layers, these need to be able to fed into their relevent pathfinding layers
                     new_data_layers = []
                     old_data_layers = []
                     if len(self.annotation_layers) > 0:
