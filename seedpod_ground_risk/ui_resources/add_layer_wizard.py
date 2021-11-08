@@ -7,7 +7,7 @@ from PySide2.QtGui import QRegExpValidator
 from PySide2.QtWidgets import QWizard, QWizardPage, QLabel, QLineEdit, QComboBox, QCheckBox, QGridLayout, QColorDialog, \
     QPushButton, QFileDialog
 
-from seedpod_ground_risk.ui_resources.aircraft_options import AIRCRAFT_LIST
+from seedpod_ground_risk.ui_resources.aircraft_options import *
 from seedpod_ground_risk.ui_resources.coordbox import GeoWidget
 from seedpod_ground_risk.ui_resources.layer_options import *
 
@@ -102,6 +102,7 @@ class SpecificLayerInfoPage(QWizardPage):
             elif regex == 'aircraft':
                 label = QLabel(name)
                 field = QComboBox(self)
+                field.addItems(dummy_aircraft_variable.keys())
                 field.addItems(AIRCRAFT_LIST.keys())
             elif regex is bool:
                 field = QCheckBox()
