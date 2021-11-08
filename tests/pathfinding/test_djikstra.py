@@ -1,11 +1,29 @@
 import unittest
 
+import matplotlib.pyplot as mpl
+
 from seedpod_ground_risk.pathfinding.djikstra import Djikstra
 from seedpod_ground_risk.pathfinding.moo_ga import *
+from tests.pathfinding import PathfindingTestCase
 from tests.pathfinding.test_data import *
 
 
-class DjikstraTestCase(unittest.TestCase):
+class DjikstraTestCase(PathfindingTestCase):
+
+    def test_risk_square(self):
+        start = Node((1, 1))
+        end = Node((99, 99))
+
+        algo = Djikstra()
+
+        path = algo.find_path(self.risk_square_environment, start, end, smooth=False)
+
+        fig = mpl.figure()
+        ax = fig.add_subplot(111)
+        ax.plot([n.position[1] for n in path], [n.position[0] for n in path], color='red')
+        im = ax.imshow(self.risk_square_environment.grid)
+        fig.colorbar(im, ax=ax)
+        fig.show()
 
     def setUp(self) -> None:
         super().setUp()

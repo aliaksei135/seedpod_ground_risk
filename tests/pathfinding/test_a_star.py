@@ -1,20 +1,17 @@
 import unittest
 
+import matplotlib.pyplot as mpl
+
 from seedpod_ground_risk.pathfinding.a_star import *
 from seedpod_ground_risk.pathfinding.heuristic import *
 from seedpod_ground_risk.pathfinding.rjps_a_star import *
-from tests.pathfinding.test_data import SMALL_TEST_GRID, LARGE_TEST_GRID, SMALL_DEADEND_TEST_GRID
+from tests.pathfinding import PathfindingTestCase
 
 
-class BaseAStarTestCase(unittest.TestCase):
+class BaseAStarTestCase(PathfindingTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.small_deadend_environment = GridEnvironment(SMALL_DEADEND_TEST_GRID, diagonals=True)
-        self.small_diag_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=True)
-        self.small_no_diag_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=False)
-        self.large_diag_environment = GridEnvironment(LARGE_TEST_GRID, diagonals=True)
-        self.large_no_diag_environment = GridEnvironment(LARGE_TEST_GRID, diagonals=False)
         self.start = Node((0, 0))
         self.end = Node((4, 4))
 
@@ -127,7 +124,7 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
             ax = fig.add_subplot(111)
             for path in paths:
                 ax.plot([n.position[1] for n in path], [n.position[0] for n in path], color='red')
-            im = ax.imshow(self.large_no_diag_environment.grid)
+            im = ax.imshow(self.large_diag_environment.grid)
             fig.colorbar(im, ax=ax, label='Population')
             ax.set_title(f'RiskA* with RDR={rdr:.4g} \n Risk sum={risk_sum:.4g}')
             fig.show()
