@@ -2,19 +2,19 @@ import unittest
 
 import matplotlib.pyplot as mpl
 
-from seedpod_ground_risk.pathfinding.djikstra import Djikstra
+from seedpod_ground_risk.pathfinding.dijkstra import Dijkstra
 from seedpod_ground_risk.pathfinding.moo_ga import *
 from tests.pathfinding import PathfindingTestCase
 from tests.pathfinding.test_data import *
 
 
-class DjikstraTestCase(PathfindingTestCase):
+class DijkstraTestCase(PathfindingTestCase):
 
     def test_risk_square(self):
         start = Node((1, 1))
         end = Node((99, 99))
 
-        algo = Djikstra()
+        algo = Dijkstra()
 
         path = algo.find_path(self.risk_square_environment, start, end, smooth=False)
 
@@ -25,12 +25,41 @@ class DjikstraTestCase(PathfindingTestCase):
         fig.colorbar(im, ax=ax)
         fig.show()
 
-    def setUp(self) -> None:
-        super().setUp()
-        self.small_deadend_environment = GridEnvironment(SMALL_DEADEND_TEST_GRID, diagonals=True)
-        self.small_diag_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=True)
-        self.small_no_diag_environment = GridEnvironment(SMALL_TEST_GRID, diagonals=False)
-        self.large_diag_environment = GridEnvironment(LARGE_TEST_GRID, diagonals=True)
+        self.assertEqual(hash(tuple(path)), -5148357753668335358)
+
+    def test_risk_circle(self):
+        start = Node((1, 1))
+        end = Node((99, 99))
+
+        algo = Dijkstra()
+
+        path = algo.find_path(self.risk_circle_environment, start, end, smooth=False)
+
+        fig = mpl.figure()
+        ax = fig.add_subplot(111)
+        ax.plot([n.position[1] for n in path], [n.position[0] for n in path], color='red')
+        im = ax.imshow(self.risk_circle_environment.grid)
+        fig.colorbar(im, ax=ax)
+        fig.show()
+
+        self.assertEqual(hash(tuple(path)), 5877875642102134190)
+
+    def test_risk_circle2(self):
+        start = Node((1, 1))
+        end = Node((99, 99))
+
+        algo = Dijkstra()
+
+        path = algo.find_path(self.risk_circle2_environment, start, end, smooth=False)
+
+        fig = mpl.figure()
+        ax = fig.add_subplot(111)
+        ax.plot([n.position[1] for n in path], [n.position[0] for n in path], color='red')
+        im = ax.imshow(self.risk_circle2_environment.grid)
+        fig.colorbar(im, ax=ax)
+        fig.show()
+
+        self.assertEqual(hash(tuple(path)), -3496425298084146625)
 
     def test_large_env_with_diagonals(self):
         start = Node((500, 10))
@@ -38,7 +67,7 @@ class DjikstraTestCase(PathfindingTestCase):
 
         grid = self.large_diag_environment.grid
 
-        algo = Djikstra()
+        algo = Dijkstra()
 
         path = algo.find_path(self.large_diag_environment, start, end)
         self.assertIsNotNone(path, 'Failed to find possible path')
