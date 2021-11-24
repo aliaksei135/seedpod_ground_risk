@@ -3,13 +3,10 @@ from heapq import *
 import matplotlib.pyplot as mpl
 import numpy as np
 
+from seedpod_ground_risk.pathfinding import _euc_dist
 from seedpod_ground_risk.pathfinding.a_star import _reconstruct_path
 from seedpod_ground_risk.pathfinding.algorithm import Algorithm
 from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
-
-
-def _euc_dist(n1, n2):
-    return ((n1.position[0] - n2.position[0]) ** 2 + (n1.position[1] - n2.position[1]) ** 2) ** 0.5
 
 
 class Dijkstra(Algorithm):
