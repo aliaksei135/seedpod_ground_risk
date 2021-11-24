@@ -1,10 +1,11 @@
 import unittest
 
 import matplotlib.pyplot as mpl
+from matplotlib.gridspec import GridSpec
 
 from seedpod_ground_risk.pathfinding.dijkstra import Dijkstra
 from seedpod_ground_risk.pathfinding.moo_ga import *
-from tests.pathfinding import PathfindingTestCase
+from tests.pathfinding import PathfindingTestCase, make_path, get_path_risk_sum, get_path_risk_mean, get_path_distance
 from tests.pathfinding.test_data import *
 
 
@@ -61,9 +62,80 @@ class DijkstraTestCase(PathfindingTestCase):
 
         self.assertEqual(hash(tuple(path)), -3496425298084146625)
 
+    def test_risk_circle2_thres_sweep(self):
+        start = Node((1, 1))
+        end = Node((99, 99))
+        # start = Node((500, 10))
+        # end = Node((100, 800))
+        algo = Dijkstra()
+        env = self.risk_circle2_environment
+        test_points = 10
+
+        truth_hashes = [-8634747763696548848,
+                        6281777845410888869,
+                        3754318523562311322,
+                        8212258328002924383]
+
+        asserting = test_points == len(truth_hashes)
+
+        risk_sums = [np.inf]
+        risk_means = []
+        distances = []
+
+        thresholds = np.logspace(-6, -9, test_points)
+
+        for idx, thres in enumerate(thresholds):
+            with self.subTest():
+                path = make_path(algo, env, start, end, smooth=False, thres=thres)
+                # plot_path(path, env)
+                if asserting:
+                    self.assertEqual(hash(tuple(path)), truth_hashes[idx],
+                                     msg=f'Path for thres={thres} incorrect')
+
+                risk_sum = get_path_risk_sum(path, env)
+                if asserting and risk_sums[-1] <= risk_sum:
+                    self.fail(f"Risk Sum not decreasing with lower risk threshold, {risk_sums[-1]}!<={risk_sum}")
+
+                risk_sums.append(risk_sum)
+                risk_means.append(get_path_risk_mean(path, env))
+                distances.append(get_path_distance(path))
+        risk_sums = risk_sums[1:]
+
+        gs = GridSpec(4, 1, hspace=0.9)
+        fig = mpl.figure()
+        ax1 = fig.add_subplot(gs[0, :])
+        ax2 = fig.add_subplot(gs[1, :])
+        ax3 = fig.add_subplot(gs[2, :])
+        ax4 = fig.add_subplot(gs[3, :])
+        ax1.grid(which='both')
+        ax2.grid(which='both')
+        ax3.grid(which='both')
+        ax4.grid(which='both')
+        ax1.set_xscale('log')
+        ax1.set_yscale('log')
+        ax2.set_xscale('log')
+        ax2.set_yscale('log')
+        ax3.set_xscale('log')
+        ax4.set_xscale('log')
+        ax4.set_yscale('log')
+
+        ax1.set_title('Path Risk Integral')
+        ax2.set_title('Path Risk Mean')
+        ax3.set_title('Path Distance')
+        ax4.set_title('Path Mean Risk/Distance')
+        ax4.set_xlabel("Input Threshold")
+
+        ax1.plot(thresholds, risk_sums, c='blue', label='Path Risk Integrals')
+        ax2.plot(thresholds, risk_means, c='green', label='Path Risk Integrals')
+        ax3.plot(thresholds, distances, c='red', label='Path Distances')
+        ax4.plot(thresholds, np.array(risk_sums) / np.array(distances), c='yellow', label='Path Mean Risk/Distances')
+
+        fig.suptitle("Input Threshold Effects")
+        fig.show()
+
     def test_large_env_with_diagonals(self):
         start = Node((500, 10))
-        end = Node((280, 430))
+        end = Node((100, 800))
 
         grid = self.large_diag_environment.grid
 

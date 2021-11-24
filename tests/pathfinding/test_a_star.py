@@ -5,7 +5,7 @@ import matplotlib.pyplot as mpl
 from seedpod_ground_risk.pathfinding.a_star import *
 from seedpod_ground_risk.pathfinding.heuristic import *
 from seedpod_ground_risk.pathfinding.rjps_a_star import *
-from tests.pathfinding import PathfindingTestCase
+from tests.pathfinding import PathfindingTestCase, make_path, get_path_risk_sum
 
 
 class BaseAStarTestCase(PathfindingTestCase):
@@ -48,7 +48,7 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         """
         Test simplest case of direct path on small grid with no diagonals ignoring node values
         """
-        path = self.algo.find_path(self.small_no_diag_environment, self.start, self.end, smooth=True)
+        path = make_path(self.algo, self.small_no_diag_environment, self.start, self.end, smooth=True)
 
         self.assertEqual(path[0], self.start, 'Start node not included in path')
         self.assertEqual(path[-1], self.end, 'Goal node not included in path')
@@ -60,7 +60,7 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         """
         Test simplest case of direct path on small grid with diagonals ignoring node values
         """
-        path = self.algo.find_path(self.small_diag_environment, self.start, self.end, smooth=True)
+        path = make_path(self.algo, self.small_diag_environment, self.start, self.end, smooth=True)
 
         self.assertEqual(path[0], self.start, "Start node not included in path")
         self.assertEqual(path[-1], self.end, 'Goal node not included in path')
@@ -74,13 +74,25 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         ],
                          "Incorrect path")
 
+    def test_risk_block(self):
+        start = Node((1, 1))
+        end = Node((99, 99))
+        path = make_path(self.algo, self.risk_square_environment, start, end, smooth=False)
+
+        fig = mpl.figure()
+        ax = fig.add_subplot(111)
+        ax.plot([n.position[1] for n in path], [n.position[0] for n in path], color='red')
+        im = ax.imshow(self.risk_square_environment.grid)
+        fig.colorbar(im, ax=ax, label='Population')
+        fig.show()
+
     def test_large_env_with_diagonals(self):
         """
         Test on realistic costmap. Used mainly for profiling code
         """
         algo = RiskGridAStar(ManhattanRiskHeuristic(self.large_diag_environment,
                                                     risk_to_dist_ratio=1))
-        path = algo.find_path(self.large_diag_environment, Node((10, 10)), Node((490, 490)), )
+        path = make_path(self.algo, self.large_diag_environment, Node((10, 10)), Node((490, 490)), )
         self.assertIsNotNone(path, 'Failed to find possible path')
 
     def test_repeatability(self):
@@ -92,11 +104,12 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         equal_paths = []
         rdrs = np.linspace(100, 10000, 10)
         risk_sums = []
+        env = self.large_diag_environment
 
-        def make_path(start, end, rdr):
+        def do_path(start, end, rdr):
             algo = RiskGridAStar(ManhattanRiskHeuristic(self.large_diag_environment,
                                                         risk_to_dist_ratio=rdr))
-            return algo.find_path(self.large_diag_environment, start, end, )
+            return make_path(algo, env, start, end, )
 
         # def run_params(rdr):
         #     paths = [make_path(start, end, rdr) for _ in range(repeats)]
@@ -112,12 +125,12 @@ class RiskGridAStarTestCase(BaseAStarTestCase):
         # pool.close()
 
         for rdr in rdrs:
-            paths = [make_path(start, end, rdr) for _ in range(repeats)]
+            paths = [do_path(start, end, rdr) for _ in range(repeats)]
             equal_paths.append(all([p == paths[0] for p in paths]))
             if not paths[0]:
                 risk_sums.append([rdr, np.inf])
                 continue
-            risk_sum = sum([self.large_diag_environment.grid[n.position[0], n.position[1]] for n in paths[0]])
+            risk_sum = get_path_risk_sum(paths[0], env)
             risk_sums.append([rdr, risk_sum])
 
             fig = mpl.figure()
