@@ -2,14 +2,19 @@ import numpy as np
 
 
 class Node:
+    position: (int, int)
+    parent: 'Node'
+    f: float
+    g: float
+    h: float
 
-    def __init__(self, position, parent=None):
+    def __init__(self, position: (int, int), parent=None):
         self.position = position
         self.parent = parent
 
-        self.f = np.inf
-        self.g = np.inf
-        self.h = np.inf
+        self.f = 1e99
+        self.g = 1e99
+        self.h = 1e99
 
     def __eq__(self, other):
         return other.position == self.position
@@ -22,22 +27,18 @@ class Node:
 
 
 class GridEnvironment:
+    grid: np.ndarray
+    shape: (int, int)
+    diagonals: bool
+    graph: dict
 
-    def __init__(self, grid: np.array, diagonals=False):
+    def __init__(self, grid, diagonals=False):
         self.grid = grid
-        self.shape = np.array(grid.shape)
+        self.shape = grid.shape
         self.diagonals = diagonals
-        self.graph = None
+        self.graph = dict()
 
-    @staticmethod
-    def f_cost(node, goal):
-        # Simple Euclidean distance as movement cost
-        return ((node[0] - goal[0]) ** 2 + (node[1] - goal[1]) ** 2) ** 0.5
-
-    def get_neighbours(self, node):
-        # if not self.graph:
-        #     self.graph = self._generate_graph()
-        # return self.graph[node]
+    def get_neighbours(self, node: Node):
         return self._find_neighbours(node.position)
 
     def _generate_graph(self):
@@ -50,7 +51,7 @@ class GridEnvironment:
 
         return graph
 
-    def _find_neighbours(self, idx):
+    def _find_neighbours(self, idx: (int, int)):
         has_top = has_bottom = has_left = has_right = False
         neighbours = set()
         max_y, max_x = self.shape
