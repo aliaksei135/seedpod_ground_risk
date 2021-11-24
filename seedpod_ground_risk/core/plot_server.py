@@ -199,19 +199,10 @@ class PlotServer:
                     t0 = time()
                     self._progress_bar_callback(10)
                     # TODO: This will give multiple data layers, these need to be able to fed into their relevent pathfinding layers
-                    new_data_layers = []
-                    old_data_layers = []
-                    if len(self.annotation_layers) > 0:
-                        for alayer in self.annotation_layers:
-                            for dlayer in self.data_layers:
-                                if alayer.aircraft != dlayer.ac_dict:
-                                    old_data_layers.append((dlayer))
-                                    new_layer = FatalityRiskLayer('Fatality Risk', ac=alayer.aircraft['name'])
-                                    new_data_layers.append(new_layer)
-                    for old_lay in old_data_layers:
-                        self.remove_layer(old_lay)
-                    for new_lay in new_data_layers:
-                        self.add_layer(new_lay)
+                    for annlayer in self.annotation_layers:
+                        new_layer = FatalityRiskLayer('Fatality Risk', ac=annlayer.aircraft['name'])
+                        self.add_layer(new_layer)
+                    self.remove_duplicate_layers()
                     self._progress_bar_callback(20)
                     self.generate_layers(bounds_poly, raster_shape)
                     self._progress_bar_callback(50)
@@ -219,20 +210,33 @@ class PlotServer:
                     print("Generated all layers in ", time() - t0)
                     if self.annotation_layers:
                         plot = Overlay([res[0] for res in self._generated_data_layers.values()])
-                        raw_datas = [res[2] for res in self._generated_data_layers.values()]
-                        raster_indices = dict(Longitude=np.linspace(x_range[0], x_range[1], num=raster_shape[0]),
-                                              Latitude=np.linspace(y_range[0], y_range[1], num=raster_shape[1]))
-                        raster_grid = np.sum(
-                            [remove_raster_nans(res[1]) for res in self._generated_data_layers.values() if
-                             res[1] is not None],
-                            axis=0)
-                        raster_grid = np.flipud(raster_grid)
-                        raster_indices['Latitude'] = np.flip(raster_indices['Latitude'])
+
+                        res = []
+                        for dlayer in self.data_layers:
+                            raster_indices = dict(Longitude=np.linspace(x_range[0], x_range[1], num=raster_shape[0]),
+                                                  Latitude=np.linspace(y_range[0], y_range[1], num=raster_shape[1]))
+                            for keys in self._generated_data_layers:
+                                if dlayer.key == keys:
+                                    raw_data = [self._generated_data_layers[keys][2]]
+                                    raster_grid = np.sum(
+                                        [remove_raster_nans(self._generated_data_layers[keys][1])],
+                                        axis=0)
+                                    raster_grid = np.flipud(raster_grid)
+                                    raster_indices['Latitude'] = np.flip(raster_indices['Latitude'])
+
+                            for alayer in self.annotation_layers:
+                                if alayer.aircraft == dlayer.ac_dict:
+                                    res.append(alayer.annotate(raw_data, (raster_indices, raster_grid)))
 
                         self._progress_callback('Annotating Layers...')
-                        res = jl.Parallel(n_jobs=1, verbose=1, backend='threading')(
-                            jl.delayed(layer.annotate)(raw_datas, (raster_indices, raster_grid)) for layer in
-                            self.annotation_layers)
+                        # res = jl.Parallel(n_jobs=1, verbose=1, backend='threading')(
+                        #     jl.delayed(layer.annotate)(raw_datas, (raster_indices, raster_grid)) for layer in
+                        #     self.annotation_layers )
+
+                        # In serial is functionally equal to above
+                        # res = []
+                        # for layer in self.annotation_layers:
+                        #     res.append(layer.annotate(raw_datas, (raster_indices, raster_grid)))
 
                         plot = Overlay(
                             [self._base_tiles, plot, *[annot for annot in res if annot is not None]]).collate()
