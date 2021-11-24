@@ -1,14 +1,7 @@
 import numpy as np
 
-
-class Node:
-    position: (int, int)
-    parent: 'Node'
-    f: float
-    g: float
-    h: float
-
-    def __init__(self, position: (int, int), parent=None):
+cdef class Node:
+    def __init__(self, (int, int) position, parent=None):
         self.position = position
         self.parent = parent
 
@@ -16,34 +9,30 @@ class Node:
         self.g = 1e99
         self.h = 1e99
 
-    def __eq__(self, other):
+    def __eq__(self, Node other):
         return other.position == self.position
 
-    def __lt__(self, other):
+    def __lt__(self, Node other):
         return self.f < other.f
 
     def __hash__(self):
         return hash(self.position)
 
-
-class GridEnvironment:
-    grid: np.ndarray
-    shape: (int, int)
-    diagonals: bool
-    graph: dict
-
-    def __init__(self, grid, diagonals=False):
+cdef class GridEnvironment:
+    def __init__(self, grid, bint diagonals=False):
         self.grid = grid
         self.shape = grid.shape
         self.diagonals = diagonals
-        self.graph = dict()
+        # self.graph = dict()
 
-    def get_neighbours(self, node: Node):
+    cpdef set get_neighbours(self, Node node):
         return self._find_neighbours(node.position)
 
-    def _generate_graph(self):
+    cpdef dict _generate_graph(self):
 
-        graph = {}
+        cdef dict graph = {}
+        cdef (int, int) idx;
+        cdef float orig_val;
 
         for idx, orig_val in np.ndenumerate(self.grid):
             neighbours = self._find_neighbours(idx)
@@ -51,21 +40,24 @@ class GridEnvironment:
 
         return graph
 
-    def _find_neighbours(self, idx: (int, int)):
+    cdef set _find_neighbours(self, (int, int) idx):
+        cdef bint has_top, has_bottom, has_left, has_right;
         has_top = has_bottom = has_left = has_right = False
-        neighbours = set()
+        cdef set neighbours = set()
+        cdef int max_y, max_x;
         max_y, max_x = self.shape
 
         # Offset into edge
         # max_y = max_y - 1
         # max_x = max_x - 1
 
-        def eval_node(y, x):
+        def eval_node(int y, int x):
             val = self.grid[y, x]
             nonlocal neighbours
             if val >= 0 and np.isfinite(val):
                 neighbours.add(Node((y, x)))
 
+        cdef int y, x;
         if idx[1] - 1 > 0:
             has_left = True
             y, x = idx[0], idx[1] - 1
