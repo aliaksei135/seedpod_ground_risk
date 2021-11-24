@@ -1,3 +1,4 @@
+import random
 from itertools import combinations
 from typing import Tuple
 
@@ -29,12 +30,16 @@ def query_osm_polygons(osm_tag, bound_poly: sg.Polygon) -> gpd.GeoDataFrame:
                      "https://z.overpass-api.de/api/interpreter", "https://overpass.openstreetmap.ru/api/interpreter",
                      "https://overpass.openstreetmap.fr/api/interpreter",
                      "https://overpass.nchc.org.tw/api/interpreter"]
-    for i, url in enumerate(overpass_urls):
-        resp, data = query_request(overpass_urls[i], osm_tag, bounds)
-        if resp.status_code == 200:
-            break
-        else:
-            print(resp.status_code)
+    random.shuffle(overpass_urls)
+    for url in overpass_urls:
+        try:
+            resp, data = query_request(url, osm_tag, bounds)
+            if resp.status_code == 200:
+                break
+            else:
+                print(resp.status_code)
+        except:
+            pass
 
     print("OSM query took ", time() - t0)
 
