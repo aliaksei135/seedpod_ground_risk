@@ -366,6 +366,15 @@ class PlotServer:
                 popup.exec()
                 break
 
+    def remove_duplicate_layers(self):
+        # TODO Make the list/set method work as the nested for loop is clunky
+        # self.data_layers = list(set(self.data_layers))
+
+        for i, layer1 in enumerate(self.data_layers):
+            for j, layer2 in enumerate(self.data_layers):
+                if layer1.ac_dict == layer2.ac_dict and i != j:
+                    self.remove_layer(layer2)
+
     def _get_raster_dimensions(self, bounds_poly: sg.Polygon, raster_resolution_m: float) -> Tuple[int, int]:
         """
         Return a the (x,y) shape of a raster grid given its EPSG4326 envelope and desired raster resolution
