@@ -1,6 +1,4 @@
-import os
-
-os.chdir('../..')
+# os.chdir('../..')
 import unittest
 
 from seedpod_ground_risk.layers.temporal_population_estimate_layer import TemporalPopulationEstimateLayer
