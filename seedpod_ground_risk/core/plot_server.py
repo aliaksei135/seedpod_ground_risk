@@ -368,7 +368,7 @@ class PlotServer:
         from seedpod_ground_risk.layers.fatality_risk_layer import FatalityRiskLayer
         for dlayer in self.data_layers:
             if isinstance(dlayer, FatalityRiskLayer) and layer.aircraft == dlayer.ac_dict:
-                cur_layer = GridEnvironment(self._generated_data_layers['Fatality Risk'][1])
+                cur_layer = GridEnvironment(self._generated_data_layers[dlayer.key][1])
                 grid = cur_layer.grid
                 popup = DataWindow(layer, grid)
                 popup.exec()
