@@ -59,11 +59,19 @@ class PlotServer:
         self.data_layers = [
             # TemporalPopulationEstimateLayer('Temporal Pop. Est'),
             # RoadsLayer('Road Traffic Population/Hour')
-            FatalityRiskLayer('Fatality Risk SPOTTER 000@0kts'),
+            FatalityRiskLayer('Fatality Risk', ac='GA MQ-9 Reaper'),
             # ResidentialLayer('Residential Layer')
         ]
 
-        self.annotation_layers = []
+        from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
+        from seedpod_ground_risk.pathfinding.theta_star import RiskThetaStar
+        from seedpod_ground_risk.ui_resources.aircraft_options import AIRCRAFT_LIST
+        from seedpod_ground_risk.pathfinding.heuristic import ManhattanRiskHeuristic
+        self.annotation_layers = [
+            PathfindingLayer('BLACKFIELD', (50.818949, -1.373442), (50.933505, -1.432153),
+
+                             RiskThetaStar, AIRCRAFT_LIST['Default'], ManhattanRiskHeuristic,
+                             1e-8)]
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
@@ -206,11 +214,11 @@ class PlotServer:
                     self._progress_bar_callback(20)
                     self.generate_layers(bounds_poly, raster_shape)
                     self._progress_bar_callback(50)
-                    plot = Overlay([res[0] for res in self._generated_data_layers.values()])
+                    plt_lyr = list(self._generated_data_layers)[0]
+                    plot = Overlay([self._generated_data_layers[plt_lyr][0]])
                     print("Generated all layers in ", time() - t0)
                     if self.annotation_layers:
-                        plot = Overlay([res[0] for res in self._generated_data_layers.values()])
-
+                        plot = Overlay([self._generated_data_layers[plt_lyr][0]])
                         res = []
                         for dlayer in self.data_layers:
                             raster_indices = dict(Longitude=np.linspace(x_range[0], x_range[1], num=raster_shape[0]),
@@ -358,8 +366,8 @@ class PlotServer:
         from seedpod_ground_risk.pathfinding.environment import GridEnvironment
         from seedpod_ground_risk.ui_resources.info_popups import DataWindow
         from seedpod_ground_risk.layers.fatality_risk_layer import FatalityRiskLayer
-        for i in self.data_layers:
-            if isinstance(i, FatalityRiskLayer):
+        for dlayer in self.data_layers:
+            if isinstance(dlayer, FatalityRiskLayer) and layer.aircraft == dlayer.ac_dict:
                 cur_layer = GridEnvironment(self._generated_data_layers['Fatality Risk'][1])
                 grid = cur_layer.grid
                 popup = DataWindow(layer, grid)
