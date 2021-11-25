@@ -59,19 +59,11 @@ class PlotServer:
         self.data_layers = [
             # TemporalPopulationEstimateLayer('Temporal Pop. Est'),
             # RoadsLayer('Road Traffic Population/Hour')
-            FatalityRiskLayer('Fatality Risk', ac='GA MQ-9 Reaper'),
+            FatalityRiskLayer('Fatality Risk'),
             # ResidentialLayer('Residential Layer')
         ]
 
-        from seedpod_ground_risk.layers.pathfinding_layer import PathfindingLayer
-        from seedpod_ground_risk.pathfinding.theta_star import RiskThetaStar
-        from seedpod_ground_risk.ui_resources.aircraft_options import AIRCRAFT_LIST
-        from seedpod_ground_risk.pathfinding.heuristic import ManhattanRiskHeuristic
-        self.annotation_layers = [
-            PathfindingLayer('BLACKFIELD', (50.818949, -1.373442), (50.933505, -1.432153),
-
-                             RiskThetaStar, AIRCRAFT_LIST['Default'], ManhattanRiskHeuristic,
-                             1e-8)]
+        self.annotation_layers = []
 
         self.plot_size = plot_size
         self._progress_callback = progress_callback if progress_callback is not None else lambda *args: None
