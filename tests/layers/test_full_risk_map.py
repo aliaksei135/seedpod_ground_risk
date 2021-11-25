@@ -1,6 +1,5 @@
 import os
-
-os.chdir('../..')
+# os.chdir('../..')
 import unittest
 from itertools import chain
 
