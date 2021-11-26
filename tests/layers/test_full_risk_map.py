@@ -70,6 +70,10 @@ class FullRiskMapTestCase(unittest.TestCase):
         # self.path_coords = list(gpd.read_file('path.geojson').iloc[0].geometry.coords)
 
     def test_make_4_plot(self):
+        # No point running this in CI, its not a real test...
+        if os.getenv('CI'):
+            return
+
         import matplotlib.pyplot as mpl
         import numpy as np
 

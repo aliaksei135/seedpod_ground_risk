@@ -1,4 +1,5 @@
 # os.chdir('../..')
+import os
 import unittest
 
 from seedpod_ground_risk.layers.temporal_population_estimate_layer import TemporalPopulationEstimateLayer
@@ -14,6 +15,10 @@ class UnbufferedTemporalPopulationEstimateLayerTestCase(BaseLayerTestCase):
         super().setUp()
 
     def test_make_4_plot(self) -> None:
+        # No point running this in CI, its not a real test...
+        if os.getenv('CI'):
+            return
+
         import matplotlib.pyplot as mpl
         import numpy as np
 
