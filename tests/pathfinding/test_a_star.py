@@ -2,10 +2,11 @@ import unittest
 
 import matplotlib.pyplot as mpl
 
+from seedpod_ground_risk.pathfinding import get_path_risk_sum
 from seedpod_ground_risk.pathfinding.a_star import *
 from seedpod_ground_risk.pathfinding.heuristic import *
 from seedpod_ground_risk.pathfinding.rjps_a_star import *
-from tests.pathfinding import PathfindingTestCase, make_path, get_path_risk_sum
+from tests.pathfinding import PathfindingTestCase, make_path
 
 
 class BaseAStarTestCase(PathfindingTestCase):

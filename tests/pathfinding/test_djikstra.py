@@ -3,9 +3,10 @@ import unittest
 import matplotlib.pyplot as mpl
 from matplotlib.gridspec import GridSpec
 
+from seedpod_ground_risk.pathfinding import get_path_risk_mean, get_path_distance, get_path_risk_sum
 from seedpod_ground_risk.pathfinding.dijkstra import Dijkstra
 from seedpod_ground_risk.pathfinding.moo_ga import *
-from tests.pathfinding import PathfindingTestCase, make_path, get_path_risk_sum, get_path_risk_mean, get_path_distance
+from tests.pathfinding import PathfindingTestCase, make_path
 from tests.pathfinding.test_data import *
 
 

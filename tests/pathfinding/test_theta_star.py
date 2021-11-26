@@ -9,11 +9,6 @@ from seedpod_ground_risk.pathfinding.theta_star import RiskThetaStar
 from tests.pathfinding import PathfindingTestCase, make_path, plot_path
 
 
-# import pyximport
-#
-# pyximport.install()
-
-
 class RiskThetaStarTestCase(PathfindingTestCase):
     algo = RiskThetaStar()
 
