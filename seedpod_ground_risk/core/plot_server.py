@@ -232,12 +232,6 @@ class PlotServer:
                         # res = jl.Parallel(n_jobs=1, verbose=1, backend='threading')(
                         #     jl.delayed(layer.annotate)(raw_datas, (raster_indices, raster_grid)) for layer in
                         #     self.annotation_layers )
-
-                        # In serial is functionally equal to above
-                        # res = []
-                        # for layer in self.annotation_layers:
-                        #     res.append(layer.annotate(raw_datas, (raster_indices, raster_grid)))
-
                         plot = Overlay(
                             [self._base_tiles, plot, *[annot for annot in res if annot is not None]]).collate()
                     else:
