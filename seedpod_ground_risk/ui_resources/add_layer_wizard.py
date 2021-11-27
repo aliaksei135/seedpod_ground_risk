@@ -150,7 +150,8 @@ class LayerWizard(QWizard):
             elif opt[0] == 'coordinate':
                 d = {opt[1]: (self.field(name).latitude(), self.field(name).longitude())}
             elif opt[1] == 'aircraft':
-                d = {opt[1]: list(AIRCRAFT_LIST.values())[self.field(name)]}
+                # -1 to account for the dummy variable being added
+                d = {opt[1]: list(AIRCRAFT_LIST.values())[self.field(name) - 1]}
             else:
                 d = {opt[1]: opt[2](self.field(name))}
             self.opts.update(d)
