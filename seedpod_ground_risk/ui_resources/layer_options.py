@@ -82,6 +82,7 @@ AIRCRAFT_PARAMETERS = {
 
 dummy_aircraft_variable = {
     "Select Aircraft...": {
+        "name": "Aliaksi",
         "width": 0,
         "length": 0,
         "mass": 0,
