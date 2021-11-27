@@ -252,7 +252,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         wizard = AircraftWizard(self, Qt.Window)
         wizard.exec()
         ac = wizard.d
+        stat_string = wizard.stat_str
         add_aircraft(ac)
+        self.status_update(stat_string)
 
     def time_changed(self, value):
         from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps

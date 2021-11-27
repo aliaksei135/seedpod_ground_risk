@@ -5,6 +5,7 @@ from PySide2.QtCore import QRegExp
 from PySide2.QtGui import QRegExpValidator
 from PySide2.QtWidgets import QWizard, QWizardPage, QLabel, QLineEdit, QGridLayout
 
+from seedpod_ground_risk.ui_resources.aircraft_options import AIRCRAFT_LIST
 from seedpod_ground_risk.ui_resources.layer_options import *
 
 
@@ -43,9 +44,20 @@ class AircraftWizard(QWizard):
 
     def accept(self) -> None:
         super().accept()
-        self.aircraftKey = self.field('name')
-        self.opts = {}
-        self.d = {}
-        for name, opt in AIRCRAFT_PARAMETERS.items():
-            self.d[f'{opt[1]}'] = opt[2](self.field(name))
-        return self.d
+        if self.field('Aircraft Name') in list(AIRCRAFT_LIST.keys()):
+            self.aircraftKey = self.field('Aircraft Name') + "(1)"
+            self.opts = {}
+            self.d = {}
+            self.stat_str = f"Aircraft saved as {self.aircraftKey} due to name duplication"
+            for name, opt in AIRCRAFT_PARAMETERS.items():
+                self.d[f'{opt[1]}'] = opt[2](self.field(name))
+            self.d['name'] = self.d['name'] + "(1)"
+            return self.d
+        else:
+            self.aircraftKey = self.field('name')
+            self.opts = {}
+            self.d = {}
+            self.stat_str = f"Aircraft saved as {self.aircraftKey}"
+            for name, opt in AIRCRAFT_PARAMETERS.items():
+                self.d[f'{opt[1]}'] = opt[2](self.field(name))
+            return self.d
