@@ -212,6 +212,7 @@ class PlotServer:
                     if self.annotation_layers:
                         plot = Overlay([self._generated_data_layers[plt_lyr][0]])
                         res = []
+                        prog_bar = 50
                         for dlayer in self.data_layers:
                             raster_indices = dict(Longitude=np.linspace(x_range[0], x_range[1], num=raster_shape[0]),
                                                   Latitude=np.linspace(y_range[0], y_range[1], num=raster_shape[1]))
@@ -224,9 +225,13 @@ class PlotServer:
 
                             for alayer in self.annotation_layers:
                                 if alayer.aircraft == dlayer.ac_dict:
+                                    self._progress_bar_callback(prog_bar)
+                                    prog_bar += 40 / len(self.annotation_layers)
+                                    self._progress_callback(f'Finding a path for {alayer.aircraft["name"]}')
                                     res.append(alayer.annotate(raw_data, (raster_indices, raster_grid)))
 
-                        self._progress_callback('Annotating Layers...')
+                        self._progress_callback('Plotting paths')
+                        self._progress_bar_callback(90)
                         # res = jl.Parallel(n_jobs=1, verbose=1, backend='threading')(
                         #     jl.delayed(layer.annotate)(raw_datas, (raster_indices, raster_grid)) for layer in
                         #     self.annotation_layers )
