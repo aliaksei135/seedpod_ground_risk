@@ -112,7 +112,7 @@ def readme():
 
 setup(
     name='seedpod-ground-risk',
-    version='0.14.0',
+    version='0.15.0',
     author='Aliaksei Pilko',
     author_email='a.pilko@southampton.ac.uk',
     description='UAS ground risk analysis and path planning',
