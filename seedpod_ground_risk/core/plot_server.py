@@ -198,27 +198,43 @@ class PlotServer:
 
                     t0 = time()
                     self._progress_bar_callback(10)
+                    # TODO: This will give multiple data layers, these need to be able to fed into their relevent pathfinding layers
+                    for annlayer in self.annotation_layers:
+                        new_layer = FatalityRiskLayer('Fatality Risk', ac=annlayer.aircraft['name'])
+                        self.add_layer(new_layer)
+                    self.remove_duplicate_layers()
+                    self._progress_bar_callback(20)
                     self.generate_layers(bounds_poly, raster_shape)
                     self._progress_bar_callback(50)
-                    plot = Overlay([res[0] for res in self._generated_data_layers.values()])
+                    plt_lyr = list(self._generated_data_layers)[0]
+                    plot = Overlay([self._generated_data_layers[plt_lyr][0]])
                     print("Generated all layers in ", time() - t0)
                     if self.annotation_layers:
-                        plot = Overlay([res[0] for res in self._generated_data_layers.values()])
-                        raw_datas = [res[2] for res in self._generated_data_layers.values()]
-                        raster_indices = dict(Longitude=np.linspace(x_range[0], x_range[1], num=raster_shape[0]),
-                                              Latitude=np.linspace(y_range[0], y_range[1], num=raster_shape[1]))
-                        raster_grid = np.sum(
-                            [remove_raster_nans(res[1]) for res in self._generated_data_layers.values() if
-                             res[1] is not None],
-                            axis=0)
-                        raster_grid = np.flipud(raster_grid)
-                        raster_indices['Latitude'] = np.flip(raster_indices['Latitude'])
+                        plot = Overlay([self._generated_data_layers[plt_lyr][0]])
+                        res = []
+                        prog_bar = 50
+                        for dlayer in self.data_layers:
+                            raster_indices = dict(Longitude=np.linspace(x_range[0], x_range[1], num=raster_shape[0]),
+                                                  Latitude=np.linspace(y_range[0], y_range[1], num=raster_shape[1]))
+                            raw_data = [self._generated_data_layers[dlayer.key][2]]
+                            raster_grid = np.sum(
+                                [remove_raster_nans(self._generated_data_layers[dlayer.key][1])],
+                                axis=0)
+                            raster_grid = np.flipud(raster_grid)
+                            raster_indices['Latitude'] = np.flip(raster_indices['Latitude'])
 
-                        self._progress_callback('Annotating Layers...')
-                        res = jl.Parallel(n_jobs=1, verbose=1, backend='threading')(
-                            jl.delayed(layer.annotate)(raw_datas, (raster_indices, raster_grid)) for layer in
-                            self.annotation_layers)
+                            for alayer in self.annotation_layers:
+                                if alayer.aircraft == dlayer.ac_dict:
+                                    self._progress_bar_callback(prog_bar)
+                                    prog_bar += 40 / len(self.annotation_layers)
+                                    self._progress_callback(f'Finding a path for {alayer.aircraft["name"]}')
+                                    res.append(alayer.annotate(raw_data, (raster_indices, raster_grid)))
 
+                        self._progress_callback('Plotting paths')
+                        self._progress_bar_callback(90)
+                        # res = jl.Parallel(n_jobs=1, verbose=1, backend='threading')(
+                        #     jl.delayed(layer.annotate)(raw_datas, (raster_indices, raster_grid)) for layer in
+                        #     self.annotation_layers )
                         plot = Overlay(
                             [self._base_tiles, plot, *[annot for annot in res if annot is not None]]).collate()
                     else:
@@ -295,6 +311,8 @@ class PlotServer:
         Tuple[str, Tuple[Geometry, np.ndarray, gpd.GeoDataFrame]], Tuple[str, None]]:
 
         try:
+            if isinstance(layer, FatalityRiskLayer):
+                layer.key = f'{layer.key} {layer.ac} {layer.wind_dir:03d}@{layer.wind_vel}kts'
             result = layer.key, layer.generate(bounds_poly, raster_shape, from_cache=False, hour=hour,
                                                resolution=resolution)
             return result
@@ -337,13 +355,22 @@ class PlotServer:
         from seedpod_ground_risk.pathfinding.environment import GridEnvironment
         from seedpod_ground_risk.ui_resources.info_popups import DataWindow
         from seedpod_ground_risk.layers.fatality_risk_layer import FatalityRiskLayer
-        for i in self.data_layers:
-            if isinstance(i, FatalityRiskLayer):
-                cur_layer = GridEnvironment(self._generated_data_layers['Fatality Risk'][1])
+        for dlayer in self.data_layers:
+            if isinstance(dlayer, FatalityRiskLayer) and layer.aircraft == dlayer.ac_dict:
+                cur_layer = GridEnvironment(self._generated_data_layers[dlayer.key][1])
                 grid = cur_layer.grid
                 popup = DataWindow(layer, grid)
                 popup.exec()
                 break
+
+    def remove_duplicate_layers(self):
+        # TODO Make the list/set method work as the nested for loop is clunky
+        # self.data_layers = list(set(self.data_layers))
+
+        for i, layer1 in enumerate(self.data_layers):
+            for j, layer2 in enumerate(self.data_layers):
+                if layer1.ac_dict == layer2.ac_dict and i != j:
+                    self.remove_layer(layer2)
 
     def _get_raster_dimensions(self, bounds_poly: sg.Polygon, raster_resolution_m: float) -> Tuple[int, int]:
         """
