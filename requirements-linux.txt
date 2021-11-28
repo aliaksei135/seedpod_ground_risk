@@ -3,7 +3,7 @@
 altgraph==0.17
 attrs==20.3.0
 bokeh==2.3.1
-Cartopy @ file:///../extern/Cartopy-0.19.0.post1-cp38-cp38-win_amd64.whl
+Cartopy==0.19.0.post1
 certifi==2020.12.5
 chardet==4.0.0
 click==7.1.2
@@ -20,11 +20,10 @@ datashape==0.5.2
 defusedxml==0.7.1
 dill==0.3.3
 distributed==2021.4.0
-fastparquet @ file:///../extern/fastparquet-0.6.3-cp38-cp38-win_amd64.whl
-Fiona @ file:///../extern/Fiona-1.8.19-cp38-cp38-win_amd64.whl
+fastparquet==0.6.3
+Fiona==1.8.19
 fsspec==2021.4.0
 future==0.18.2
-GDAL @ file:///../extern/GDAL-3.2.3-cp38-cp38-win_amd64.whl
 geopandas==0.9.0
 geoviews==1.9.1
 HeapDict==1.0.1
@@ -60,10 +59,10 @@ pyarrow==3.0.0
 pyct==0.4.8
 pygeos==0.8 # Keep at 0.8 for geopandas to play nice
 Pygments==2.8.1
-pyinstaller @ https://github.com/pyinstaller/pyinstaller/tarball/develop
+pyinstaller
 pyinstaller-hooks-contrib==2021.1
 pyparsing==2.4.7
-pyproj @ file:///../extern/pyproj-3.0.1-cp38-cp38-win_amd64.whl
+pyproj==3.0.1
 pyshp==2.1.3
 PySide2==5.15.2
 python-dateutil==2.8.1
@@ -71,11 +70,11 @@ pytz==2021.1
 pyviz-comms==2.0.1
 pywin32-ctypes==0.2.0
 PyYAML==5.4.1
-rasterio @ file:///../extern/rasterio-1.2.3-cp38-cp38-win_amd64.whl
+rasterio==1.2.3
 requests==2.25.1
 retrying==1.3.3
 rich==10.1.0
-Rtree @ file:///../extern/Rtree-0.9.7-cp38-cp38-win_amd64.whl
+Rtree==0.9.7
 scipy==1.6.2
 Shapely==1.7.1
 shiboken2==5.15.2
