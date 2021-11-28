@@ -3,8 +3,13 @@ from typing import Tuple
 
 import geopandas as gpd
 import numpy as np
+import requests
 import shapely.geometry as sg
 from holoviews.element import Geometry
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+# TODO The below line is a symptom of us not varifying the SSL certs.
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 from seedpod_ground_risk.layers.blockable_data_layer import BlockableDataLayer
 
@@ -17,29 +22,20 @@ def query_osm_polygons(osm_tag, bound_poly: sg.Polygon) -> gpd.GeoDataFrame:
     :param shapely.Polygon bound_poly: bounding box around requested area in EPSG:4326 coordinates
     """
     from time import time
-    import requests
 
     t0 = time()
     bounds = bound_poly.bounds
-    overpass_url = "https://overpass.kumi.systems/api/interpreter"
-    query = """
-              [out:json]
-              [timeout:30]
-              [bbox:{s_bound}, {w_bound}, {n_bound}, {e_bound}];
-              (
-                  node[{tag}];
-                  way[{tag}];
-                  rel[{tag}];
-              ); 
-              out center body;
-              >;
-              out center qt;
-          """.format(tag=osm_tag,
-                     s_bound=bounds[0], w_bound=bounds[1], n_bound=bounds[2], e_bound=bounds[3])
-    resp = requests.get(overpass_url, params={'data': query})
-    if resp.status_code != 200:
-        print(resp)
-    data = resp.json()
+    overpass_urls = ["https://overpass.kumi.systems/api/interpreter", "https://lz4.overpass-api.de/api/interpreter",
+                     "https://z.overpass-api.de/api/interpreter", "https://overpass.openstreetmap.ru/api/interpreter",
+                     "https://overpass.openstreetmap.fr/api/interpreter",
+                     "https://overpass.nchc.org.tw/api/interpreter"]
+    for i, url in enumerate(overpass_urls):
+        resp, data = query_request(overpass_urls[i], osm_tag, bounds)
+        if resp.status_code == 200:
+            break
+        else:
+            print(resp.status_code)
+
     print("OSM query took ", time() - t0)
 
     ways = {o['id']: o['nodes'] for o in data['elements'] if o['type'] == 'way'}
@@ -205,6 +201,28 @@ def query_osm_polygons(osm_tag, bound_poly: sg.Polygon) -> gpd.GeoDataFrame:
     poly_df = gpd.GeoDataFrame(df_list, columns=['geometry']).set_crs('EPSG:4326')
     poly_df.drop_duplicates(subset='geometry', inplace=True, ignore_index=True)
     return poly_df
+
+
+def query_request(overpass_url, osm_tag, bounds):
+    headers = {'User-Agent': f'seedpod-ground-risk v0.13.0 (Python 3.8/requests v{requests.__version__};)',
+               'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    query = """
+              [out:json]
+              [timeout:30]
+              [bbox:{s_bound}, {w_bound}, {n_bound}, {e_bound}];
+              (
+                  node[{tag}];
+                  way[{tag}];
+                  rel[{tag}];
+              ); 
+              out center body;
+              >;
+              out center qt;
+          """.format(tag=osm_tag,
+                     s_bound=bounds[0], w_bound=bounds[1], n_bound=bounds[2], e_bound=bounds[3])
+    resp = requests.post(overpass_url, data={'data': query}, headers=headers, verify=False)
+    data = resp.json()
+    return resp, data
 
 
 class OSMTagLayer(BlockableDataLayer):

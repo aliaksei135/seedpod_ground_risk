@@ -13,6 +13,7 @@ from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
 from seedpod_ground_risk.pathfinding.algorithm import Algorithm
 from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
 from seedpod_ground_risk.pathfinding.heuristic import Heuristic, ManhattanRiskHeuristic
+from seedpod_ground_risk.pathfinding.theta_star import RiskThetaStar
 
 
 class PathfindingLayer(AnnotationLayer):
@@ -32,12 +33,13 @@ class PathfindingLayer(AnnotationLayer):
         self.aircraft = aircraft
         self.heuristic = heuristic
         self.rdr = rdr
+        self.thresh = rdr
 
     def preload_data(self) -> NoReturn:
         pass
 
     def annotate(self, data: List[gpd.GeoDataFrame], raster_data: Tuple[Dict[str, np.array], np.array],
-                 resolution=20, **kwargs) -> Geometry:
+                 resolution=30, **kwargs) -> Geometry:
 
         raster_grid = np.flipud(raster_data[1])
 
@@ -54,7 +56,10 @@ class PathfindingLayer(AnnotationLayer):
         env = GridEnvironment(raster_grid, diagonals=False)
         algo = self.algo(heuristic=self.heuristic(env, risk_to_dist_ratio=self.rdr))
         t0 = time()
-        self.path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)))
+        if isinstance(algo, RiskThetaStar):
+            self.path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)), thres=self.thresh)
+        elif isinstance(algo, RiskGridAStar):
+            self.path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)))
         if self.path is None:
             print("Path not found")
             return None

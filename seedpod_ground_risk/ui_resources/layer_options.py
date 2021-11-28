@@ -21,7 +21,7 @@ ALGORITHM_OBJECTS = {
     'Select Pathfinding Algorithm': None,
     # 'Grid A*': GridAStar,
     'Risk Grid A*': RiskGridAStar,
-    'Risk Grid Theta*': RiskThetaStar
+    'Risk Grid \u03B8*': RiskThetaStar
     # 'Jump Point Search+ A*': JumpPointSearchAStar,
     # 'Risk Jump Point Search+ A*': RiskJumpPointSearchAStar
 }
@@ -57,7 +57,9 @@ LAYER_OPTIONS = {
         'End Coordinate [dd]': ('coordinate', 'end_coord', tuple),
         'Algorithm': ('algos', 'algo', eval),
         'Aircraft': ('aircraft', 'aircraft', eval),
-        'Risk-Distance Ratio': (r'\d{0,3}(\.\d+)?', 'rdr', float),
+        'Risk-Distance Ratio (A*) / Risk Threshold (\u03B8*)': (
+        r'[+-]?((\d+\.\d*)|(\.\d+)|(\d+))([eE][+-]?\d+)?', 'rdr', float),
+        # change the icon to a theta
         'Wind Speed [m/s]': (r'-?\d{0,3}\.?\d+', 'wind_vel', float),
         'Wind Bearing [deg]': (r'-?\d{0,3}\.?\d+', 'wind_dir', float)
     }
@@ -78,3 +80,19 @@ AIRCRAFT_PARAMETERS = {
     'Flight Airspeed [m/s]': (r'-?\d{0,3}\.?\d+', 'vel', float)
 }
 
+dummy_aircraft_variable = {
+    "Select Aircraft...": {
+        "name": "Aliaksei",
+        "width": 0,
+        "length": 0,
+        "mass": 0,
+        "bal_drag_coeff": 0,
+        "frontal_area": 0,
+        "glide_drag_coeff": 0,
+        "glide_speed": 0,
+        "glide_ratio": 0,
+        "cruise_speed": 0,
+        "cruise_alt": 0,
+        "failure_prob": 0
+    }
+}

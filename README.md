@@ -3,13 +3,14 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4776529.svg)](https://doi.org/10.5281/zenodo.4776529)
 
 Proof of Concept demonstrating modelling of UAS ground risk from open source data sources. This constructs a
-spatiotemporal population density map and evaluates the risk posed by a parameterised UAS.
+spatiotemporal population density map and evaluates the risk posed by a parameterised UAS. This risk map can then be
+used by pathfinding algorithms to determine routes that have a fixed risk threshold or minimize flight risk completely.
 
 All data processing is performed locally, so performance depends on your machine spec. At least 8GiB of RAM is essential
 however.
 
 Developed as part of the [SEEDPOD project](https://cascadeuav.com/seedpod/) funded by the E-Drone project grant
-grant ([EP/V002619/1)](https://gow.epsrc.ukri.org/NGBOViewGrant.aspx?GrantRef=EP/V002619/1).
+([EP/V002619/1)](https://gow.epsrc.ukri.org/NGBOViewGrant.aspx?GrantRef=EP/V002619/1).
 
 ## Disclaimer
 

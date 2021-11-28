@@ -12,7 +12,6 @@ def aircraft_list():
 def add_aircraft(new_ac):
     ac_list = AIRCRAFT_LIST
     ac_list[f"{new_ac['name']}"] = new_ac
-    if 'name' in ac_list[f"{new_ac['name']}"]: del ac_list[f"{new_ac['name']}"]['name']
     with open(aircraft_list_filepath(), 'w') as f:
         json.dump(ac_list, f)
 

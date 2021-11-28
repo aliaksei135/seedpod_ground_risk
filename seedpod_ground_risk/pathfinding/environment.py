@@ -54,9 +54,10 @@ class GridEnvironment:
         has_top = has_bottom = has_left = has_right = False
         neighbours = set()
         max_y, max_x = self.shape
+
         # Offset into edge
-        max_y = max_y - 1
-        max_x = max_x - 1
+        # max_y = max_y - 1
+        # max_x = max_x - 1
 
         def eval_node(y, x):
             val = self.grid[y, x]

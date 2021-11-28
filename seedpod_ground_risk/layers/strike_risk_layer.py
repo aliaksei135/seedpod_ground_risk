@@ -80,8 +80,8 @@ def wrap_row_pipeline(row, shape, padded_pdf, padded_centre, sm):
 
 class StrikeRiskLayer(BlockableDataLayer):
     def __init__(self, key, colour: str = None, blocking=False, buffer_dist=0,
-                 ac: dict = AIRCRAFT_LIST['SPOTTER'],
-                 wind_vel: float = 1, wind_dir: float = 220):
+                 ac: dict = AIRCRAFT_LIST['Default'],
+                 wind_vel: float = 0, wind_dir: float = 0):
         super().__init__(key, colour, blocking, buffer_dist)
         delattr(self, '_colour')
 
