@@ -336,15 +336,18 @@ class PlotServer:
             self.data_layers.append(layer)
         elif isinstance(layer, AnnotationLayer):
             self.annotation_layers.append(layer)
+        self._update_layer_list()
 
     def remove_layer(self, layer):
         if layer in self.data_layers:
             self.data_layers.remove(layer)
         elif layer in self.annotation_layers:
             self.annotation_layers.remove(layer)
+        self._update_layer_list()
 
     def set_layer_order(self, layer_order):
         self.data_layer_order = layer_order
+        self._update_layer_list()
 
     def export_path_geojson(self, layer, filepath):
         import os
