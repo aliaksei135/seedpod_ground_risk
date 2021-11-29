@@ -1,18 +1,10 @@
-rom
-scipy.optimize
-import minimize_scalar
 import numpy as np
+
 cimport numpy as np
-
-cimport
-
-numpy as np
-import numpy as np
 from scipy.optimize import minimize_scalar
 
 np.import_array()
 from seedpod_ground_risk.pathfinding import get_path_risk_sum
-# from algorithm cimport Algorithm
 from environment cimport GridEnvironment, Node
 from theta_star cimport RiskThetaStar
 

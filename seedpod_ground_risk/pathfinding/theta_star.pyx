@@ -1,14 +1,10 @@
 from heapq import heappop, heappush
 
-cimport
-
-cython
-cimport
-
-numpy as np
+cimport cython
+cimport numpy as np
 
 np.import_array()
-# import numpy as np
+import numpy as np
 from skimage.draw import line
 
 from environment cimport Node, GridEnvironment
