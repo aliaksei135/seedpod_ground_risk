@@ -16,7 +16,7 @@ class UnbufferedTemporalPopulationEstimateLayerTestCase(BaseLayerTestCase):
 
     def test_make_4_plot(self) -> None:
         # No point running this in CI, its not a real test...
-        if os.getenv('CI'):
+        if os.getenv('CI') or os.getenv('GITHUB_ACTIONS'):
             return
 
         import matplotlib.pyplot as mpl
