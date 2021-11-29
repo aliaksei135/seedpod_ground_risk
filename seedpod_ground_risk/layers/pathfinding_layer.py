@@ -9,10 +9,9 @@ from holoviews.element import Geometry
 
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.path_analysis.utils import snap_coords_to_grid
-from seedpod_ground_risk.pathfinding.a_star import RiskGridAStar
 from seedpod_ground_risk.pathfinding.algorithm import Algorithm
 from seedpod_ground_risk.pathfinding.environment import GridEnvironment, Node
-from seedpod_ground_risk.pathfinding.heuristic import Heuristic, ManhattanRiskHeuristic
+from seedpod_ground_risk.pathfinding.heuristic import Heuristic, EuclideanRiskHeuristic
 from seedpod_ground_risk.pathfinding.theta_star import RiskThetaStar
 
 
@@ -24,7 +23,7 @@ class PathfindingLayer(AnnotationLayer):
     '''
 
     def __init__(self, key, start_coord: list = (0, 0), end_coord: list = (0, 0),
-                 algo: Algorithm = RiskGridAStar, aircraft: dict = {},heuristic: Heuristic = ManhattanRiskHeuristic,
+                 algo: Algorithm = RiskThetaStar, aircraft: dict = {}, heuristic: Heuristic = EuclideanRiskHeuristic,
                  rdr: float = 0.2, **kwargs):
         super().__init__(key)
         self.start_coord = start_coord
@@ -39,7 +38,7 @@ class PathfindingLayer(AnnotationLayer):
         pass
 
     def annotate(self, data: List[gpd.GeoDataFrame], raster_data: Tuple[Dict[str, np.array], np.array],
-                 resolution=30, **kwargs) -> Geometry:
+                 **kwargs) -> Geometry:
 
         raster_grid = np.flipud(raster_data[1])
 
@@ -53,13 +52,10 @@ class PathfindingLayer(AnnotationLayer):
             print('End node in blocked area, path impossible')
             return None
 
-        env = GridEnvironment(raster_grid, diagonals=False)
+        env = GridEnvironment(raster_grid, diagonals=True)
         algo = self.algo(heuristic=self.heuristic(env, risk_to_dist_ratio=self.rdr))
         t0 = time()
-        if isinstance(algo, RiskThetaStar):
-            self.path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)), thres=self.thresh)
-        elif isinstance(algo, RiskGridAStar):
-            self.path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)))
+        self.path = algo.find_path(env, Node((start_y, start_x)), Node((end_y, end_x)), thres=self.thresh)
         if self.path is None:
             print("Path not found")
             return None

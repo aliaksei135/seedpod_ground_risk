@@ -12,14 +12,14 @@ from seedpod_ground_risk.pathfinding.heuristic import Heuristic, ManhattanHeuris
 def _reconstruct_path(end: Node, grid: np.ndarray, smooth=True) -> List[Node]:
     reverse_path = []
     reverse_path_append = reverse_path.append
-    reverse_path_append(end)
+    # reverse_path_append(end)
     node = end
     while node is not None:
         reverse_path_append(node)
         if node.parent is None:
             break
         if node == node.parent:
-            reverse_path_append(node.parent)
+            # reverse_path_append(node.parent)
             break
         node = node.parent
     path = list(reversed(reverse_path))
@@ -68,10 +68,11 @@ def _reconstruct_path(end: Node, grid: np.ndarray, smooth=True) -> List[Node]:
 
 
 class GridAStar(Algorithm):
-    def __init__(self, heuristic: Heuristic = ManhattanHeuristic()):
+    def __init__(self, heuristic: Heuristic = ManhattanHeuristic(), **kwargs):
+        super().__init__(**kwargs)
         self.heuristic = heuristic.h
 
-    def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node, **kwargs) -> Union[
         List[Node], None]:
         pass
 
@@ -79,7 +80,7 @@ class GridAStar(Algorithm):
 # Canonical algorithm from literature
 class RiskAStar(Algorithm):
 
-    def find_path(self, environment: GridEnvironment, start: Node, end: Node, k=0.9, smooth=True, **kwargs) -> Union[
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node, k=0.5, smooth=False, **kwargs) -> Union[
         List[Node], None]:
         grid = environment.grid
         min_dist = 2 ** 0.5
@@ -114,6 +115,8 @@ class RiskAStar(Algorithm):
                     dist = ((node.position[1] - end.position[1]) ** 2 + (
                             node.position[0] - end.position[0]) ** 2) ** 0.5
                     line = skline(node.position[1], node.position[0], end.position[1], end.position[0])
+                    if (line[0] >= grid.shape[0]).any() or (line[1] >= grid.shape[1]).any():
+                        continue
                     min_val = grid[line[0], line[1]].min()
                     node_val = grid[node.position]
                     h = k * ((((node_val + goal_val) / 2) * min_dist) + ((dist - min_dist) * min_val))
@@ -131,7 +134,7 @@ class RiskAStar(Algorithm):
 
 class RiskGridAStar(GridAStar):
 
-    def find_path(self, environment: GridEnvironment, start: Node, end: Node, k=1, smooth=True, **kwargs) -> Union[
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node, **kwargs) -> Union[
         List[Node], None]:
         grid = environment.grid
 
@@ -140,6 +143,8 @@ class RiskGridAStar(GridAStar):
         start.f = start.g = start.h = 0
         open_cost = {start: start.f}
         closed = set()
+        smooth = kwargs.get('smooth', False)
+        k = kwargs.get('k', 0.9)
 
         while open:
             node = heappop(open)
@@ -169,7 +174,7 @@ class RiskGridAStar(GridAStar):
 
 class JumpPointSearchAStar(GridAStar):
 
-    def find_path(self, environment: GridEnvironment, start: Node, end: Node) -> Union[
+    def find_path(self, environment: GridEnvironment, start: Node, end: Node, **kwargs) -> Union[
         List[Node], None]:
         if not environment.diagonals:
             raise ValueError('JPS relies on a grid environment with diagonals')

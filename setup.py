@@ -1,10 +1,16 @@
 import os
 
+import numpy as np
+from Cython.Build import cythonize
 from setuptools import setup, find_packages
 
 ####
 # setup.py is used over a static setup.cfg as dynamic determination of local wheel dependencies is required.
 ###
+
+ext_options = {"compiler_directives": {"profile": False, 'language_level': 2, 'cdivision': True}, "annotate": True,
+               "gdb_debug": False}
+# ext_options = {"compiler_directives": {"profile": False}, "annotate": True, "gdb_debug": False}
 
 extern_path = 'file:///' + os.path.join(os.getcwd(), 'extern', ) + os.sep
 
@@ -144,4 +150,7 @@ setup(
             'spgr = seedpod_ground_risk.cli.spgr:main',
         ],
     },
+    include_dirs=[np.get_include()],
+    ext_modules=cythonize('seedpod_ground_risk/**/*.pyx', **ext_options),
+    zip_safe=False,
 )

@@ -1,4 +1,5 @@
 import os
+# os.chdir('../..')
 import unittest
 from itertools import chain
 
@@ -8,6 +9,7 @@ import scipy.stats as ss
 
 from seedpod_ground_risk.core.plot_server import PlotServer
 from seedpod_ground_risk.core.utils import make_bounds_polygon, remove_raster_nans
+from seedpod_ground_risk.layers.fatality_risk_layer import FatalityRiskLayer
 from seedpod_ground_risk.layers.strike_risk_layer import wrap_pipeline_cuda, wrap_all_pipeline
 from seedpod_ground_risk.layers.temporal_population_estimate_layer import TemporalPopulationEstimateLayer
 from seedpod_ground_risk.path_analysis.descent_models.ballistic_model import BallisticModel
@@ -66,6 +68,68 @@ class FullRiskMapTestCase(unittest.TestCase):
         del ps
 
         # self.path_coords = list(gpd.read_file('path.geojson').iloc[0].geometry.coords)
+
+    def test_make_4_plot(self):
+        # No point running this in CI, its not a real test...
+        if os.getenv('CI') or os.getenv('GITHUB_ACTIONS'):
+            return
+
+        import matplotlib.pyplot as mpl
+        import numpy as np
+
+        hours = [1, 8, 13, 17]
+        rasters = {}
+
+        layer = FatalityRiskLayer('test')
+        layer.preload_data()
+
+        for hour in hours:
+            _, raster, _ = layer.generate(self.test_bounds, self.raster_shape, hour=hour, resolution=self.resolution)
+            rasters[hour] = raster
+
+        gs = mpl.GridSpec(2, 2, hspace=0.28, wspace=0.18)
+        fig = mpl.figure()
+
+        font = dict(fontsize=10)
+
+        ax0 = fig.add_subplot(gs[0, 0])
+        ax0.tick_params(left=False, right=False,
+                        bottom=False, top=False,
+                        labelleft=False, labelbottom=False)
+        m0 = ax0.matshow(np.flipud(rasters[1]))
+        # m0.set_clim(0, 1e-6)
+        ax0.set_title('Fatality Risk:1 AM', fontdict=font)
+        fig.colorbar(m0).set_label('Fatality Risk\n[hr$^{-1}$]', fontsize=7)
+
+        ax1 = fig.add_subplot(gs[0, 1])
+        ax1.tick_params(left=False, right=False,
+                        bottom=False, top=False,
+                        labelleft=False, labelbottom=False)
+        m1 = ax1.matshow(np.flipud(rasters[8]))
+        # m1.set_clim(0, 1e-6)
+        ax1.set_title('Fatality Risk:8 AM', fontdict=font)
+        fig.colorbar(m1).set_label('Fatality Risk\n[hr$^{-1}$]', fontsize=7)
+
+        ax2 = fig.add_subplot(gs[1, 0])
+        ax2.tick_params(left=False, right=False,
+                        bottom=False, top=False,
+                        labelleft=False, labelbottom=False)
+        m2 = ax2.matshow(np.flipud(rasters[13]))
+        # m2.set_clim(0, 1e-6)
+        ax2.set_title('Fatality Risk:1 PM', fontdict=font)
+        fig.colorbar(m2).set_label('Fatality Risk\n[hr$^{-1}$]', fontsize=7)
+
+        ax3 = fig.add_subplot(gs[1, 1])
+        ax3.tick_params(left=False, right=False,
+                        bottom=False, top=False,
+                        labelleft=False, labelbottom=False)
+        m3 = ax3.matshow(np.flipud(rasters[17]))
+        # m3.set_clim(0, 1e-6)
+        ax3.set_title('Fatality Risk: 5 PM', fontdict=font)
+        fig.colorbar(m3).set_label('Fatality Risk\n[hr$^{-1}$]', fontsize=7)
+
+        fig.tight_layout()
+        fig.show()
 
     def test_full_risk_map(self):
 
