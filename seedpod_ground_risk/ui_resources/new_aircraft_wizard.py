@@ -54,7 +54,7 @@ class AircraftWizard(QWizard):
             self.d['name'] = self.d['name'] + "(1)"
             return self.d
         else:
-            self.aircraftKey = self.field('name')
+            self.aircraftKey = self.field('Aircraft Name') + "(1)"
             self.opts = {}
             self.d = {}
             self.stat_str = f"Aircraft saved as {self.aircraftKey}"
