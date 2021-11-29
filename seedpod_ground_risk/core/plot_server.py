@@ -347,7 +347,6 @@ class PlotServer:
 
     def set_layer_order(self, layer_order):
         self.data_layer_order = layer_order
-        self._update_layer_list()
 
     def export_path_geojson(self, layer, filepath):
         import os
