@@ -11,31 +11,31 @@ class IterativeRiskThetaStarTestCase(PathfindingTestCase):
         end = Node((99, 99))
         env = self.risk_square_environment
 
-        path = self.algo.find_path(env, start, end, 1e-8)
+        path = self.algo.find_path(env, start, end, target=1e-8)
         print('Converged path risk sum: ', get_path_risk_sum(path, env))
 
         plot_path(path, TEST_RISK_SQUARE_GRID)
 
-        self.assertEqual(hash(tuple(path)), -1426980368256641227)
+        self.assertEqual(hash(tuple(path)), -7379034819982425799)
 
     def test_risk_circle(self):
         start = Node((1, 1))
         end = Node((99, 99))
         env = self.risk_circle_environment
 
-        path = self.algo.find_path(env, start, end, 1e-8)
+        path = self.algo.find_path(env, start, end, target=1e-8)
 
         plot_path(path, TEST_RISK_CIRCLE_GRID)
         print('Converged path risk sum: ', get_path_risk_sum(path, env))
 
-        self.assertEqual(hash(tuple(path)), 7407489380230064092)
+        self.assertEqual(hash(tuple(path)), -8742845364387441995)
 
     def test_risk_circle2(self):
         start = Node((1, 1))
         end = Node((99, 99))
         env = self.risk_circle2_environment
 
-        path = self.algo.find_path(env, start, end, 1e-6)
+        path = self.algo.find_path(env, start, end, target=1e-6)
         print('Converged path risk sum: ', get_path_risk_sum(path, env))
 
         plot_path(path, TEST_RISK_CIRCLE2_GRID)
@@ -47,12 +47,12 @@ class IterativeRiskThetaStarTestCase(PathfindingTestCase):
         end = Node((100, 800))
         env = self.large_no_diag_environment
 
-        path = self.algo.find_path(env, start, end, 8e-7)
+        path = self.algo.find_path(env, start, end, target=8e-7)
         print('Converged path risk sum: ', get_path_risk_sum(path, env))
 
         plot_path(path, env)
 
-        self.assertEqual(hash(tuple(path)), 7644177961470539392)
+        self.assertEqual(hash(tuple(path)), 343200227379637684)
 
 
 if __name__ == '__main__':

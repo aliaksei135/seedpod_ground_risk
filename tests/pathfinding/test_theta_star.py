@@ -2,6 +2,7 @@ import unittest
 
 import matplotlib.pyplot as mpl
 from matplotlib.gridspec import GridSpec
+from scipy.optimize import minimize_scalar
 
 from seedpod_ground_risk.pathfinding import *
 from seedpod_ground_risk.pathfinding.moo_ga import *
@@ -17,7 +18,7 @@ class RiskThetaStarTestCase(PathfindingTestCase):
         end = Node((99, 99))
         env = self.risk_square_environment
 
-        path = make_path(self.algo, env, start, end, 1e-8)
+        path = make_path(self.algo, env, start, end, thres=1e-8)
 
         plot_path(path, env)
 
@@ -28,7 +29,7 @@ class RiskThetaStarTestCase(PathfindingTestCase):
         end = Node((99, 99))
         env = self.risk_circle_environment
 
-        path = self.algo.find_path(env, start, end, 1e-8)
+        path = self.algo.find_path(env, start, end, thres=1e-8)
         # path = make_path(self.algo, env, start, end, float(1e-7))
 
         plot_path(path, env)
@@ -40,7 +41,7 @@ class RiskThetaStarTestCase(PathfindingTestCase):
         end = Node((99, 99))
         env = self.risk_circle2_environment
 
-        path = self.algo.find_path(env, start, end, 1e-8)
+        path = self.algo.find_path(env, start, end, thres=1e-8)
 
         plot_path(path, env)
         print(get_path_risk_sum(path, env))
@@ -70,7 +71,7 @@ class RiskThetaStarTestCase(PathfindingTestCase):
 
         for idx, thres in enumerate(thresholds):
             with self.subTest():
-                path = self.algo.find_path(env, start, end, thres)
+                path = self.algo.find_path(env, start, end, thres=thres)
                 plot_path(path, env)
                 if asserting:
                     self.assertEqual(hash(tuple(path)), truth_hashes[idx],
@@ -127,7 +128,7 @@ class RiskThetaStarTestCase(PathfindingTestCase):
         env = self.large_no_diag_environment
         # grid = env
         n_iter = 50
-        rit = 5e-6
+        rit = 5e-7
         tol = np.power(10, np.log10(rit) - 2)
         bracket = (np.power(10, np.log10(rit) - 3), np.power(10, np.log10(rit) + 3))
 
@@ -144,17 +145,17 @@ class RiskThetaStarTestCase(PathfindingTestCase):
             rs_ns.append(err)
             return err
 
-        # res = root_scalar(f, method='ridder', bracket=(1e-20, 1e-2))
-        # res = minimize_scalar(f, method='brent', bracket=bracket, tol=tol, options=dict(maxiter=n_iter))
+        # res = root_scalar(f, method='ridder', bracket=(1e-20, 1e-))
+        res = minimize_scalar(f, method='brent', bracket=bracket, tol=tol, options=dict(maxiter=n_iter))
         # res = minimize(f, rit, bounds=[(1e-15, 1)], tol=tol,
         #       options = dict(maxiter=n_iter))
 
-        # conv_thres = res.x
-        # conv_path = algo.find_path(env, start, end, thres=conv_thres)
-        # print('Converged path risk sum: ', get_path_risk_sum(conv_path, env))
-        # plot_path(conv_path, env)
+        conv_thres = res.x
+        conv_path = algo.find_path(env, start, end, thres=conv_thres)
+        print('Converged path risk sum: ', get_path_risk_sum(conv_path, env))
+        plot_path(conv_path, env)
 
-        [f(t) for t in np.logspace(-9, -6)]
+        # [f(t) for t in np.logspace(-9, -6)]
 
         # gs = GridSpec(1, 1)
         fig = mpl.figure()
@@ -174,7 +175,7 @@ class RiskThetaStarTestCase(PathfindingTestCase):
         end = Node((100, 800))
         env = self.large_no_diag_environment
 
-        path = self.algo.find_path(env, start, end, 1e-8)
+        path = self.algo.find_path(env, start, end, thres=1e-8)
 
         plot_path(path, env)
 
