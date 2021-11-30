@@ -8,6 +8,7 @@ import PySide2
 from seedpod_ground_risk.core.plot_worker import PlotWorker
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.ui_resources.add_layer_wizard import LayerWizard
+from seedpod_ground_risk.ui_resources.aircraft_list import ListAircraftWizard
 from seedpod_ground_risk.ui_resources.layer_options import LAYER_OBJECTS
 from seedpod_ground_risk.ui_resources.layerlistdelegate import Ui_delegate
 from seedpod_ground_risk.ui_resources.new_aircraft_wizard import AircraftWizard
@@ -255,6 +256,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         stat_string = wizard.stat_str
         add_aircraft(ac)
         self.status_update(stat_string)
+
+    def list_aircraft(self):
+        from PySide2.QtGui import QTextDocument
+        wizard = ListAircraftWizard(self, Qt.Window)
+        wizard.exec()
+        ac = wizard.d
+
+        self.list_dialog = TextAboutDialog('About Data')
+        doc = QTextDocument()
+        doc.setMarkdown(self._read_file('static_data/DATA_SOURCES.md'))
+        self.list_dialog.ui.textEdit.setDocument(doc)
+        self.list_dialog.show()
 
     def time_changed(self, value):
         from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps
