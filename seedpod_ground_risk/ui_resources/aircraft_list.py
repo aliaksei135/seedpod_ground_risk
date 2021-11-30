@@ -45,6 +45,6 @@ class ListAircraftWizard(QWizard):
     def accept(self) -> None:
         super().accept()
 
-        d = list(AIRCRAFT_LIST.values())[self.field("Choose Aircraft") - 1]
+        self.d = list(AIRCRAFT_LIST.values())[self.field("Choose Aircraft") - 1]
 
-        return d
+        return self.d
