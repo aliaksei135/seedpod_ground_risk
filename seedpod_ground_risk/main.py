@@ -262,9 +262,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         from PySide2.QtGui import QTextDocument
         wizard = ListAircraftWizard(self, Qt.Window)
         wizard.exec()
-        ac = wizard.d
+        ac_dict = wizard.d
 
-        self.list_dialog = TextAboutDialog('About Data')
+        data_string = f"Data for {ac_dict['name']}:\nWing Span: {ac_dict['width']}\nLength: {ac_dict['width']}\nMass: {ac_dict['mass']}\n" \
+                      f"Frontal Area: {ac_dict['frontal_area']}\nBallistic Drag Coefficient: {ac_dict['bal_drag_coeff']}" \
+                      f"\nGlide Drag Coefficient: {ac_dict['glide_drag_coeff']}\nGlide Speed: {ac_dict['glide_speed']}" \
+                      f"Glide Ratio: {ac_dict['glide_ratio']}\nCruise Speed: {ac_dict['cruise_speed']}\nCruise Altitude: {ac_dict['cruise_alt']}\n" \
+                      f"Failure Probability: {ac_dict['failure_prob']}"
+
+        print(data_string)
+
+        self.list_dialog = TextAboutDialog(f"{ac_dict['name']} Aircraft Data")
         doc = QTextDocument()
         doc.setMarkdown(self._read_file('static_data/DATA_SOURCES.md'))
         self.list_dialog.ui.textEdit.setDocument(doc)
