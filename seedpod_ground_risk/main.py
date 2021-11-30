@@ -160,6 +160,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionAbout_Static_Sources.triggered.connect(self.menu_about_static_sources)
         self.actionAbout_App.triggered.connect(self.menu_about_app)
         self.actionAdd_Aircraft.triggered.connect(self.add_aircraft)
+        self.actionAircraft_Data.triggered.connect(self.list_aircraft)
 
     def menu_config_rasterise(self, checked):
         # TODO: Allow reliable on-the-fly rasterisation switching
