@@ -8,6 +8,7 @@ import PySide2
 from seedpod_ground_risk.core.plot_worker import PlotWorker
 from seedpod_ground_risk.layers.annotation_layer import AnnotationLayer
 from seedpod_ground_risk.ui_resources.add_layer_wizard import LayerWizard
+from seedpod_ground_risk.ui_resources.aircraft_list import ListAircraftWizard
 from seedpod_ground_risk.ui_resources.layer_options import LAYER_OBJECTS
 from seedpod_ground_risk.ui_resources.layerlistdelegate import Ui_delegate
 from seedpod_ground_risk.ui_resources.new_aircraft_wizard import AircraftWizard
@@ -159,6 +160,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionAbout_Static_Sources.triggered.connect(self.menu_about_static_sources)
         self.actionAbout_App.triggered.connect(self.menu_about_app)
         self.actionAdd_Aircraft.triggered.connect(self.add_aircraft)
+        self.actionAircraft_Data.triggered.connect(self.list_aircraft)
 
     def menu_config_rasterise(self, checked):
         # TODO: Allow reliable on-the-fly rasterisation switching
@@ -255,6 +257,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         stat_string = wizard.stat_str
         add_aircraft(ac)
         self.status_update(stat_string)
+
+    def list_aircraft(self):
+        from PySide2.QtGui import QTextDocument
+        wizard = ListAircraftWizard(self, Qt.Window)
+        wizard.exec()
+        ac_dict = wizard.d
+
+        data_string = f"Data for {ac_dict['name']}:\n\nWing Span: {ac_dict['width']}m\nLength: {ac_dict['width']}m\nMass: {ac_dict['mass']}kg\n" \
+                      f"Frontal Area: {ac_dict['frontal_area']}m\u00b2 \nBallistic Drag Coefficient: {ac_dict['bal_drag_coeff']}" \
+                      f"\nGlide Drag Coefficient: {ac_dict['glide_drag_coeff']}\nGlide Speed: {ac_dict['glide_speed']}ms\u207B\u00B9 \n" \
+                      f"Glide Ratio: {ac_dict['glide_ratio']}\nCruise Speed: {ac_dict['cruise_speed']}ms\u207B\u00B9 \nCruise Altitude: {ac_dict['cruise_alt']}m\n" \
+                      f"Failure Probability: {ac_dict['failure_prob']}"
+
+        self.list_dialog = TextAboutDialog(f"{ac_dict['name']} Aircraft Data")
+        doc = QTextDocument()
+        doc.setPlainText(data_string)
+        self.list_dialog.ui.textEdit.setDocument(doc)
+        self.list_dialog.show()
 
     def time_changed(self, value):
         from seedpod_ground_risk.layers.roads_layer import generate_week_timesteps
