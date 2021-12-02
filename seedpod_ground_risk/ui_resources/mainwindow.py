@@ -45,6 +45,8 @@ class Ui_MainWindow(object):
         self.actionAdd_Aircraft.setObjectName(u"actionAdd_Aircraft")
         self.actionView_Risk_vs_Distance_Graph = QAction(MainWindow)
         self.actionView_Risk_vs_Distance_Graph.setObjectName(u"actionView_Risk_vs_Distance_Graph")
+        self.actionAircraft_Data = QAction(MainWindow)
+        self.actionAircraft_Data.setObjectName(u"actionAircraft_Data")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
@@ -134,6 +136,7 @@ class Ui_MainWindow(object):
         self.menu_File.addAction(self.actionImport)
         self.menu_File.addAction(self.actionExport)
         self.menu_Aircraft.addAction(self.actionAdd_Aircraft)
+        self.menu_Aircraft.addAction(self.actionAircraft_Data)
         self.menu_Help.addAction(self.actionAbout_Static_Sources)
         self.menu_Help.addAction(self.actionAbout_App)
 
@@ -160,6 +163,7 @@ class Ui_MainWindow(object):
         # endif // QT_CONFIG(tooltip)
         self.actionView_Risk_vs_Distance_Graph.setText(
             QCoreApplication.translate("MainWindow", u"Risk vs Distance Graph", None))
+        self.actionAircraft_Data.setText(QCoreApplication.translate("MainWindow", u"Show Aircraft Data", None))
         self.addLayerButton.setText(QCoreApplication.translate("MainWindow", u"Add Layer", None))
         self.generateButton.setText(QCoreApplication.translate("MainWindow", u"Generate", None))
         self.menu_File.setTitle(QCoreApplication.translate("MainWindow", u"&File", None))
