@@ -12,7 +12,7 @@ class ListAircraftPage(QWizardPage):
 
     def __init__(self, parent: typing.Optional[PySide2.QtWidgets.QWidget] = ...) -> None:
         super().__init__(parent)
-        self.setTitle('New Aircraft Configuration')
+        self.setTitle('Show Aircraft Data')
 
     def initializePage(self) -> None:
         super().initializePage()
