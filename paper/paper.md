@@ -1,21 +1,24 @@
 ---
-title: "SEEDPOD Ground Risk: A Python application and library for Uncrewed Aerial Systems ground risk analysis and
-risk-aware path finding"
+title: "SEEDPOD Ground Risk: A Python application and library for Uncrewed Aerial Systems ground risk analysis and risk-aware path finding"
 tags:
-
-- python
-- "uncrewed aerial systems"
-- "unmanned aerial systems"
-- "aviation safety"
-- risk
-- "ground risk"
-  authors:
-- name: Aliaksei Pilko orcid: 0000-0003-0023-0300 affiliation: 1
-- name: Zachary Tait
-- orcid: 0000-0002-5016-6821 affiliation: 1 affiliations:
-- name: Faculty of Engineering and the Environment, University of Southampton index: 1 date: 28/11/2021 bibliography:
-  paper.bib
-
+  - python
+  - "uncrewed aerial systems"
+  - "unmanned aerial systems"
+  - "aviation safety"
+  - risk
+  - "ground risk"
+authors:
+  - name: Aliaksei Pilko 
+    orcid: 0000-0003-0023-0300 
+    affiliation: 1
+  - name: Zachary Tait
+    orcid: 0000-0002-5016-6821 
+    affiliation: 1 
+affiliations:
+  - name: Faculty of Engineering and the Environment, University of Southampton 
+    index: 1 
+date: 28/11/2021 
+bibliography: paper.bib
 ---
 
 # Summary
