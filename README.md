@@ -9,15 +9,14 @@ used by pathfinding algorithms to determine routes that have a fixed risk thresh
 All data processing is performed locally, so performance depends on your machine spec. At least 8GiB of RAM is essential
 however.
 
-Developed as part of the [SEEDPOD project](https://cascadeuav.com/seedpod/) funded by the E-Drone project grant
-([EP/V002619/1)](https://gow.epsrc.ukri.org/NGBOViewGrant.aspx?GrantRef=EP/V002619/1).
+Funded by the Engineering and Physical Sciences Research Council on the E-Drone project
+([EP/V002619/1](https://gow.epsrc.ukri.org/NGBOViewGrant.aspx?GrantRef=EP/V002619/1)).
 
 ## Disclaimer
 
 ***This is intended to provide guidance on overflight risks in terms of risk-to-life (RtL) and is by no means an
 extensive or complete picture of the ground risks. While the software is intended to promote safe drone flight, use of
-this software does not in itself guarantee safe or legal drone operation. Follow
-the [drone code](https://dronesafe.uk/drone-code/).***
+this software does not in itself guarantee safe or legal drone operation. For the UK, [the CAA provides further information](https://caa.co.uk/drones)***
 
 ## Usage
 
@@ -38,7 +37,7 @@ See `BUILD.md` for further instructions.
 
     MIT License
     
-    Copyright (c) 2021 Aliaksei Pilko
+    Copyright (c) 2022 Aliaksei Pilko
     
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
