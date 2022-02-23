@@ -45,7 +45,7 @@ sudo apt install libgeos-dev libgdal-dev proj-bin libbz2-dev
 
 ```bash
 python -m venv spgr
-source spgr
+source spgr/bin/activate
 ```
 
 3. Clone the repository
