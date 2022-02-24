@@ -19,9 +19,10 @@ python3 -m venv spgr
 .\spgr\Scripts\activate.bat
 ```
 
-3. Clone the repository
+3. Clone the repository. There are some data files that are stored in git LFS, so we ensure that the hooks are installed first, then `git clone` is able to download both sets of files.
 
 ```commandline
+git lfs install
 git clone https://github.com/aliaksei135/seedpod_ground_risk.git
 ```
 
@@ -29,7 +30,6 @@ git clone https://github.com/aliaksei135/seedpod_ground_risk.git
 
 ```commandline
 cd seedpod_ground_risk
-
 pip install -r requirements.txt
 ```
 
@@ -48,9 +48,9 @@ python -m venv spgr
 source spgr/bin/activate
 ```
 
-3. Clone the repository
-
+3. Clone the repository. There are some data files that are stored in git LFS, so we ensure that the hooks are installed first, then `git clone` is able to download both sets of files.
 ```commandline
+git lfs install
 git clone https://github.com/aliaksei135/seedpod_ground_risk.git
 ```
 
@@ -58,7 +58,6 @@ git clone https://github.com/aliaksei135/seedpod_ground_risk.git
 
 ```commandline
 cd seedpod_ground_risk
-
 pip install -r requirements-linux.txt
 ```
 
