@@ -1,6 +1,8 @@
 # Building
 
-The build process should be fairly familiar. The instructions provided are for Windows x64.
+The build process should be fairly familiar. 
+
+## Windows
 
 1. Ensure you have the required dependencies:
     - Python 3.8 *ONLY*
@@ -17,9 +19,10 @@ python3 -m venv spgr
 .\spgr\Scripts\activate.bat
 ```
 
-3. Clone the repository
+3. Clone the repository. There are some data files that are stored in git LFS, so we ensure that the hooks are installed first, then `git clone` is able to download both sets of files.
 
 ```commandline
+git lfs install
 git clone https://github.com/aliaksei135/seedpod_ground_risk.git
 ```
 
@@ -27,8 +30,35 @@ git clone https://github.com/aliaksei135/seedpod_ground_risk.git
 
 ```commandline
 cd seedpod_ground_risk
-
 pip install -r requirements.txt
+```
+
+## Linux
+
+1. Install dependencies
+
+```bash
+sudo apt install libgeos-dev libgdal-dev proj-bin libbz2-dev
+```
+
+2. Create and activate a virtual environment, any should do. Here we use `virtualenv`:
+
+```bash
+python -m venv spgr
+source spgr/bin/activate
+```
+
+3. Clone the repository. There are some data files that are stored in git LFS, so we ensure that the hooks are installed first, then `git clone` is able to download both sets of files.
+```commandline
+git lfs install
+git clone https://github.com/aliaksei135/seedpod_ground_risk.git
+```
+
+4. Install requirements
+
+```commandline
+cd seedpod_ground_risk
+pip install -r requirements-linux.txt
 ```
 
 This is enough to run and develop on.
@@ -41,6 +71,8 @@ required for use of the CLI for instance.
 When packaging don't forget to check versions in both `setup.py` and `make_installer.iss` and ensure they match!
 
 ### Installer
+
+**Currently, this is only supported on Windows.**
 
 The installer uses `PyInstaller` to extract all the dependencies and `InnoSetup` to create a Windows installer package
 out of them.
@@ -61,16 +93,13 @@ level optimisation `-OO`, as this removes some docstrings that break dependencie
 
 ### Wheel
 
+**Building wheels is supported on both Windows and Linux**
+
 1. Inside the root repository directory with the virtualenv active. Ensure you have up to date build tools:
 
 ```commandline
-pip install --upgrade build
-```
-
-2. Build the wheel as usual:
-
-```commandline
-python -m build
+cd seedpod_ground_risk
+pip wheel . -w dist
 ```
 
 The `.whl` file will be built in `dist`. You can install this as required:

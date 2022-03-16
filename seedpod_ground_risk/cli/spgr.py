@@ -195,14 +195,10 @@ main.add_command(path)
 @click.option('--wind-direction', default=90, type=click.INT,
               help='The wind bearing. This is the direction the wind is coming from.')
 @click.option('--wind_speed', default=5, type=click.FLOAT, help='Wind speed at the flight altitude in m/s')
-@click.option('--algo', default='ra*', type=click.STRING,
-              help='Pathfinding algorithm to use. Current options are ["ra*", "ga"]')
-@click.argument('algo_args', nargs=-1, type=click.UNPROCESSED)
 def make(min_lat, max_lat, min_lon, max_lon,
          start_lat, start_lon, end_lat, end_lon,
          aircraft, failure_prob, output_path, resolution, hour, altitude,
-         airspeed, wind_direction, wind_speed,
-         algo, algo_args):
+         airspeed, wind_direction, wind_speed):
     """
     Path minimising the fatality risk posed.
 
@@ -212,7 +208,7 @@ def make(min_lat, max_lat, min_lon, max_lon,
 
     If an aircraft config json file is not specified, a default aircraft with reasonable parameters is used.
 
-    All coordinates should be in decimal degrees and form a non degenerate polygon.
+    All coordinates should be in decimal degrees and form a non degenerate polygon. The path start and end coordinates must be within the bounds
 
     """
     import geopandas as gpd
@@ -228,13 +224,15 @@ def make(min_lat, max_lat, min_lon, max_lon,
                                          wind_direction, wind_speed)
     res = make_fatality_grid(aircraft, strike_grid, v_is)
 
-    snapped_path = make_path(res, bounds, (start_lat, start_lon), (end_lat, end_lon), algo=algo)
+    snapped_path = make_path(res, bounds, (start_lat, start_lon), (end_lat, end_lon))
     if snapped_path:
         dataframe = gpd.GeoDataFrame({'geometry': [snapped_path]}).set_crs('EPSG:4326')
         dataframe.to_file(os.path.join(output_path, f'path.geojson'), driver='GeoJSON')
     else:
         print('Path could not be found')
 
+        
+path.add_command(make)
 
 # path
 ############################
