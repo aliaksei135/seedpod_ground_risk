@@ -56,7 +56,7 @@ SEEDPOD Ground Risk is a Python application and package that enables the generat
 GPU-accelerated routines for the risk calculation as well as being, to the authors best knowledge, the first open-source
 probabilistic ground risk assessment tool. Numba is used for all calculation acceleration and enable the fallback to
 JIT-compiled CPU code where a compatible NVIDIA GPU is not detected. A common set of scientific and geospatial Python
-packages are used, such as NumPy, SciPy, Pandas and GeoPandas.
+packages are used, such as NumPy, SciPy, Pandas, and GeoPandas.
 
 The software is intended to allow for further development and testing of different constituent models as part of a
 holistic ground risk assessment process. This enables the exploration of individual model effects on the final ground
@@ -74,7 +74,7 @@ exposes much the same functionality as the API in a no-code environment.
 # Acknowledgements
 
 This work is funded by the Engineering and Physical Sciences Research Council as part of the E-Drone project under grant
-number EP/V002619/1. The authors would like to thank András Sóbester, James Scanlan and Mario Ferraro for their guidance
+number EP/V002619/1. The authors would like to thank András Sóbester, James Scanlan, and Mario Ferraro for their guidance
 and advice on theoretical aspects of the work.
 
 # References
